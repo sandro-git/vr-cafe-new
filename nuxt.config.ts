@@ -7,5 +7,5 @@ export default defineNuxtConfig({
     icons:['simple-icons'],
     
   },
-  ssr:true
+  ssr:true,
 })

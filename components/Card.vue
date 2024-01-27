@@ -1,7 +1,10 @@
 <template>
 <div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
     <a href="#">
-        <NuxtImg :src="game.image" :alt="game.title" class="rounded-t-lg"  />
+        <NuxtImg :src="game.image" 
+        :alt="game.title" class="rounded-t-lg"  
+        placeholder width="382" height="382" 
+        format="webp"/>
     </a>
     <div class="p-5">
         <a href="#">
