@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@iconify-json/simple-icons':
+    specifier: ^1.1.89
+    version: 1.1.89
   '@nuxt/ui-pro':
     specifier: ^0.7.3
     version: 0.7.3(nuxt@3.9.3)(vite@5.0.12)(vue@3.4.15)
@@ -601,6 +604,12 @@ packages:
     resolution: {integrity: sha512-uW2F9vdGll59W21ocBl+wR4Ve+/1CsmzBqPTuOaR3CbKzqnJKwzGASvC4Op0uTieFVWfBaevnzcRxwNo73J29g==}
     dependencies:
       '@iconify/types': 2.0.0
+
+  /@iconify-json/simple-icons@1.1.89:
+    resolution: {integrity: sha512-rsRgN5okCP6Xg4RD/5t8UlSQR7812AYMz3eas1JzOtBdLuaSDjI+FIarI+EUXzVblA6VAX2n9SwSuyXlHcjy+g==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: false
 
   /@iconify/collections@1.0.383:
     resolution: {integrity: sha512-ktPmaLdRBMveRXisZW/hxjb/X7sHTVDJn+vR4bXVNSy+iXGkODbODudctB6Wczx0iHstxuwn5TZpjRsCGvo8pw==}

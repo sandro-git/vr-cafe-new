@@ -15,10 +15,71 @@ Entre amis, en famille, entre collaborateur, tentez l'expérience VR Café." />
     <ULandingCard class="col-span-6 row-span-4" icon="i-heroicons-face-smile" title="Icons" description="Choose any of the 100k+ icons from the most popular icon libraries." />
     <ULandingCard class="col-span-6 row-span-2" icon="i-heroicons-computer-desktop" title="Keyboard Shortcuts" description="Nuxt UI comes with a set of Vue composables to easily handle shortcuts." />
   </ULandingGrid>
+  <ULandingSection id="Escapes" title="ESCAPE GAMES"/>
+  <UContainer class="grid grid-cols-3 grid-flow-row gap-4">
+    <Card v-for="game in escapes" :game="game"/>
+  </UContainer>
+  <ULandingSection id="Arcades" title="ARCADES"/>
+  <UContainer class="grid grid-cols-3 grid-flow-row gap-4">
+    <Card v-for="game in arcades" :game="game"/>
+  </UContainer>
 </template>
 
 <script setup>
 function log() {
   console.log("click")
 };
+
+const escapes= [{
+  title:"Alice au Pays des merveilles" ,
+  image:"/Alice.jpg"
+},
+{
+  title:"Chernobyl",
+  image:"/Chernobyl.jpg"
+},
+{
+  title:"Cyberpunk",
+  image:"/Cyberpunk.jpg"
+},
+{
+  title:"House of Fear 2",
+  image:"/HOF_2.jpg"
+},
+{
+  title:"House of Fear",
+  image:"/House.jpg"
+},
+{
+  title:"Jungle Quest",
+  image:"/JQ.jpg"
+},
+{
+  title:"Mission Sigma",
+  image:"/Mission Sigma.jpg"
+},
+{
+  title:"Noël",
+  image:"/Noël.jpg"
+},
+{
+  title:"Sanctum",
+  image:"/Sanctum.jpg"
+},
+{
+  title:"Survival",
+  image:"/Survival.jpg"
+},
+]
+
+const arcades =[
+{
+  title:"Plush Rush",
+  image:"/Plush Rush.jpeg"
+},
+{
+  title:"SMASH POINT",
+  image:"/SMASH POINT.jpg"
+},
+]
 </script>
