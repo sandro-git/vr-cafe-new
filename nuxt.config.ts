@@ -2,8 +2,10 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   extends: ['@nuxt/ui-pro'],
-  modules: ["@nuxt/ui"],
+  modules: ["@nuxt/ui", "@nuxt/image"],
   ui:{
-    icons:['simple-icons']
-  }
+    icons:['simple-icons'],
+    
+  },
+  ssr:true
 })
