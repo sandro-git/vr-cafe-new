@@ -51,12 +51,12 @@ const escapes= [{
   image:"/House.jpg"
 },
 {
-  title:"Jungle Quest",
+  title:"Jungle-Quest",
   image:"/JQ.jpg"
 },
 {
   title:"Mission Sigma",
-  image:"/Mission Sigma.jpg"
+  image:"/Mission-Sigma.jpg"
 },
 {
   title:"Noël",
@@ -75,11 +75,11 @@ const escapes= [{
 const arcades =[
 {
   title:"Plush Rush",
-  image:"/Plush Rush.jpeg"
+  image:"/Plush-Rush.jpeg"
 },
 {
   title:"SMASH POINT",
-  image:"/SMASH POINT.jpg"
+  image:"/SMASH-POINT.jpg"
 },
 ]
 </script>
