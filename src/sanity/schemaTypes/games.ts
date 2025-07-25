@@ -9,10 +9,12 @@ export const gamesTypes = defineType({
         defineField({
             name: "name",
             type: "string",
+            description: "Le nom du jeu",
         }),
         defineField({
             name: "slug",
             type: "slug",
+            description: "Un identifiant unique pour le jeu, utilisé dans les URL",
             options: {
                 source: "name",
                 maxLength: 96,
@@ -29,19 +31,21 @@ export const gamesTypes = defineType({
                     name: "alt",
                     type: "string",
                     title: "Alternative Text",
+                    description: "Important pour le SEO et l'accessibilité",
                 },
             ],
         }),
         defineField({
+            name: "youtubeLink",
+            type: "text",
+            description: "Le lien vers la bande-annonce YouTube du jeu",
+            rows: 1,
+        }),
+        defineField({
             name: "description",
-            type: "array",
-            of: [
-                {
-                    type: "block",
-                    styles: [{ title: "Normal", value: "normal" }],
-                    lists: [],
-                },
-            ],
+            type: "text",
+            description: "Une brève description du jeu",
+            rows: 8,
         }),
     ],
     preview: {
