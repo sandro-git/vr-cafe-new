@@ -1,13 +1,13 @@
 ---
-import ExperienceImage from "../components/ExperienceImage.astro";
-const { src, alt, slug } = Astro.props;
+// src/components/CardImage.astro - VERSION MISE À JOUR
+import SanityPicture from "./SanityPicture.astro";
+const { image, alt, slug } = Astro.props;
 ---
 
 <a href={"/" + slug} class="block w-full">
-  <ExperienceImage
-    filename={src}
+  <SanityPicture
+    image={image}
     alt={alt}
-    class="w-full transition-all hover:shadow-xl"
-    loading="lazy"
+    className="w-full transition-all hover:shadow-xl"
   />
 </a>

@@ -1,17 +1,17 @@
 ---
+// src/components/Card.astro - VERSION MISE À JOUR
 import CardImage from "./CardImage.astro";
 import CardLink from "./CardLink.astro";
-import { urlForImage } from "../sanity/lib/url-for-image";
 
 const { game, slug } = Astro.props;
-const imageUrl = urlForImage(game.image).width(1000).height(1000).url();
+// Plus besoin d'urlForImage ici, on passe l'objet image directement
 ---
 
 <div
   class="w-full h-full bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800 dark:border-gray-700 flex flex-col"
 >
   <div class="flex-none">
-    <CardImage src={imageUrl} alt={game.image.alt} slug={slug} />
+    <CardImage image={game.image} alt={game.image.alt} slug={slug} />
   </div>
   <div class="border rounded-lg flex-grow">
     <CardLink slug={slug} />
