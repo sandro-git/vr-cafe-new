@@ -8,12 +8,11 @@ const { filename, alt, class: className } = Astro.props;
 <div class={`aspect-square overflow-hidden rounded-lg ${className || ""}`}>
   {
     filename ? (
-      <Image
+      <img
         src={filename}
         alt={alt || "Image"}
         width={800}
         height={800}
-        format="avif"
         class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
       />
     ) : (
