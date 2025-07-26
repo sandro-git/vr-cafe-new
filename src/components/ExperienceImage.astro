@@ -3,47 +3,13 @@
 import { Image } from "astro:assets";
 
 const { filename, alt, class: className } = Astro.props;
-
-// Importer dynamiquement toutes les images
-const images = import.meta.glob<{ default: ImageMetadata }>(
-  "../assets/images/experiences/*.{png,jpg,jpeg,gif}",
-  { eager: true }
-);
-
-// Fonction simplifiée pour trouver l'image correspondante
-function findImage(filename: string): ImageMetadata | null {
-  // Si le filename inclut déjà un chemin, extraire juste le nom du fichier
-  const justFilename = filename.split("/").pop() || "";
-
-  // Chercher l'image dans les imports globaux
-  for (const path in images) {
-    const importedFilename = path.split("/").pop() || "";
-    if (importedFilename.toLowerCase() === justFilename.toLowerCase()) {
-      return images[path].default;
-    }
-  }
-
-  // Essayer sans l'extension
-  const filenameWithoutExt = justFilename.replace(/\.[^/.]+$/, "");
-  for (const path in images) {
-    const importedName = path.split("/").pop() || "".replace(/\.[^/.]+$/, "");
-    if (importedName.toLowerCase() === filenameWithoutExt.toLowerCase()) {
-      return images[path].default;
-    }
-  }
-
-  return null;
-}
-
-// Rechercher l'image
-const imageSource = findImage(filename);
 ---
 
 <div class={`aspect-square overflow-hidden rounded-lg ${className || ""}`}>
   {
-    imageSource ? (
+    filename ? (
       <Image
-        src={imageSource}
+        src={filename}
         alt={alt || "Image"}
         width={800}
         height={800}

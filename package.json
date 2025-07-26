@@ -12,6 +12,7 @@
     "@astrojs/react": "^4.3.0",
     "@sanity/astro": "^3.2.10",
     "@sanity/client": "^7.8.1",
+    "@sanity/vision": "^4.1.1",
     "@tailwindcss/vite": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

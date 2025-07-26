@@ -4,14 +4,14 @@ import CardLink from "./CardLink.astro";
 const { game, slug } = Astro.props;
 
 // Plus besoin d'extraire le nom du fichier, on utilise directement la valeur
-const imageFilename = game.data.image;
+console.log(game);
 ---
 
 <div
   class="w-full h-full bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800 dark:border-gray-700 flex flex-col"
 >
   <div class="flex-none">
-    <CardImage src={imageFilename} alt={game.data.name} slug={slug} />
+    <CardImage src={game.image.asset.url} alt={game.image.alt} slug={slug} />
   </div>
   <div class="border rounded-lg flex-grow">
     <CardLink slug={slug} />

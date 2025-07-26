@@ -10,7 +10,7 @@ const { experiences } = Astro.props;
   {
     experiences.map((exp: any) => (
       <div class="w-full">
-        <Card game={exp} slug={exp.data.slug} />
+        <Card game={exp} slug={exp.slug.current} />
       </div>
     ))
   }

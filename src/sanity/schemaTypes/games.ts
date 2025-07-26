@@ -47,6 +47,18 @@ export const gamesTypes = defineType({
             description: "Une brève description du jeu",
             rows: 8,
         }),
+        defineField({
+            name: "tag",
+            type: "reference",
+            description: "Le tag associé au jeu",
+            to: { type: "tag" },
+        }),
+        defineField({
+            name: "editeur",
+            type: "reference",
+            description: "L'éditeur associé au jeu",
+            to: { type: "editeur" },
+        }),
     ],
     preview: {
         select: {

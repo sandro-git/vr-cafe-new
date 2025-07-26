@@ -2,49 +2,52 @@
 // src/pages/[...slug].astro
 import BaseLayout from "../layouts/BaseLayout.astro";
 import YoutubePlayer from "../components/YoutubePlayer.jsx";
-import { getCollection, type CollectionEntry } from "astro:content";
 
 export const prerender = true;
 
-export async function getStaticPaths() {
-  const experiences = await getCollection("experiences");
+import type { SanityDocument } from "@sanity/client";
+import { loadQuery } from "../sanity/lib/load-query";
 
-  return experiences.map((experience: CollectionEntry<"experiences">) => ({
-    params: {
-      slug: experience.data.slug,
-    },
-    props: {
-      experience,
-    },
-  }));
+export async function getStaticPaths() {
+  const { data: games } = await loadQuery<SanityDocument[]>({
+    query: `*[_type == "games"] {
+      slug
+    }`,
+  });
+
+  return games.map(({ slug }) => {
+    return {
+      params: {
+        slug: slug.current,
+      },
+    };
+  });
+}
+const { params } = Astro;
+
+interface Game {
+  name: string;
+  description: string;
+  youtubeLink: string;
+  slug: { current: string };
 }
 
-const { experience } = Astro.props as {
-  experience: CollectionEntry<"experiences">;
-};
-
-// const { body } = experience;
-const { name, youtube, text } = experience.data;
-
-// Extraction de l'ID YouTube si c'est une URL complète
-const videoId = youtube.includes("youtu.be/")
-  ? youtube.split("youtu.be/")[1]
-  : youtube.includes("watch?v=")
-    ? youtube.split("watch?v=")[1]
-    : youtube;
+const { data: game } = await loadQuery<Game>({
+  query: `*[_type == "games" && slug.current == $slug][0]`,
+  params,
+});
 ---
 
 <BaseLayout>
   <div class="grid place-items-center">
     <h1
-      id={experience.data.slug}
       class="my-8 text-center text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
     >
-      {name}
+      {game.name}
     </h1>
     <div class="w-full max-w-4xl">
-      <YoutubePlayer videoId={videoId} client:load />
+      <YoutubePlayer videoId={game.youtubeLink} client:load />
     </div>
-    <p class="dark:text-white p-8 lg:w-1/2">{text}</p>
+    <p class="dark:text-white p-8 lg:w-1/2">{game.description}</p>
   </div>
 </BaseLayout>
