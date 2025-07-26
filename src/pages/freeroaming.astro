@@ -5,14 +5,21 @@
 import GameList from "../components/GameList.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
-import { getCollection } from "astro:content";
-import type { CollectionEntry } from "astro:content";
-const experiences = await getCollection("experiences");
 
-type Experience = CollectionEntry<"experiences">;
-const freeroaming: Experience[] = experiences.filter(
-  (exp: Experience) => exp.data.tag === "freeroaming"
-);
+import { sanityClient } from "sanity:client";
+
+const freeroaming =
+  await sanityClient.fetch(`*[_type == "games" && tag->title == "freeroaming"]{
+  name,
+  description,
+  image{
+    alt,
+    asset->{url}
+  },
+  tag->{name},
+  slug
+}`);
+// This fetches all games with the tag "jeuxVR" from Sanity
 ---
 
 <BaseLayout>

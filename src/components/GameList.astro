@@ -2,13 +2,29 @@
 import Card from "../components/Card.astro";
 const { experiences } = Astro.props;
 // Interface pour les données spécifiques à l'expérience
+interface Experience {
+  name: string;
+  description: string;
+  image: {
+    alt: string;
+    asset: {
+      url: string;
+    };
+  };
+  tag: {
+    name: string;
+  };
+  slug: {
+    current: string;
+  };
+}
 ---
 
 <div
   class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 container mx-auto px-4 max-w-7xl"
 >
   {
-    experiences.map((exp: any) => (
+    experiences.map((exp: Experience) => (
       <div class="w-full">
         <Card game={exp} slug={exp.slug.current} />
       </div>

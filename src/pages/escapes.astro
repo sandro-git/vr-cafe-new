@@ -1,25 +1,22 @@
 ---
-// Welcome to Astro! Everything between these triple-dash code fences
-// is your "component frontmatter". It never runs in the browser.
-//components
 import GameList from "../components/GameList.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 
 import { sanityClient } from "sanity:client";
 
-const escapes = await sanityClient.fetch(`*[_type == "games"] 
-{
+const escapes =
+  await sanityClient.fetch(`*[_type == "games" && tag->title == "escapeGame"]{
+  name,
   description,
- tag -> {title},
-    editeur -> {name},
-    name,
-    slug,
-   image {
+  image{
     alt,
-     asset -> {url}
-   }
+    asset->{url}
+  },
+  tag->{name},
+  slug
 }`);
+// This fetches all games with the tag "escapeGame" from Sanity
 ---
 
 <BaseLayout>
