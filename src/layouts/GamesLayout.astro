@@ -1,0 +1,52 @@
+---
+//components
+import Title from "../components/Title.astro";
+
+// Récupérer l'URL actuelle pour déterminer la page courante
+const currentPath = Astro.url.pathname;
+const isEscapesPage =
+  currentPath === "/escapes" ||
+  currentPath === "/escapes/" ||
+  currentPath.includes("/escapes/");
+
+// Déterminer le titre en fonction de la page
+let pageTitle = "Escape Games VR";
+if (currentPath.includes("/jeux")) {
+  pageTitle = "Jeux VR";
+} else if (currentPath.includes("/freeroaming")) {
+  pageTitle = "VR Sans Fil";
+} else if (currentPath.includes("/escapesFreeroaming")) {
+  pageTitle = "Escapes VR Sans Fil";
+}
+---
+
+<Title title={pageTitle} />
+
+{
+  isEscapesPage && (
+    <ul class="flex gap-8 text-white justify-center mb-8 text-2xl">
+      <a
+        href="/escapes"
+        type="button"
+        class="rounded-lg bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+      >
+        <li>TOUT</li>
+      </a>
+      <a
+        href="/escapes/arvi"
+        type="button"
+        class="rounded-lg bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+      >
+        <li>ARVI VR</li>
+      </a>
+      <a
+        href="/escapes/ubisoft"
+        type="button"
+        class="rounded-lg bg-blue-700 px-4 py-2 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+      >
+        <li>UBISOFT</li>
+      </a>
+    </ul>
+  )
+}
+<slot />

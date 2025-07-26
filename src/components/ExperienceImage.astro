@@ -1,0 +1,61 @@
+---
+// src/components/ExperienceImage.astro
+import { Image } from "astro:assets";
+
+const { filename, alt, class: className } = Astro.props;
+
+// Importer dynamiquement toutes les images
+const images = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/images/experiences/*.{png,jpg,jpeg,gif}",
+  { eager: true }
+);
+
+// Fonction simplifiée pour trouver l'image correspondante
+function findImage(filename: string): ImageMetadata | null {
+  // Si le filename inclut déjà un chemin, extraire juste le nom du fichier
+  const justFilename = filename.split("/").pop() || "";
+
+  // Chercher l'image dans les imports globaux
+  for (const path in images) {
+    const importedFilename = path.split("/").pop() || "";
+    if (importedFilename.toLowerCase() === justFilename.toLowerCase()) {
+      return images[path].default;
+    }
+  }
+
+  // Essayer sans l'extension
+  const filenameWithoutExt = justFilename.replace(/\.[^/.]+$/, "");
+  for (const path in images) {
+    const importedName = path.split("/").pop() || "".replace(/\.[^/.]+$/, "");
+    if (importedName.toLowerCase() === filenameWithoutExt.toLowerCase()) {
+      return images[path].default;
+    }
+  }
+
+  return null;
+}
+
+// Rechercher l'image
+const imageSource = findImage(filename);
+---
+
+<div class={`aspect-square overflow-hidden rounded-lg ${className || ""}`}>
+  {
+    imageSource ? (
+      <Image
+        src={imageSource}
+        alt={alt || "Image"}
+        width={800}
+        height={800}
+        format="avif"
+        class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+      />
+    ) : (
+      <div class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+        <p class="text-gray-500 dark:text-gray-400 text-center p-4">
+          Image non trouvée: {filename}
+        </p>
+      </div>
+    )
+  }
+</div>

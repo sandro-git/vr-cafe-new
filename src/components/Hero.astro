@@ -1,0 +1,98 @@
+---
+import Image from "astro/components/Image.astro";
+import Arvi from "../assets/arvi_vr_white.png";
+import Ubisoft from "../assets/ubisoft-white.png";
+import Wanadev from "../assets/wanadev_studio.png";
+import Ldlc from "../assets/LDLC-VR-Studio.png";
+---
+
+<section class="bg-white dark:bg-gray-900">
+  <div class="py-8 px-4 mx-auto max-w-screen-xl text-center lg:py-16 lg:px-12">
+    <a
+      href="/giftCard"
+      class="inline-flex justify-between items-center py-1 px-1 pr-4 mb-7 text-sm text-gray-700 bg-gray-100 rounded-full dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+      role="alert"
+    >
+      <span class="text-xs bg-blue-600 rounded-full text-white px-4 py-1.5 mr-3"
+        >Nouveau</span
+      >
+      <span class="text-sm font-medium">Freeroaming VR</span>
+      <svg
+        class="ml-2 w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        ><path
+          fill-rule="evenodd"
+          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+          clip-rule="evenodd"></path></svg
+      >
+    </a>
+    <h1
+      class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
+    >
+      Explorez les possibilités de la réalité virtuelle au VR Café !
+    </h1>
+    <p
+      class="mb-8 text-lg font-normal text-gray-500 lg:text-xl sm:px-16 xl:px-48 dark:text-gray-400"
+    >
+      La réalité virtuelle (VR) est une technologie immersive qui vous
+      transporte dans des environnements numériques réalistes grâce à un casque
+      VR et des contrôleurs. Elle permet de vivre des expériences visuelles et
+      auditives captivantes, que ce soit pour jouer à des jeux, suivre des
+      formations, voyager virtuellement, ou pour la rééducation. Au VR Café,
+      nous vous offrons la possibilité de découvrir ces aventures uniques dans
+      un cadre convivial, que vous soyez en famille, entre amis, ou avec des
+      collègues. Venez vivre une immersion totale et créer des souvenirs
+      inoubliables grace la magie de la réalité virtuelle.
+    </p>
+    <div
+      class="px-4 mx-auto text-center md:max-w-screen-md lg:max-w-screen-lg lg:px-36"
+    >
+      <span class="font-semibold text-gray-400 uppercase">Nos partenaires</span>
+      <div
+        class="flex flex-wrap justify-center items-center mt-8 text-gray-500 sm:justify-between"
+      >
+        <a
+          href="https://www.ubisoft.com/en-gb/entertainment/parks-experiences/escape-games"
+          class="mr-5 mb-5 lg:mb-0 hover:text-gray-800 dark:hover:text-gray-400"
+        >
+          <Image src={Ubisoft} alt="Ubisoft logo" class="h-11" height={44} />
+        </a>
+
+        <a
+          href="https://www.wanadevstudio.com/home"
+          class="mr-5 mb-5 lg:mb-0 hover:text-gray-800 dark:hover:text-gray-400"
+        >
+          <Image src={Wanadev} alt="wanadev logo" class="h-11" height={44} />
+        </a>
+        <a
+          href="https://vr.arvilab.com/"
+          class="mr-5 mb-5 lg:mb-0 hover:text-gray-800 dark:hover:text-gray-400"
+        >
+          <Image src={Arvi} alt="arvi vr logo" class="h-11" height={44} />
+        </a>
+        <a
+          href="https://www.ldlc-vrstudio.com/"
+          class="mr-5 mb-5 lg:mb-0 hover:text-gray-800 dark:hover:text-gray-400"
+        >
+          <Image
+            src={Ldlc}
+            alt="Ldlc vr studio logo"
+            class="h-11"
+            height={44}
+          />
+        </a>
+        <!-- <a href="https://www.kayak.fr/" target="_blank">
+          <Image
+            height={60}
+            width={188}
+            src="https://content.r9cdn.net/rimg/seo/badges/v1/LIGHT_LARGE_LOGO_KAYAK.png.png"
+            alt="Kayak logo"
+            class="h-11 mt-8 self-center"
+          />
+        </a> -->
+      </div>
+    </div>
+  </div>
+</section>

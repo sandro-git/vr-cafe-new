@@ -1,0 +1,17 @@
+---
+import Card from "../components/Card.astro";
+const { experiences } = Astro.props;
+// Interface pour les données spécifiques à l'expérience
+---
+
+<div
+  class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 container mx-auto px-4 max-w-7xl"
+>
+  {
+    experiences.map((exp: any) => (
+      <div class="w-full">
+        <Card game={exp} slug={exp.data.slug} />
+      </div>
+    ))
+  }
+</div>

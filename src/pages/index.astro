@@ -1,11 +1,22 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+// Welcome to Astro! Everything between these triple-dash code fences
+// is your "component frontmatter". It never runs in the browser.
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+//components
+import LandingImage from "../components/LandingImage.astro";
+import Title from "../components/Title.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Pricing from "../components/Pricing.astro";
+import Hero from "../components/Hero.astro";
+import Features from "../components/Features.astro";
+import GiftCard from "../components/GitfCard.astro";
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<BaseLayout>
+  <GiftCard />
+  <LandingImage />
+  <Title title="Tarifs" />
+  <Pricing />
+  <Hero />
+  <Features />
+</BaseLayout>

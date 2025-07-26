@@ -1,0 +1,13 @@
+---
+import ExperienceImage from "../components/ExperienceImage.astro";
+const { src, alt, slug } = Astro.props;
+---
+
+<a href={"/" + slug} class="block w-full">
+  <ExperienceImage
+    filename={src}
+    alt={alt}
+    class="w-full transition-all hover:shadow-xl"
+    loading="lazy"
+  />
+</a>

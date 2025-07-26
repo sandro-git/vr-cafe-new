@@ -1,0 +1,14 @@
+---
+const { title, slug, display } = Astro.props;
+---
+
+<a href={slug}>
+  <h2
+    class:list={[
+      "mb-2 text-xl text-center font-bold tracking-tight text-gray-900 dark:text-white",
+      display,
+    ]}
+  >
+    {title}
+  </h2>
+</a>

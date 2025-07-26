@@ -1,0 +1,23 @@
+---
+//components
+import NavBar from "../components/NavBar.astro";
+import Footer from "../components/Footer.astro";
+import BaseHead from "./BaseHead.astro";
+---
+
+<html lang="fr" class="smooth scroll-smooth pt-16 dark">
+  <BaseHead />
+  <body class="dark:bg-gray-800">
+    <NavBar />
+    <slot />
+    <Footer />
+    <style>
+      :root {
+        --navHeight: 8rem;
+      }
+      html {
+        scroll-padding-top: var(--navHeight);
+      }
+    </style>
+  </body>
+</html>

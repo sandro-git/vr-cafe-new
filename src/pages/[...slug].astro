@@ -1,0 +1,50 @@
+---
+// src/pages/[...slug].astro
+import BaseLayout from "../layouts/BaseLayout.astro";
+import YoutubePlayer from "../components/YoutubePlayer.jsx";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const experiences = await getCollection("experiences");
+
+  return experiences.map((experience: CollectionEntry<"experiences">) => ({
+    params: {
+      slug: experience.data.slug,
+    },
+    props: {
+      experience,
+    },
+  }));
+}
+
+const { experience } = Astro.props as {
+  experience: CollectionEntry<"experiences">;
+};
+
+// const { body } = experience;
+const { name, youtube, text } = experience.data;
+
+// Extraction de l'ID YouTube si c'est une URL complète
+const videoId = youtube.includes("youtu.be/")
+  ? youtube.split("youtu.be/")[1]
+  : youtube.includes("watch?v=")
+    ? youtube.split("watch?v=")[1]
+    : youtube;
+---
+
+<BaseLayout>
+  <div class="grid place-items-center">
+    <h1
+      id={experience.data.slug}
+      class="my-8 text-center text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
+    >
+      {name}
+    </h1>
+    <div class="w-full max-w-4xl">
+      <YoutubePlayer videoId={videoId} client:load />
+    </div>
+    <p class="dark:text-white p-8 lg:w-1/2">{text}</p>
+  </div>
+</BaseLayout>

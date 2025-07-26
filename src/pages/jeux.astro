@@ -1,0 +1,22 @@
+---
+// Welcome to Astro! Everything between these triple-dash code fences
+// is your "component frontmatter". It never runs in the browser.
+import GameList from "../components/GameList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import GamesLayout from "../layouts/GamesLayout.astro";
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+const experiences = await getCollection("experiences");
+
+type Experience = CollectionEntry<"experiences">;
+const jeux: Experience[] = experiences.filter(
+  (exp: Experience) => exp.data.tag === "jeuxVR"
+);
+---
+
+<!-- TO DO :netlify cloudinary integration to optimize images -->
+<BaseLayout>
+  <GamesLayout>
+    <GameList experiences={jeux} />
+  </GamesLayout>
+</BaseLayout>

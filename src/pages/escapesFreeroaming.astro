@@ -1,0 +1,22 @@
+---
+// Welcome to Astro! Everything between these triple-dash code fences
+// is your "component frontmatter". It never runs in the browser.
+//components
+import GameList from "../components/GameList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import GamesLayout from "../layouts/GamesLayout.astro";
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+const experiences = await getCollection("experiences");
+
+type Experience = CollectionEntry<"experiences">;
+const escapeFreeroaming: Experience[] = experiences.filter(
+  (exp: Experience) => exp.data.tag === "escapeFreeroaming"
+);
+---
+
+<BaseLayout>
+  <GamesLayout>
+    <GameList experiences={escapeFreeroaming} />
+  </GamesLayout>
+</BaseLayout>

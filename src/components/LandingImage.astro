@@ -1,0 +1,15 @@
+---
+import { Image } from "astro:assets";
+import vrcafe from "../assets/vrcafe.jpg";
+---
+
+<Image
+  loading={"eager"}
+  class="mx-auto h-auto max-w-full rounded-xl mt-8"
+  src={vrcafe}
+  alt="description"
+  format="avif"
+/>
+
+<!-- widths={[320, 820, 1125]}
+  sizes="(min-width: 640px) 820px ,(min-width: 1024px) 1125px, 320px" -->
