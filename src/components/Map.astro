@@ -25,18 +25,16 @@ const encodedAddress = encodeURIComponent(address);
       </div>
     </div>
     
-    <!-- Google Maps iframe améliorée -->
+    <!-- Google Maps iframe avec lazy loading optimisé -->
     <iframe 
-      src={`https://www.google.com/maps?q=${encodedAddress}&output=embed`}
+      data-src={`https://www.google.com/maps?q=${encodedAddress}&output=embed`}
       width="100%" 
       height={height}
       style={`border:0; width: 100%; height: ${height};`}
       allowfullscreen=""
-      loading="lazy"
       referrerpolicy="no-referrer-when-downgrade"
-      class="relative z-10 w-full"
+      class="relative z-10 w-full lazy-map"
       title="Localisation VR Café"
-      onload="this.previousElementSibling.style.display='none'"
     ></iframe>
   </div>
 
@@ -135,7 +133,44 @@ const encodedAddress = encodeURIComponent(address);
     transition: opacity 0.3s ease-in-out;
   }
   
-  iframe[onload] {
+  iframe.loaded {
     opacity: 1;
   }
 </style>
+
+<script>
+  // Intersection Observer pour lazy loading de la carte
+  document.addEventListener('DOMContentLoaded', function() {
+    const mapIframe = document.querySelector('.lazy-map');
+    const placeholder = mapIframe?.previousElementSibling;
+    
+    if (!mapIframe) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const iframe = entry.target as HTMLIFrameElement;
+          const src = iframe.getAttribute('data-src');
+          
+          if (src) {
+            iframe.src = src;
+            iframe.removeAttribute('data-src');
+            
+            iframe.onload = () => {
+              iframe.classList.add('loaded');
+              if (placeholder) {
+                (placeholder as HTMLElement).style.display = 'none';
+              }
+            };
+          }
+          
+          observer.unobserve(iframe);
+        }
+      });
+    }, {
+      rootMargin: '50px'
+    });
+    
+    observer.observe(mapIframe);
+  });
+</script>
