@@ -26,7 +26,7 @@ const encodedAddress = encodeURIComponent(address);
     </div>
     
     <!-- Google Maps iframe avec lazy loading optimisé -->
-    <iframe 
+    <iframe loading="lazy"
       data-src={`https://www.google.com/maps?q=${encodedAddress}&output=embed`}
       width="100%" 
       height={height}
