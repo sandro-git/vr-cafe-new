@@ -1,0 +1,35 @@
+---
+// Critical Image component for LCP optimization
+import { Image } from "astro:assets";
+
+interface Props {
+  src: any;
+  alt: string;
+  class?: string;
+  width?: number;
+  height?: number;
+  priority?: boolean;
+}
+
+const { 
+  src, 
+  alt, 
+  class: className = "",
+  width,
+  height,
+  priority = true 
+} = Astro.props;
+---
+
+<Image
+  src={src}
+  alt={alt}
+  class={className}
+  width={width}
+  height={height}
+  loading={priority ? "eager" : "lazy"}
+  fetchpriority={priority ? "high" : "auto"}
+  format="webp"
+  widths={[320, 640, 768, 1024, 1280]}
+  sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 1024px"
+/>

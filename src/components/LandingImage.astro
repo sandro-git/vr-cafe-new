@@ -1,15 +1,15 @@
 ---
 import { Image } from "astro:assets";
-import vrcafe from "../assets/vrcafe.jpg";
+import vrcafe from "../assets/vrcafe.webp";
 ---
 
 <Image
-  loading={"eager"}
+  loading="eager"
+  fetchpriority="high"
   class="mx-auto h-auto max-w-full rounded-xl mt-8"
   src={vrcafe}
-  alt="description"
-  format="avif"
+  alt="VR Café - Réalité virtuelle à Canet-en-Roussillon"
+  widths={[320, 640, 768, 1024, 1280]}
+  sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 1024px"
+  format="webp"
 />
-
-<!-- widths={[320, 820, 1125]}
-  sizes="(min-width: 640px) 820px ,(min-width: 1024px) 1125px, 320px" -->
