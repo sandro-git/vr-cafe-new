@@ -1,6 +1,141 @@
-<iframe src="https://storage.googleapis.com/maps-solutions-g2mvt6hqyt/locator-plus/gnjt/locator-plus.html"
-  width="100%" height="100%"
-  style="border:0;"
-  loading="lazy"
-class="w-full h-96">
-</iframe>
+---
+// src/components/Map.astro - Version améliorée
+const { 
+  height = "400px",
+  className = "",
+  showInfo = true 
+} = Astro.props;
+
+// Coordonnées de Canet-en-Roussillon (remplacez par votre adresse exacte)
+const address = "VR Café 2 rue du pilou 66140 Canet-en-Roussillon, France";
+const encodedAddress = encodeURIComponent(address);
+---
+
+<div class={`space-y-4 ${className}`}>
+  <!-- Carte -->
+  <div class="relative overflow-hidden rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+    <!-- Loading placeholder -->
+    <div class="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center animate-pulse">
+      <div class="text-center">
+        <svg class="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Chargement de la carte...</p>
+      </div>
+    </div>
+    
+    <!-- Google Maps iframe améliorée -->
+    <iframe 
+      src={`https://www.google.com/maps?q=${encodedAddress}&output=embed`}
+      width="100%" 
+      height={height}
+      style={`border:0; width: 100%; height: ${height};`}
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      class="relative z-10 w-full"
+      title="Localisation VR Café"
+      onload="this.previousElementSibling.style.display='none'"
+    ></iframe>
+  </div>
+
+  {showInfo && (
+    <!-- Informations de contact -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Informations principales -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Nous trouver
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Adresse -->
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Adresse</h4>
+            <p class="text-gray-600 dark:text-gray-400">
+              VR Café<br>
+              2 rue du pilou<br>
+              66140 Canet-en-Roussillon<br>
+              France
+            </p>
+          </div>
+          
+          <!-- Téléphone -->
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Téléphone</h4>
+            <a href="tel:0671410695" class="text-blue-600 dark:text-blue-400 hover:underline">
+              06 71 41 06 95
+            </a>
+          </div>
+          
+          <!-- Email -->
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Email</h4>
+            <a href="mailto:contact@vr-cafe.fr" class="text-blue-600 dark:text-blue-400 hover:underline">
+              contact@vr-cafe.fr
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Horaires et actions -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Horaires d'ouverture
+        </h3>
+        
+        <div class="space-y-2 mb-6">
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Tous les jours</span>
+            <span class="font-medium text-gray-900 dark:text-white">14h - 22h</span>
+          </div>
+        </div>
+        
+        <!-- Boutons d'action -->
+        <div class="space-y-3">
+          <a 
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3"/>
+            </svg>
+            Obtenir un itinéraire
+          </a>
+          
+          <a 
+            href="/reservation"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-6 0h6m-6 0a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V8a1 1 0 00-1-1"/>
+            </svg>
+            Réserver maintenant
+          </a>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  /* Animation de chargement */
+  iframe {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  iframe[onload] {
+    opacity: 1;
+  }
+</style>

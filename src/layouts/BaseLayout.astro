@@ -3,6 +3,7 @@
 import NavBar from "../components/NavBar.astro";
 import Footer from "../components/Footer.astro";
 import BaseHead from "./BaseHead.astro";
+import WhatsAppButton from "../components/WhatsAppButton.astro";
 ---
 
 <html lang="fr" class="smooth scroll-smooth pt-16 dark">
@@ -11,6 +12,14 @@ import BaseHead from "./BaseHead.astro";
     <NavBar />
     <slot />
     <Footer />
+
+    <!-- Bouton WhatsApp flottant -->
+    <WhatsAppButton
+      phoneNumber="33671410695"
+      message="Bonjour ! J'aimerais avoir des informations sur le VR Café."
+      position="fixed"
+    />
+
     <style>
       :root {
         --navHeight: 8rem;
