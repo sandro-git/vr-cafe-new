@@ -11,7 +11,12 @@ import "../styles/global.css";
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://cdn.sanity.io" />
-  <link rel="preload" href="/src/assets/vrcafe.webp" as="image" type="image/webp" />
+  <link
+    rel="preload"
+    href="/src/assets/vrcafe.webp"
+    as="image"
+    type="image/webp"
+  />
   <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,8 +26,10 @@ import "../styles/global.css";
     content="Le plus grand choix d'escape games VR Pour toute la famille"
   />
   <!-- Google tag (gtag.js) -->
-  <script async defer src="https://www.googletagmanager.com/gtag/js?id=G-J14FRYVVTZ"
-  ></script>
+  <!-- <script
+    async
+    defer
+    src="https://www.googletagmanager.com/gtag/js?id=G-J14FRYVVTZ"></script>
   <script defer is:inline>
     window.dataLayer = window.dataLayer || [];
     function gtag() {
@@ -31,5 +38,19 @@ import "../styles/global.css";
     gtag("js", new Date());
 
     gtag("config", "G-J14FRYVVTZ");
+  </script> -->
+  <!-- Google Tag Manager -->
+  <script type="text/partytown">
+    (function (w, d, s, l, i) {
+      w[l] = w[l] || [];
+      w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+      var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s),
+        dl = l != "dataLayer" ? "&l=" + l : "";
+      j.async = true;
+      j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+      f.parentNode.insertBefore(j, f);
+    })(window, document, "script", "dataLayer", "GTM-NJ2HQDKS");
   </script>
+  <!-- End Google Tag Manager -->
 </head>
