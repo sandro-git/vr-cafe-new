@@ -2,11 +2,9 @@
 //layout
 import BaseLayout from "../layouts/BaseLayout.astro";
 //components
-import BookingWidget from "../components/reservation";
+import BookingWidget from "../components/reservation.astro";
 ---
 
 <BaseLayout>
-  <BookingWidget client:load />
+  <BookingWidget />
 </BaseLayout>
-
-<!-- <script type="text/javascript" src="https://bookeo.com/widget.js?a=42553RYJM3J191442B5723"></script> -->
