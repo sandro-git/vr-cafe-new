@@ -9,7 +9,170 @@
   data-settings="b64.eyJkb21haW4iOiJ2cmNhZmUuNGVzY2FwZS5pbyJ9"
 >
 </div>
-<script>
+
+<style is:global>
+  /* Cacher la navbar sur la page de réservation */
+  nav {
+    display: none !important;
+  }
+
+  header {
+    display: none !important;
+  }
+
+  /* Override les variables CSS du widget */
+  .forescape-catalog,
+  .forescape-cart {
+    --f-player-picker-button-bg-color: rgb(29, 78, 216) !important;
+    --f-player-picker-button-border-color: rgb(29, 78, 216) !important;
+    --f-datepicker-btn-bg-color: rgb(29, 78, 216) !important;
+    --f-datepicker-btn-border-color: rgb(29, 78, 216) !important;
+    --f-cart-toggle-btn-bg-color: rgb(29, 78, 216) !important;
+    --f-cart-bg-color: rgb(255, 255, 255) !important;
+  }
+
+  /* Bouton de fermeture/toggle du panier */
+  button.f-cart-toggle-btn {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: rgb(29, 78, 216) !important;
+    color: rgb(255, 255, 255) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
+    cursor: pointer !important;
+    margin-top: 1rem !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  button.f-cart-toggle-btn:hover {
+    background-color: rgb(25, 55, 160) !important;
+  }
+
+  button.f-cart-toggle-btn svg {
+    fill: rgb(255, 255, 255) !important;
+    display: inline-block !important;
+  }
+
+  /* Tous les boutons du widget */
+  .forescape-catalog button,
+  .forescape-cart button,
+  [class*="forescape"] button {
+    background-color: rgb(29, 78, 216) !important;
+    color: rgb(255, 255, 255) !important;
+    border: none !important;
+    border-radius: 6px !important;
+  }
+
+  .forescape-catalog button:hover,
+  .forescape-cart button:hover,
+  [class*="forescape"] button:hover {
+    background-color: rgb(25, 55, 160) !important;
+  }
+
+  /* Boutons + et - */
+  .f-player-picker-button,
+  .forescape-catalog .f-player-picker-button,
+  .forescape-cart .f-player-picker-button {
+    background-color: rgb(29, 78, 216) !important;
+    color: rgb(255, 255, 255) !important;
+    border-color: rgb(29, 78, 216) !important;
+    border-radius: 6px !important;
+  }
+
+  .f-player-picker-button:hover,
+  .forescape-catalog .f-player-picker-button:hover,
+  .forescape-cart .f-player-picker-button:hover {
+    background-color: rgb(25, 55, 160) !important;
+    border-color: rgb(25, 55, 160) !important;
+  }
+
+  /* Boutons de date/heure */
+  .f-datepicker-btn,
+  .forescape-catalog .f-datepicker-btn,
+  .forescape-cart .f-datepicker-btn {
+    background-color: rgb(29, 78, 216) !important;
+    color: rgb(255, 255, 255) !important;
+    border-color: rgb(29, 78, 216) !important;
+    border-radius: 6px !important;
+  }
+
+  .f-datepicker-btn:hover,
+  .forescape-catalog .f-datepicker-btn:hover,
+  .forescape-cart .f-datepicker-btn:hover {
+    background-color: rgb(25, 55, 160) !important;
+    border-color: rgb(25, 55, 160) !important;
+  }
+
+  /* Override les styles inline */
+  [style*="rgb(234, 88, 12)"],
+  [style*="#EA580C"],
+  [style*="background-color: rgb(234, 88, 12)"] {
+    background-color: rgb(29, 78, 216) !important;
+    color: white !important;
+    border-radius: 6px !important;
+  }
+
+  .forescape-catalog button:focus,
+  .forescape-cart button:focus,
+  .f-player-picker-button:focus,
+  .f-datepicker-btn:focus,
+  button.f-cart-toggle-btn:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5) !important;
+  }
+
+  /* Responsive - adapter pour les petits écrans */
+  @media (max-width: 768px) {
+    .forescape-cart {
+      position: fixed !important;
+      top: 140px !important;
+      right: 10px !important;
+      width: 280px !important;
+    }
+  }
+
+  /* Contenu du panier en mode sombre */
+  @media (prefers-color-scheme: dark) {
+    .f-cart,
+    .f-cart-content {
+      background-color: rgb(31, 41, 55) !important;
+      color: rgb(255, 255, 255) !important;
+    }
+
+    .forescape-catalog,
+    .forescape-cart {
+      --f-player-picker-button-bg-color: rgb(37, 99, 235) !important;
+      --f-player-picker-button-border-color: rgb(37, 99, 235) !important;
+      --f-datepicker-btn-bg-color: rgb(37, 99, 235) !important;
+      --f-datepicker-btn-border-color: rgb(37, 99, 235) !important;
+      --f-cart-toggle-btn-bg-color: rgb(37, 99, 235) !important;
+    }
+
+    .forescape-catalog button,
+    .forescape-cart button,
+    [class*="forescape"] button,
+    .f-player-picker-button,
+    .f-datepicker-btn,
+    button.f-cart-toggle-btn {
+      background-color: rgb(37, 99, 235) !important;
+    }
+
+    .forescape-catalog button:hover,
+    .forescape-cart button:hover,
+    [class*="forescape"] button:hover,
+    .f-player-picker-button:hover,
+    .f-datepicker-btn:hover,
+    button.f-cart-toggle-btn:hover {
+      background-color: rgb(29, 78, 216) !important;
+    }
+  }
+</style>
+
+<script is:inline>
+  // @ts-nocheck
   !(function () {
     var e = document.createElement("link");
     (e.href = "https://widgets.4escape.app/main.css"),
