@@ -106,13 +106,33 @@
     border-color: rgb(25, 55, 160) !important;
   }
 
-  /* Override les styles inline */
+  /* Override les styles inline - boutons orange */
   [style*="rgb(234, 88, 12)"],
   [style*="#EA580C"],
-  [style*="background-color: rgb(234, 88, 12)"] {
+  [style*="background-color: rgb(234, 88, 12)"],
+  button[style*="background-color: rgb(234, 88, 12)"],
+  div[style*="background-color: rgb(234, 88, 12)"],
+  a[style*="background-color: rgb(234, 88, 12)"] {
     background-color: rgb(29, 78, 216) !important;
     color: white !important;
     border-radius: 6px !important;
+    border-color: rgb(29, 78, 216) !important;
+  }
+
+  /* Cibler spécifiquement les boutons avec des couleurs inline */
+  .forescape-catalog [style*="background"],
+  .forescape-cart [style*="background"] {
+    background-color: rgb(29, 78, 216) !important;
+  }
+
+  /* Hover pour les boutons avec styles inline */
+  [style*="rgb(234, 88, 12)"]:hover,
+  [style*="#EA580C"]:hover,
+  button[style*="background-color: rgb(234, 88, 12)"]:hover,
+  div[style*="background-color: rgb(234, 88, 12)"]:hover,
+  a[style*="background-color: rgb(234, 88, 12)"]:hover {
+    background-color: rgb(25, 55, 160) !important;
+    border-color: rgb(25, 55, 160) !important;
   }
 
   .forescape-catalog button:focus,
