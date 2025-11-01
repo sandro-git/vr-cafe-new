@@ -11,9 +11,9 @@ const { game, slug } = Astro.props;
   class="w-full h-full bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800 dark:border-gray-700 flex flex-col"
 >
   <div class="flex-none">
-    <CardImage image={game.image} alt={game.image.alt} slug={slug} />
+    <CardImage image={game.image} alt={game.image.alt} slug={slug} title={game.name} />
   </div>
-  <div class="border rounded-lg flex-grow">
+  <!-- <div class="border rounded-lg flex-grow">
     <CardLink slug={slug} />
-  </div>
+  </div> -->
 </div>

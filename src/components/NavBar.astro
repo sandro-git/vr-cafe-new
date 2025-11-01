@@ -1,32 +1,23 @@
 ---
 import Logo from "../assets/logo.webp";
 import { Image } from "astro:assets";
-import BookingButton from "./BookingButton.astro";
+// NavBar.astro avec dropdowns pour VR et VR sans fil
 
 const currentPath = Astro.url.pathname;
 
-const links = [
-  {
-    text: "Escapes VR",
-    path: "/escapes",
-  },
-  {
-    text: "Jeux VR",
-    path: "/jeux",
-  },
-  {
-    text: "Escapes VR Sans Fil",
-    path: "/escapesFreeroaming",
-  },
-  {
-    text: "VR sans fil",
-    path: "/freeroaming",
-  },
-  {
-    text: "Contact",
-    path: "/contact",
-  },
-];
+// Déterminer si on est dans le sous-menu VR
+const isVRSubmenu =
+  currentPath.includes("/escapes") ||
+  currentPath.includes("/jeux") ||
+  currentPath === "/vr" ||
+  currentPath === "/vr/";
+
+// Déterminer si on est dans le sous-menu VR sans fil
+const isVRSansFil =
+  currentPath.includes("/freeroaming") ||
+  currentPath.includes("/escapesFreeroaming") ||
+  currentPath === "/vr-sans-fil" ||
+  currentPath === "/vr-sans-fil/";
 ---
 
 <nav
@@ -49,11 +40,17 @@ const links = [
         style="font-family: 'Brush Script MT', cursive;">Café</span
       >
     </a>
+
     <div
       class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse"
     >
-      <!-- Button -->
-      <BookingButton id="MainButton" />
+      <!-- Button de réservation -->
+      <button
+        id="MainButton"
+        class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900"
+      >
+        Réserver
+      </button>
 
       <!-- Mobile menu button -->
       <button
@@ -100,7 +97,6 @@ const links = [
     </div>
 
     <!-- Menu -->
-
     <div
       class="hidden w-full items-center justify-between md:order-1 md:flex md:w-auto"
       id="navbar-sticky"
@@ -108,39 +104,146 @@ const links = [
       <ul
         class="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium md:mt-0 md:flex-row md:space-x-8 md:border-0 md:bg-white md:p-0 rtl:space-x-reverse dark:border-gray-700 dark:bg-gray-800 md:dark:bg-gray-900"
       >
+        <!-- Accueil -->
         <li>
           <a
             href="/"
             class={currentPath === "/"
               ? "block rounded bg-blue-700 px-3 py-2 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
-              : "block rounded px-3 py-2 text-white md:bg-transparent md:p-0 md:dark:hover:text-blue-500"}
+              : "block rounded px-3 py-2 text-gray-900 hover:bg-gray-100 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:text-white md:dark:hover:text-blue-500 dark:bg-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent md:dark:border-0"}
             aria-current="page">Accueil</a
           >
         </li>
-        {
-          links.map(({ text, path }) => (
+
+        <!-- VR avec dropdown -->
+        <li class="relative group">
+          <button
+            type="button"
+            class={`flex items-center w-full justify-between rounded px-3 py-2 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
+              isVRSubmenu
+                ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
+                : "text-gray-900 hover:bg-gray-100 md:bg-transparent md:hover:bg-transparent md:hover:text-blue-700 md:dark:text-white md:dark:hover:text-blue-500 dark:bg-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent"
+            }`}
+          >
+            VR
+            <svg
+              class="w-4 h-4 ml-2 transform group-hover:rotate-180 transition-transform md:rotate-0 md:group-hover:rotate-180"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown menu VR -->
+          <ul
+            class="hidden group-hover:flex group-hover:flex-col absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:absolute md:top-full md:left-0"
+          >
             <li>
               <a
-                href={path}
-                class={
-                  currentPath === path
-                    ? "block rounded bg-blue-700 px-3 py-2 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
-                    : "block rounded px-3 py-2 text-white md:bg-transparent md:p-0 md:dark:hover:text-blue-500"
-                }
-                aria-current="page"
+                href="/escapes"
+                class={`block px-4 py-2 rounded-t-lg ${
+                  currentPath === "/escapes" || currentPath === "/escapes/"
+                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
+                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                }`}
               >
-                {text}
+                Escapes Games
               </a>
             </li>
-          ))
-        }
+            <li>
+              <a
+                href="/jeux"
+                class={`block px-4 py-2 rounded-b-lg ${
+                  currentPath === "/jeux" || currentPath === "/jeux/"
+                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
+                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                }`}
+              >
+                Jeux VR
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- VR sans fil avec dropdown -->
+        <li class="relative group">
+          <button
+            type="button"
+            class={`flex items-center w-full justify-between rounded px-3 py-2 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
+              isVRSansFil
+                ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
+                : "text-gray-900 hover:bg-gray-100 md:bg-transparent md:hover:bg-transparent md:hover:text-blue-700 md:dark:text-white md:dark:hover:text-blue-500 dark:bg-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent"
+            }`}
+          >
+            VR sans fil
+            <svg
+              class="w-4 h-4 ml-2 transform group-hover:rotate-180 transition-transform md:rotate-0 md:group-hover:rotate-180"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown menu VR sans fil -->
+          <ul
+            class="hidden group-hover:flex group-hover:flex-col absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:absolute md:top-full md:left-0"
+          >
+            <li>
+              <a
+                href="/escapesFreeroaming"
+                class={`block px-4 py-2 rounded-t-lg ${
+                  currentPath === "/escapesFreeroaming" ||
+                  currentPath === "/escapesFreeroaming/"
+                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
+                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                }`}
+              >
+                Escapes Sans Fil
+              </a>
+            </li>
+            <li>
+              <a
+                href="/freeroaming"
+                class={`block px-4 py-2 rounded-b-lg ${
+                  currentPath === "/freeroaming" ||
+                  currentPath === "/freeroaming/"
+                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
+                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                }`}
+              >
+                Jeux Sans Fil
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Contact -->
+        <li>
+          <a
+            href="/contact"
+            class={currentPath === "/contact" ||
+            currentPath.includes("/contact/")
+              ? "block rounded bg-blue-700 px-3 py-2 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
+              : "block rounded px-3 py-2 text-gray-900 hover:bg-gray-100 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:text-white md:dark:hover:text-blue-500 dark:bg-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent md:dark:border-0"}
+          >
+            Contact
+          </a>
+        </li>
       </ul>
     </div>
   </div>
 </nav>
 
 <script>
-  const button = document.querySelector("#booking");
+  const button = document.querySelector("#MainButton");
   button?.addEventListener("click", () => (location.href = "/reservation"));
 
   // Toggle mobile menu
@@ -165,5 +268,19 @@ const links = [
       closeIcon?.classList.add("hidden");
       mobileMenuButton?.setAttribute("aria-expanded", "false");
     }
+  });
+
+  // Fermer le dropdown quand on clique sur un lien mobile
+  const navLinks = document.querySelectorAll("#navbar-sticky a");
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      const isHidden = mobileMenu?.classList.contains("hidden");
+      if (isHidden === false) {
+        mobileMenu?.classList.add("hidden");
+        hamburgerIcon?.classList.remove("hidden");
+        closeIcon?.classList.add("hidden");
+        mobileMenuButton?.setAttribute("aria-expanded", "false");
+      }
+    });
   });
 </script>

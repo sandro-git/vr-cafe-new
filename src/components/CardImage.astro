@@ -1,13 +1,21 @@
 ---
 // src/components/CardImage.astro - VERSION MISE À JOUR
 import SanityPicture from "./SanityPicture.astro";
-const { image, alt, slug } = Astro.props;
+import Play from "./Play.astro";
+const { image, alt, slug, title } = Astro.props;
 ---
 
-<a href={"/" + slug} class="block w-full">
+<a href={"/" + slug} class="block w-full relative group">
   <SanityPicture
     image={image}
     alt={alt}
     className="w-full transition-all hover:shadow-xl"
   />
+  <div class="absolute bottom-4 left-4 text-white">
+    <h3 class="text-xl font-semibold">{title || alt}</h3>
+    <p class="text-sm opacity-80">Découvrir la vidéo</p>
+  </div>
+  <div class="absolute bottom-4 right-4">
+    <Play class="transition-transform group-hover:scale-110" />
+  </div>
 </a>

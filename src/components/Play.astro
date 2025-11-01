@@ -1,0 +1,48 @@
+---
+interface Props {
+  size?: number;
+  class?: string;
+}
+const { size = 59, class: className } = Astro.props;
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 59 59"
+  fill="none"
+  class={className}
+>
+  <!-- Le reste du SVG -->
+  <foreignObject x="-4" y="-4" width="66.8726" height="66.8727"
+    ><div
+      xmlns="http://www.w3.org/1999/xhtml"
+      style="backdrop-filter:blur(2px);clip-path:url(#bgblur_0_61_71_clip_path);height:100%;width:100%"
+    >
+    </div></foreignObject
+  ><g data-figma-bg-blur-radius="4">
+    <circle
+      cx="29.4363"
+      cy="29.4363"
+      r="29.4363"
+      fill="white"
+      fill-opacity="0.15"></circle>
+    <circle
+      cx="29.4363"
+      cy="29.4363"
+      r="28.4363"
+      stroke="white"
+      stroke-opacity="0.7"
+      stroke-width="2"></circle>
+  </g>
+  <path
+    d="M45 29.5L20.25 43.7894L20.25 15.2106L45 29.5Z"
+    fill="white"
+    fill-opacity="0.7"></path>
+  <defs>
+    <clipPath id="bgblur_0_61_71_clip_path" transform="translate(4 4)"
+      ><circle cx="29.4363" cy="29.4363" r="29.4363"></circle>
+    </clipPath></defs
+  >
+</svg>

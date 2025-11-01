@@ -4,6 +4,7 @@ import GamesLayout from "../layouts/GamesLayout.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 import { sanityClient } from "sanity:client";
+import Play from "../components/Play.astro";
 
 const escapes =
   await sanityClient.fetch(`*[_type == "games" && tag->title == "escapeGame"]{
