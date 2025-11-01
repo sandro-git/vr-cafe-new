@@ -119,6 +119,7 @@ const isVRSansFil =
         <li class="relative group">
           <button
             type="button"
+            data-dropdown="vr-dropdown"
             class={`flex items-center w-full justify-between rounded px-3 py-2 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
               isVRSubmenu
                 ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
@@ -127,7 +128,7 @@ const isVRSansFil =
           >
             VR
             <svg
-              class="w-4 h-4 ml-2 transform group-hover:rotate-180 transition-transform md:rotate-0 md:group-hover:rotate-180"
+              class="dropdown-arrow w-4 h-4 ml-2 transform transition-transform md:rotate-0 md:group-hover:rotate-180"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -140,7 +141,8 @@ const isVRSansFil =
 
           <!-- Dropdown menu VR -->
           <ul
-            class="hidden group-hover:flex group-hover:flex-col absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:absolute md:top-full md:left-0"
+            id="vr-dropdown"
+            class="hidden md:group-hover:flex md:group-hover:flex-col md:absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
           >
             <li>
               <a
@@ -173,6 +175,7 @@ const isVRSansFil =
         <li class="relative group">
           <button
             type="button"
+            data-dropdown="vr-sans-fil-dropdown"
             class={`flex items-center w-full justify-between rounded px-3 py-2 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
               isVRSansFil
                 ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
@@ -181,7 +184,7 @@ const isVRSansFil =
           >
             VR sans fil
             <svg
-              class="w-4 h-4 ml-2 transform group-hover:rotate-180 transition-transform md:rotate-0 md:group-hover:rotate-180"
+              class="dropdown-arrow w-4 h-4 ml-2 transform transition-transform md:rotate-0 md:group-hover:rotate-180"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -194,7 +197,8 @@ const isVRSansFil =
 
           <!-- Dropdown menu VR sans fil -->
           <ul
-            class="hidden group-hover:flex group-hover:flex-col absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:absolute md:top-full md:left-0"
+            id="vr-sans-fil-dropdown"
+            class="hidden md:group-hover:flex md:group-hover:flex-col md:absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
           >
             <li>
               <a
@@ -270,7 +274,51 @@ const isVRSansFil =
     }
   });
 
-  // Fermer le dropdown quand on clique sur un lien mobile
+  // Gérer les dropdowns sur mobile
+  const dropdownButtons = document.querySelectorAll("[data-dropdown]");
+
+  dropdownButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      // Sur desktop, laisser le hover CSS gérer
+      if (window.innerWidth >= 768) return;
+
+      e.preventDefault();
+      const dropdownId = button.getAttribute("data-dropdown");
+      const dropdown = document.getElementById(dropdownId);
+      const arrow = button.querySelector(".dropdown-arrow");
+
+      if (dropdown) {
+        const isHidden = dropdown.classList.contains("hidden");
+
+        // Fermer tous les autres dropdowns
+        document.querySelectorAll("[id$='-dropdown']").forEach((d) => {
+          if (d.id !== dropdownId) {
+            d.classList.add("hidden");
+          }
+        });
+
+        // Réinitialiser toutes les flèches
+        document.querySelectorAll(".dropdown-arrow").forEach((a) => {
+          if (a !== arrow) {
+            a.classList.remove("rotate-180");
+          }
+        });
+
+        // Toggle le dropdown actuel
+        if (isHidden) {
+          dropdown.classList.remove("hidden");
+          dropdown.classList.add("flex", "flex-col");
+          arrow?.classList.add("rotate-180");
+        } else {
+          dropdown.classList.add("hidden");
+          dropdown.classList.remove("flex", "flex-col");
+          arrow?.classList.remove("rotate-180");
+        }
+      }
+    });
+  });
+
+  // Fermer le menu mobile quand on clique sur un lien
   const navLinks = document.querySelectorAll("#navbar-sticky a");
   navLinks.forEach((link) => {
     link.addEventListener("click", () => {
@@ -280,6 +328,15 @@ const isVRSansFil =
         hamburgerIcon?.classList.remove("hidden");
         closeIcon?.classList.add("hidden");
         mobileMenuButton?.setAttribute("aria-expanded", "false");
+
+        // Fermer aussi tous les dropdowns
+        document.querySelectorAll("[id$='-dropdown']").forEach((d) => {
+          d.classList.add("hidden");
+          d.classList.remove("flex", "flex-col");
+        });
+        document.querySelectorAll(".dropdown-arrow").forEach((a) => {
+          a.classList.remove("rotate-180");
+        });
       }
     });
   });
