@@ -47,7 +47,7 @@ const isVRSansFil =
       <!-- Button de réservation -->
       <button
         id="MainButton"
-        class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900"
+        class="rounded-full bg-blue-700 px-6 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900"
       >
         Réserver
       </button>
@@ -142,15 +142,15 @@ const isVRSansFil =
           <!-- Dropdown menu VR -->
           <ul
             id="vr-dropdown"
-            class="hidden md:group-hover:flex md:group-hover:flex-col md:absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
+            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
           >
             <li>
               <a
                 href="/escapes"
                 class={`block px-4 py-2 rounded-t-lg ${
                   currentPath === "/escapes" || currentPath === "/escapes/"
-                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
-                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500"
                 }`}
               >
                 Escapes Games
@@ -161,8 +161,8 @@ const isVRSansFil =
                 href="/jeux"
                 class={`block px-4 py-2 rounded-b-lg ${
                   currentPath === "/jeux" || currentPath === "/jeux/"
-                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
-                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500"
                 }`}
               >
                 Jeux VR
@@ -198,7 +198,7 @@ const isVRSansFil =
           <!-- Dropdown menu VR sans fil -->
           <ul
             id="vr-sans-fil-dropdown"
-            class="hidden md:group-hover:flex md:group-hover:flex-col md:absolute left-0 mt-0 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
+            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
           >
             <li>
               <a
@@ -206,8 +206,8 @@ const isVRSansFil =
                 class={`block px-4 py-2 rounded-t-lg ${
                   currentPath === "/escapesFreeroaming" ||
                   currentPath === "/escapesFreeroaming/"
-                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
-                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500"
                 }`}
               >
                 Escapes Sans Fil
@@ -219,8 +219,8 @@ const isVRSansFil =
                 class={`block px-4 py-2 rounded-b-lg ${
                   currentPath === "/freeroaming" ||
                   currentPath === "/freeroaming/"
-                    ? "text-blue-700 dark:text-blue-500 bg-gray-100 dark:bg-gray-700"
-                    : "text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500"
                 }`}
               >
                 Jeux Sans Fil
@@ -274,14 +274,11 @@ const isVRSansFil =
     }
   });
 
-  // Gérer les dropdowns sur mobile
+  // Gérer les dropdowns (mobile ET desktop)
   const dropdownButtons = document.querySelectorAll("[data-dropdown]");
 
   dropdownButtons.forEach((button) => {
     button.addEventListener("click", (e) => {
-      // Sur desktop, laisser le hover CSS gérer
-      if (window.innerWidth >= 768) return;
-
       e.preventDefault();
       const dropdownId = button.getAttribute("data-dropdown");
       if (!dropdownId) return;
@@ -318,6 +315,20 @@ const isVRSansFil =
         }
       }
     });
+  });
+
+  // Fermer les dropdowns quand on clique ailleurs
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest("[data-dropdown]") && !target.closest("[id$='-dropdown']")) {
+      document.querySelectorAll("[id$='-dropdown']").forEach((d) => {
+        d.classList.add("hidden");
+        d.classList.remove("flex", "flex-col");
+      });
+      document.querySelectorAll(".dropdown-arrow").forEach((a) => {
+        a.classList.remove("rotate-180");
+      });
+    }
   });
 
   // Fermer le menu mobile quand on clique sur un lien
