@@ -1,0 +1,19 @@
+# Netlify configuration
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+# Configuration pour les fichiers .well-known
+# Important pour Apple Pay et autres services
+[[headers]]
+  for = "/.well-known/*"
+  [headers.values]
+    Content-Type = "application/octet-stream"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Redirection pour s'assurer que les fichiers .well-known sont accessibles
+[[redirects]]
+  from = "/.well-known/*"
+  to = "/.well-known/:splat"
+  status = 200
+  force = false
