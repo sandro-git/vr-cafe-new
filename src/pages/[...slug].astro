@@ -34,6 +34,11 @@ interface Game {
   slug: { current: string };
   image: any;
   tag: { name: string; title: string };
+  players: string;
+  duration: string;
+  difficulty: number;
+  age: string;
+  tags: string[];
 }
 
 const { data: game } = await loadQuery<Game>({
@@ -43,19 +48,15 @@ const { data: game } = await loadQuery<Game>({
     youtubeLink,
     slug,
     image,
-    tag->{name, title}
+    tag->{name, title},
+    players,
+    duration,
+    difficulty,
+    age,
+    tags
   }`,
   params,
 });
-
-// Données temporaires - à ajouter dans Sanity plus tard
-const gameMetadata = {
-  players: "1 à 4",
-  duration: "60 min",
-  difficulty: 3, // sur 5
-  age: "16+",
-  tags: ["Horreur", "Escape Room", "Coop"], // À remplacer par les vrais tags
-};
 ---
 
 <BaseLayout>
@@ -80,39 +81,49 @@ const gameMetadata = {
           </h1>
 
           <!-- Tags -->
-          <div class="flex flex-wrap gap-2 mb-6">
-            {gameMetadata.tags.map((tag) => (
-              <span class="px-3 py-1 text-sm border border-blue-400 text-blue-400 rounded-full">
-                {tag}
-              </span>
-            ))}
-          </div>
+          {game.tags && game.tags.length > 0 && (
+            <div class="flex flex-wrap gap-2 mb-6">
+              {game.tags.map((tag) => (
+                <span class="px-3 py-1 text-sm border border-blue-400 text-blue-400 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           <!-- Métadonnées -->
           <div class="space-y-3 text-white">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">De {gameMetadata.players} joueurs</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">Durée :</span>
-              <span>{gameMetadata.duration}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">Difficulté :</span>
-              <div class="flex gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    class={`w-3 h-3 rounded-full border border-white ${
-                      i < gameMetadata.difficulty ? 'bg-white' : 'bg-transparent'
-                    }`}
-                  />
-                ))}
+            {game.players && (
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">De {game.players} joueurs</span>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">Age conseillé :</span>
-              <span>{gameMetadata.age}</span>
-            </div>
+            )}
+            {game.duration && (
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">Durée :</span>
+                <span>{game.duration}</span>
+              </div>
+            )}
+            {game.difficulty && (
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">Difficulté :</span>
+                <div class="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      class={`w-3 h-3 rounded-full border border-white ${
+                        i < game.difficulty ? 'bg-white' : 'bg-transparent'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {game.age && (
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">Age conseillé :</span>
+                <span>{game.age}</span>
+              </div>
+            )}
           </div>
         </div>
 

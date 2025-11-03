@@ -59,6 +59,33 @@ export const gamesTypes = defineType({
             description: "L'éditeur associé au jeu",
             to: { type: "editeur" },
         }),
+        defineField({
+            name: "players",
+            type: "string",
+            description: "Nombre de joueurs (ex: '1 à 4')",
+        }),
+        defineField({
+            name: "duration",
+            type: "string",
+            description: "Durée du jeu (ex: '60 min')",
+        }),
+        defineField({
+            name: "difficulty",
+            type: "number",
+            description: "Difficulté du jeu (1-5)",
+            validation: (Rule) => Rule.min(1).max(5),
+        }),
+        defineField({
+            name: "age",
+            type: "string",
+            description: "Age conseillé (ex: '16+')",
+        }),
+        defineField({
+            name: "tags",
+            type: "array",
+            description: "Tags du jeu (ex: Horreur, Escape Room, Coop)",
+            of: [{ type: "string" }],
+        }),
     ],
     preview: {
         select: {
