@@ -83,8 +83,8 @@ export const gamesTypes = defineType({
         defineField({
             name: "tags",
             type: "array",
-            description: "Tags du jeu (ex: Horreur, Escape Room, Coop)",
-            of: [{ type: "string" }],
+            description: "Tags du jeu pour le filtrage",
+            of: [{ type: "reference", to: [{ type: "tag" }] }],
         }),
     ],
     preview: {

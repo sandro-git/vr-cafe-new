@@ -38,7 +38,7 @@ interface Game {
   duration: string;
   difficulty: number;
   age: string;
-  tags: string[];
+  tags: { title: string }[];
 }
 
 const { data: game } = await loadQuery<Game>({
@@ -53,7 +53,7 @@ const { data: game } = await loadQuery<Game>({
     duration,
     difficulty,
     age,
-    tags
+    tags[]->{title}
   }`,
   params,
 });
@@ -83,9 +83,9 @@ const { data: game } = await loadQuery<Game>({
           <!-- Tags -->
           {game.tags && game.tags.length > 0 && (
             <div class="flex flex-wrap gap-2 mb-6">
-              {game.tags.map((tag) => (
+              {game.tags.filter(tag => tag !== null).map((tag) => (
                 <span class="px-3 py-1 text-sm border border-blue-400 text-blue-400 rounded-full">
-                  {tag}
+                  {tag.title}
                 </span>
               ))}
             </div>
