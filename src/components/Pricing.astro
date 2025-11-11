@@ -3,8 +3,9 @@ import PricingCard from "./PricingCard.astro";
 ---
 
 <div
-  class="md:container mx-4 md:mx-auto flex flex-col md:flex-row gap-4 md:justify-center"
+  class="md:container mx-4 md:mx-auto flex flex-col lg:flex-row gap-6 md:gap-8 md:justify-center items-center md:items-stretch pt-6 pb-12 flex-wrap"
 >
-  <PricingCard title="1 Heure" price="25" />
-  <PricingCard title="30 min" price="18" />
+  <PricingCard title="30 min" price="18" popular={false} type="standard" />
+  <PricingCard title="1 Heure" price="25" popular={true} type="standard" />
+  <PricingCard title="Anniversaire" price="25" popular={false} type="birthday" />
 </div>
