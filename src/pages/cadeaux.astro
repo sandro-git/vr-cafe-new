@@ -1,0 +1,189 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Title from "../components/Title.astro";
+---
+
+<BaseLayout>
+  <Title title="Cartes Cadeaux" />
+
+  <div class="container mx-auto px-4 pb-12">
+    <!-- Section Hero -->
+    <div class="max-w-4xl mx-auto text-center mb-16">
+      <div class="mb-6 flex justify-center">
+        <svg
+          class="w-16 h-16 text-blue-600 dark:text-blue-400"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z"
+            clip-rule="evenodd"></path>
+          <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z"
+          ></path>
+        </svg>
+      </div>
+      <h1
+        class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6"
+      >
+        Offrez l'Expérience VR
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+        La carte cadeau parfaite pour surprendre vos proches avec une aventure
+        en réalité virtuelle inoubliable.
+      </p>
+    </div>
+
+    <!-- Avantages des cartes cadeaux -->
+    <div class="max-w-6xl mx-auto">
+      <h2
+        class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12"
+      >
+        Pourquoi choisir nos cartes cadeaux ?
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Avantage 1 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+          <div
+            class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4"
+          >
+            <svg
+              class="w-6 h-6 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Flexibilité totale
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Valable sur toutes nos expériences VR : escapes games, jeux VR et
+            free-roaming.
+          </p>
+        </div>
+
+        <!-- Avantage 2 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+          <div
+            class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4"
+          >
+            <svg
+              class="w-6 h-6 text-green-600 dark:text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Validité prolongée
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Nos cartes cadeaux sont valables pendant 1 an à partir de la date
+            d'achat.
+          </p>
+        </div>
+
+        <!-- Avantage 3 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+          <div
+            class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4"
+          >
+            <svg
+              class="w-6 h-6 text-purple-600 dark:text-purple-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Livraison instantanée
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Recevez votre carte cadeau par email immédiatement après l'achat.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div
+      class="max-w-3xl mx-auto bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-center shadow-2xl mt-20"
+    >
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+        Prêt à offrir l'aventure ?
+      </h2>
+      <p class="text-blue-100 text-lg mb-8">
+        Commandez votre carte cadeau dès maintenant et faites plaisir à vos
+        proches !
+      </p>
+      <a
+        href="/giftCard"
+        class="inline-block bg-white text-blue-600 font-bold text-lg px-8 py-4 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg"
+      >
+        Commander une carte cadeau
+      </a>
+    </div>
+
+    <!-- Section FAQ/Infos -->
+    <div class="max-w-4xl mx-auto pt-16">
+      <h2
+        class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12"
+      >
+        Questions fréquentes
+      </h2>
+      <div class="space-y-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Comment utiliser ma carte cadeau ?
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Lors de votre réservation, indiquez simplement le code de votre
+            carte cadeau. Le montant sera automatiquement déduit de votre total.
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Puis-je personnaliser le montant ?
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Oui ! Vous pouvez choisir le montant de votre carte cadeau selon vos
+            besoins et votre budget.
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            La carte cadeau est-elle remboursable ?
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Les cartes cadeaux ne sont ni remboursables ni échangeables contre
+            de l'argent, mais elles sont valables 1 an sur toutes nos
+            expériences.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
