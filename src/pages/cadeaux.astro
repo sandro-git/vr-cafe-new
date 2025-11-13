@@ -1,6 +1,40 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Title from "../components/Title.astro";
+import FAQ from "../components/FAQ.astro";
+
+const giftCardFAQs = [
+  {
+    question: "Comment utiliser ma carte cadeau ?",
+    answer:
+      "Lors de votre réservation, indiquez simplement le code de votre carte cadeau. Le montant sera automatiquement déduit de votre total.",
+  },
+  {
+    question: "Puis-je personnaliser le montant ?",
+    answer:
+      "Oui ! Vous pouvez choisir le montant de votre carte cadeau selon vos besoins et votre budget.",
+  },
+  {
+    question: "La carte cadeau est-elle remboursable ?",
+    answer:
+      "Les cartes cadeaux ne sont ni remboursables ni échangeables contre de l'argent, mais elles sont valables 1 an sur toutes nos expériences.",
+  },
+  {
+    question: "Quelle est la validité de la carte cadeau ?",
+    answer:
+      "Nos cartes cadeaux sont valables pendant 1 an à partir de la date d'achat.",
+  },
+  {
+    question: "Comment recevoir ma carte cadeau ?",
+    answer:
+      "Vous recevrez votre carte cadeau par email immédiatement après l'achat, avec un code unique à utiliser lors de votre réservation.",
+  },
+  {
+    question: "Peut-on utiliser plusieurs cartes cadeaux pour une réservation ?",
+    answer:
+      "Oui, vous pouvez cumuler plusieurs cartes cadeaux lors de votre réservation.",
+  },
+];
 ---
 
 <BaseLayout>
@@ -145,45 +179,15 @@ import Title from "../components/Title.astro";
       </a>
     </div>
 
-    <!-- Section FAQ/Infos -->
-    <div class="max-w-4xl mx-auto pt-16">
-      <h2
-        class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12"
-      >
-        Questions fréquentes
-      </h2>
-      <div class="space-y-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Comment utiliser ma carte cadeau ?
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Lors de votre réservation, indiquez simplement le code de votre
-            carte cadeau. Le montant sera automatiquement déduit de votre total.
-          </p>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Puis-je personnaliser le montant ?
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Oui ! Vous pouvez choisir le montant de votre carte cadeau selon vos
-            besoins et votre budget.
-          </p>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            La carte cadeau est-elle remboursable ?
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Les cartes cadeaux ne sont ni remboursables ni échangeables contre
-            de l'argent, mais elles sont valables 1 an sur toutes nos
-            expériences.
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
+
+  <!-- Section FAQ -->
+  <FAQ
+    title="Questions fréquentes"
+    subtitle="Tout ce que vous devez savoir sur nos cartes cadeaux"
+    faqs={giftCardFAQs}
+    ctaText="Une autre question ?"
+    ctaButtonText="Commander une carte cadeau"
+    ctaLink="/giftCard"
+  />
 </BaseLayout>

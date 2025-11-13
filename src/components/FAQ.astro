@@ -1,48 +1,57 @@
 ---
 // FAQ Component with accordion design
-const faqs = [
-  {
-    question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
-    answer:
-      "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
-  },
-  {
-    question: "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
-    answer:
-      "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter.",
-  },
-  {
-    question: "Y aura-t-il d'autres personnes dans notre partie ?",
-    answer:
-      "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
-  },
-  {
-    question: "Vos jeux sont-ils adaptés aux enfants ?",
-    answer:
-      "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place.",
-  },
-  {
-    question:
-      "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
-    answer:
-      'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.',
-  },
-  {
-    question: "Je suis en fauteuil roulant, est-ce accessible ?",
-    answer:
-      "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap.",
-  },
-  {
-    question: "Peut-on annuler ou reporter ?",
-    answer:
-      "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux.",
-  },
-  {
-    question: "Peut-on venir sans réserver ?",
-    answer:
-      "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités.",
-  },
-];
+const {
+  title = "FAQ VR Café",
+  subtitle = "Les réponses à vos questions les plus fréquentes",
+  faqs = [
+    {
+      question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
+      answer:
+        "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
+    },
+    {
+      question:
+        "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
+      answer:
+        "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter.",
+    },
+    {
+      question: "Y aura-t-il d'autres personnes dans notre partie ?",
+      answer:
+        "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
+    },
+    {
+      question: "Vos jeux sont-ils adaptés aux enfants ?",
+      answer:
+        "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place.",
+    },
+    {
+      question:
+        "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
+      answer:
+        'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.',
+    },
+    {
+      question: "Je suis en fauteuil roulant, est-ce accessible ?",
+      answer:
+        "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap.",
+    },
+    {
+      question: "Peut-on annuler ou reporter ?",
+      answer:
+        "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux.",
+    },
+    {
+      question: "Peut-on venir sans réserver ?",
+      answer:
+        "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités.",
+    },
+  ],
+  showCTA = true,
+  ctaText = "Vous avez d'autres questions ?",
+  ctaButtonText = "Contactez-nous",
+  ctaLink = "/contact",
+} = Astro.props;
 ---
 
 <section class="bg-white dark:bg-gray-900 py-12 md:py-20">
@@ -50,11 +59,15 @@ const faqs = [
     <h2
       class="mb-8 text-4xl md:text-5xl font-extrabold text-center text-gray-900 dark:text-white"
     >
-      FAQ VR Café
+      {title}
     </h2>
-    <p class="text-center text-gray-600 dark:text-gray-300 mb-12 text-lg">
-      Les réponses à vos questions les plus fréquentes
-    </p>
+    {
+      subtitle && (
+        <p class="text-center text-gray-600 dark:text-gray-300 mb-12 text-lg">
+          {subtitle}
+        </p>
+      )
+    }
 
     <div class="space-y-4">
       {
@@ -98,17 +111,19 @@ const faqs = [
     </div>
 
     <!-- CTA Section -->
-    <div class="mt-12 text-center">
-      <p class="text-gray-600 dark:text-gray-300 mb-4">
-        Vous avez d'autres questions ?
-      </p>
-      <a
-        href="/contact"
-        class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-      >
-        Contactez-nous
-      </a>
-    </div>
+    {
+      showCTA && (
+        <div class="mt-12 text-center">
+          <p class="text-gray-600 dark:text-gray-300 mb-4">{ctaText}</p>
+          <a
+            href={ctaLink}
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
+            {ctaButtonText}
+          </a>
+        </div>
+      )
+    }
   </div>
 </section>
 
