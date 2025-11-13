@@ -1,5 +1,5 @@
 <div
-  class="forescape-catalog"
+  class="forescape-catalog pt-4"
   data-widget-id="5f1af699-4c4e-4d14-8946-230f16f6fccc"
   data-settings="b64.eyJkb21haW4iOiJ2cmNhZmUuNGVzY2FwZS5pbyJ9"
 >
@@ -11,13 +11,9 @@
 </div>
 
 <style is:global>
-  /* Cacher la navbar sur la page de réservation */
-  nav {
-    display: none !important;
-  }
-
-  header {
-    display: none !important;
+  /* S'assurer que le panier reste au-dessus de la navbar */
+  .forescape-cart {
+    z-index: 9999 !important;
   }
 
   /* Override les variables CSS du widget */
