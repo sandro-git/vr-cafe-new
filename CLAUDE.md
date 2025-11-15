@@ -27,7 +27,7 @@ All commands use `pnpm` and should be run from the project root:
   - Dataset: `production`
   - Studio accessible at `/studio` route
   - Uses `@sanity/astro` integration with Vision tool
-- **React 19** for interactive components
+- **React 19** - Required only for Sanity Studio (`/studio`), not used in frontend components
 - **Tailwind CSS v4** via Vite plugin
 - **Partytown** for third-party script optimization
 
@@ -84,9 +84,7 @@ src/
   - `sanity-studio` - Sanity Studio (heavy)
   - `sanity-vision` - Vision tool
   - `video-player` - Video components
-  - `react-vendor` - React/ReactDOM
   - `sanity-utils` - Sanity client utilities
-  - `styled-components` - Styling library
 
 **Routing:**
 - Static pages in `src/pages/`

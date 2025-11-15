@@ -42,17 +42,9 @@ export default defineConfig({
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
             }
-            // Grouper React
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
             // Grouper les utilitaires Sanity
             if (id.includes('@sanity/client') || id.includes('@sanity/image-url')) {
               return 'sanity-utils';
-            }
-            // Grouper styled-components
-            if (id.includes('styled-components')) {
-              return 'styled-components';
             }
           }
         }

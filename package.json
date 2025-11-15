@@ -11,20 +11,18 @@
   "dependencies": {
     "@astrojs/netlify": "^6.5.3",
     "@astrojs/partytown": "^2.1.4",
-    "@astrojs/react": "^4.3.0",
+    "@astrojs/react": "^4.4.2",
     "@sanity/astro": "^3.2.10",
     "@sanity/client": "^7.8.1",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^4.1.1",
     "@tailwindcss/vite": "^4.1.11",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
     "astro": "^5.12.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-is": "^19.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "sanity": "^4.1.1",
-    "styled-components": "^6.1.19",
     "tailwindcss": "^4.1.11"
   }
 }

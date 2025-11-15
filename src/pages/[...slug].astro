@@ -1,7 +1,7 @@
 ---
 // src/pages/[...slug].astro
 import BaseLayout from "../layouts/BaseLayout.astro";
-import YoutubePlayer from "../components/YoutubePlayer.jsx";
+import YoutubePlayer from "../components/YoutubePlayer.astro";
 import SanityPicture from "../components/SanityPicture.astro";
 import Play from "../components/Play.astro";
 
@@ -169,7 +169,7 @@ const { data: game } = await loadQuery<Game>({
           </button>
         </div>
         {game.youtubeLink && (
-          <YoutubePlayer videoId={game.youtubeLink} client:load />
+          <YoutubePlayer videoId={game.youtubeLink} />
         )}
       </div>
     </div>

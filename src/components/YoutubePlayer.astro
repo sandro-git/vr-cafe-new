@@ -1,0 +1,89 @@
+---
+// src/components/YoutubePlayer.astro
+interface Props {
+  videoId: string;
+}
+
+const { videoId } = Astro.props;
+
+// Construire l'URL YouTube avec des paramètres
+const youtubeUrl = `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0&autoplay=1`;
+const primaryThumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+const fallbackThumbnail = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+---
+
+<div class="youtube-container w-full aspect-video relative rounded-lg overflow-hidden" data-video-id={videoId}>
+  <div class="youtube-placeholder cursor-pointer relative w-full h-full">
+    <img
+      src={primaryThumbnail}
+      alt="Miniature YouTube"
+      class="youtube-thumbnail w-full h-full object-cover"
+      data-fallback={fallbackThumbnail}
+    />
+    <div class="absolute inset-0 flex items-center justify-center">
+      <div class="play-button w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-8 w-8 text-white"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M8 5v14l11-7z"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="absolute bottom-0 left-0 right-0 text-center py-2 bg-black bg-opacity-50 text-white">
+      Cliquez pour lancer la vidéo en plein écran
+    </div>
+  </div>
+</div>
+
+<script>
+  // Handle all YouTube players on the page
+  document.querySelectorAll('.youtube-container').forEach((container) => {
+    const placeholder = container.querySelector('.youtube-placeholder');
+    const thumbnail = container.querySelector('.youtube-thumbnail');
+    const videoId = container.getAttribute('data-video-id');
+
+    if (!placeholder || !thumbnail || !videoId) return;
+
+    // Handle thumbnail fallback
+    thumbnail.addEventListener('error', () => {
+      const fallback = thumbnail.getAttribute('data-fallback');
+      if (fallback) {
+        thumbnail.setAttribute('src', fallback);
+      }
+    });
+
+    // Handle click to play
+    placeholder.addEventListener('click', () => {
+      const youtubeUrl = `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0&autoplay=1`;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = youtubeUrl;
+      iframe.className = 'w-full h-full absolute top-0 left-0';
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('loading', 'lazy');
+      iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+
+      // Replace placeholder with iframe
+      container.innerHTML = '';
+      container.appendChild(iframe);
+
+      // Try to go fullscreen after a delay
+      setTimeout(() => {
+        try {
+          if (iframe.requestFullscreen) {
+            iframe.requestFullscreen();
+          } else if ((iframe as any).webkitRequestFullscreen) {
+            (iframe as any).webkitRequestFullscreen();
+          } else if ((iframe as any).msRequestFullscreen) {
+            (iframe as any).msRequestFullscreen();
+          }
+        } catch (e) {
+          console.error('Impossible de passer en plein écran:', e);
+        }
+      }, 1000);
+    });
+  });
+</script>
