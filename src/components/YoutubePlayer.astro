@@ -6,36 +6,40 @@ interface Props {
 
 const { videoId } = Astro.props;
 
-// Construire l'URL YouTube avec des paramètres
-const youtubeUrl = `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0&autoplay=1`;
+// Construire les URLs des thumbnails YouTube
 const primaryThumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 const fallbackThumbnail = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 ---
 
 <div class="youtube-container w-full aspect-video relative rounded-lg overflow-hidden" data-video-id={videoId}>
-  <div class="youtube-placeholder cursor-pointer relative w-full h-full">
+  <button
+    class="youtube-placeholder cursor-pointer relative w-full h-full border-0 p-0 bg-transparent focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-all"
+    aria-label="Lire la vidéo YouTube"
+    type="button"
+  >
     <img
       src={primaryThumbnail}
-      alt="Miniature YouTube"
+      alt=""
       class="youtube-thumbnail w-full h-full object-cover"
       data-fallback={fallbackThumbnail}
     />
-    <div class="absolute inset-0 flex items-center justify-center">
-      <div class="play-button w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="play-button w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-8 w-8 text-white"
           viewBox="0 0 24 24"
           fill="currentColor"
+          aria-hidden="true"
         >
           <path d="M8 5v14l11-7z"></path>
         </svg>
       </div>
     </div>
-    <div class="absolute bottom-0 left-0 right-0 text-center py-2 bg-black bg-opacity-50 text-white">
+    <div class="absolute bottom-0 left-0 right-0 text-center py-2 bg-black bg-opacity-50 text-white pointer-events-none">
       Cliquez pour lancer la vidéo en plein écran
     </div>
-  </div>
+  </button>
 </div>
 
 <script>
@@ -65,6 +69,7 @@ const fallbackThumbnail = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
       iframe.setAttribute('allowfullscreen', '');
       iframe.setAttribute('loading', 'lazy');
       iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      iframe.setAttribute('title', 'Lecteur vidéo YouTube');
 
       // Replace placeholder with iframe
       container.innerHTML = '';

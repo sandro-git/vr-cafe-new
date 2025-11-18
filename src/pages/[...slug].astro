@@ -136,7 +136,9 @@ const { data: game } = await loadQuery<Game>({
         <div class="flex flex-wrap gap-4 mt-4">
           <button
             onclick={`document.getElementById('video-modal').classList.remove('hidden')`}
-            class="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-white hover:text-gray-900 transition-colors"
+            class="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-white hover:text-gray-900 focus:outline-none focus:ring-4 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
+            aria-label="Voir la vidéo de présentation"
+            type="button"
           >
             <Play size={24} />
             Voir la vidéo
@@ -157,13 +159,18 @@ const { data: game } = await loadQuery<Game>({
     id="video-modal"
     class="fixed inset-0 bg-black/90 z-50 hidden"
     onclick="this.classList.add('hidden')"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Vidéo de présentation"
   >
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="w-full max-w-5xl" onclick="event.stopPropagation()">
         <div class="flex justify-end mb-4">
           <button
             onclick="document.getElementById('video-modal').classList.add('hidden')"
-            class="text-white text-4xl hover:text-gray-300"
+            class="text-white text-4xl hover:text-gray-300 focus:outline-none focus:ring-4 focus:ring-white rounded-lg px-3 transition-colors"
+            aria-label="Fermer la vidéo"
+            type="button"
           >
             ×
           </button>
