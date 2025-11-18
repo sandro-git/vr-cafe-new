@@ -1,0 +1,61 @@
+---
+import Image from "astro/components/Image.astro";
+import Arvi from "../assets/arvi_vr_white.webp";
+import Ubisoft from "../assets/ubisoft-white.webp";
+import Wanadev from "../assets/wanadev_studio.webp";
+import Ldlc from "../assets/LDLC-VR-Studio.webp";
+---
+
+<section class="bg-white dark:bg-gray-900 py-12 lg:py-20">
+  <div class="px-4 mx-auto text-center max-w-screen-xl">
+    <h2 class="mb-12 text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+      Nos partenaires
+    </h2>
+    <div class="flex flex-wrap justify-center items-center gap-8 lg:gap-12 text-gray-500">
+      <a
+        href="https://www.ubisoft.com/en-gb/entertainment/parks-experiences/escape-games"
+        class="hover:text-gray-800 dark:hover:text-gray-400 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Ubisoft"
+      >
+        <Image src={Ubisoft} alt="Ubisoft logo" class="h-12 lg:h-14" height={56} />
+      </a>
+
+      <a
+        href="https://www.wanadevstudio.com/home"
+        class="hover:text-gray-800 dark:hover:text-gray-400 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Wanadev Studio"
+      >
+        <Image src={Wanadev} alt="wanadev logo" class="h-12 lg:h-14" height={56} />
+      </a>
+
+      <a
+        href="https://vr.arvilab.com/"
+        class="hover:text-gray-800 dark:hover:text-gray-400 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="ARVI VR"
+      >
+        <Image src={Arvi} alt="arvi vr logo" class="h-12 lg:h-14" height={56} />
+      </a>
+
+      <a
+        href="https://www.ldlc-vrstudio.com/"
+        class="hover:text-gray-800 dark:hover:text-gray-400 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="LDLC VR Studio"
+      >
+        <Image
+          src={Ldlc}
+          alt="Ldlc vr studio logo"
+          class="h-12 lg:h-14"
+          height={56}
+        />
+      </a>
+    </div>
+  </div>
+</section>
