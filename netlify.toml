@@ -11,6 +11,20 @@
     Content-Type = "application/octet-stream"
     Cache-Control = "public, max-age=0, must-revalidate"
 
+# Redirection pour Sanity Studio
+# Assure que /studio fonctionne correctement avec SSR
+[[redirects]]
+  from = "/studio"
+  to = "/studio"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/studio/*"
+  to = "/studio/:splat"
+  status = 200
+  force = false
+
 # Redirection pour s'assurer que les fichiers .well-known sont accessibles
 [[redirects]]
   from = "/.well-known/*"

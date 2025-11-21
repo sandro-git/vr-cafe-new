@@ -23,7 +23,7 @@ const {
     <!-- 2 Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       <!-- Left Column - Contact Info -->
-      <div class="space-y-8">
+      <div class="flex flex-col gap-8">
         <!-- Quick Contact Card -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
           <h3
@@ -102,7 +102,7 @@ const {
 
           <!-- Address -->
           <a
-            href="https://maps.google.com/?q=VR+Café+Baux+commerciaux+Béziers"
+            href="https://maps.google.com/?q=2+rue+du+pilou+66140+Canet-en-Roussillon"
             target="_blank"
             rel="noopener noreferrer"
             class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
@@ -136,39 +136,35 @@ const {
               <p
                 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400"
               >
-                Baux commerciaux, Béziers
+                2 rue du pilou<br />66140 Canet-en-Roussillon
               </p>
             </div>
           </a>
         </div>
 
-        <!-- Hours Card (optional) -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <h3
-            class="text-2xl font-bold text-gray-900 dark:text-white mb-6"
-          >
-            Horaires d'ouverture
-          </h3>
-          <div class="space-y-3">
-            <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-300">Lundi - Vendredi</span>
-              <span class="font-semibold text-gray-900 dark:text-white">14h - 22h</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-300">Samedi - Dimanche</span>
-              <span class="font-semibold text-gray-900 dark:text-white">10h - 23h</span>
-            </div>
-          </div>
+        <!-- Carte Google Maps -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden aspect-square">
+          <iframe
+            loading="lazy"
+            src="https://www.google.com/maps?q=VR%20Café%202%20rue%20du%20pilou%2066140%20Canet-en-Roussillon,%20France&output=embed"
+            width="100%"
+            height="100%"
+            style="border:0; width: 100%; height: 100%;"
+            allowfullscreen=""
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Localisation VR Café"
+            class="w-full h-full"
+          ></iframe>
         </div>
       </div>
 
       <!-- Right Column - Contact Form -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 flex flex-col">
         <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
           Envoyez-nous un message
         </h3>
 
-        <form action="mailto:contact@vr-cafe.fr" method="POST" class="space-y-6">
+        <form action="mailto:contact@vr-cafe.fr" method="POST" class="flex flex-col flex-grow space-y-6">
           <!-- Email Field -->
           <div>
             <label
@@ -230,7 +226,7 @@ const {
           </div>
 
           <!-- Message Field -->
-          <div>
+          <div class="flex flex-col flex-grow">
             <label
               for="message"
               class="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-900 dark:text-white"
@@ -251,8 +247,7 @@ const {
             <textarea
               id="message"
               name="message"
-              rows="5"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all resize-none"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all resize-none flex-grow min-h-[200px]"
               placeholder="Décrivez votre demande..."></textarea>
           </div>
 
