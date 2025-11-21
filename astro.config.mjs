@@ -17,7 +17,8 @@ export default defineConfig({
       projectId: '0oshw5tf',
       dataset: 'production',
       useCdn: true, // See note on using the CDN
-      apiVersion: "2025-01-28" // insert the current date to access the latest version of the API
+      apiVersion: "2025-01-28", // insert the current date to access the latest version of the API
+      studioBasePath: '/studio'
     }), react(), partytown()],
 
   vite: {
