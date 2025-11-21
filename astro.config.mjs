@@ -29,21 +29,13 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Séparer Sanity Studio (très lourd)
-            if (id.includes('@sanity/astro') || id.includes('sanity/lib') || id.includes('studio-component')) {
-              return 'sanity-studio';
-            }
-            // Séparer Sanity Vision
-            if (id.includes('@sanity/vision') || id.includes('SanityVision')) {
-              return 'sanity-vision';
+            // Grouper tout Sanity ensemble pour éviter les problèmes de dépendances circulaires
+            if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
+              return 'sanity';
             }
             // Séparer VideoPlayer
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
-            }
-            // Grouper les utilitaires Sanity
-            if (id.includes('@sanity/client') || id.includes('@sanity/image-url')) {
-              return 'sanity-utils';
             }
           }
         }
