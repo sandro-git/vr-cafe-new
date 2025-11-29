@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Netlify Forms Detection</title>
+</head>
+<body>
+  <!--
+    Ce fichier permet à Netlify de détecter le formulaire lors du build.
+    Il ne sera jamais affiché aux utilisateurs.
+    Le vrai formulaire est dans src/components/ContactForm.astro
+  -->
+
+  <form
+    name="contact"
+    method="POST"
+    data-netlify="true"
+    data-netlify-honeypot="bot-field"
+    hidden
+  >
+    <input type="hidden" name="form-name" value="contact" />
+    <input name="bot-field" />
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+    <input type="tel" name="phone" />
+    <input type="text" name="subject" />
+    <textarea name="message"></textarea>
+  </form>
+</body>
+</html>
