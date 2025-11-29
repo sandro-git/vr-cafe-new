@@ -164,10 +164,22 @@ const {
           Envoyez-nous un message
         </h3>
 
-        <!-- Message de succès/erreur -->
-        <div id="form-message" class="hidden mb-6"></div>
+        <form
+          name="contact"
+          method="POST"
+          data-netlify="true"
+          data-netlify-honeypot="bot-field"
+          action="/contact-success"
+          class="flex flex-col flex-grow space-y-6"
+        >
+          <!-- Champ caché pour Netlify Forms -->
+          <input type="hidden" name="form-name" value="contact" />
 
-        <form id="contact-form" class="flex flex-col flex-grow space-y-6">
+          <!-- Honeypot anti-spam (caché) -->
+          <div class="hidden" aria-hidden="true">
+            <label>Ne remplissez pas ce champ si vous êtes humain : <input name="bot-field" /></label>
+          </div>
+
           <!-- Nom Field -->
           <div>
             <label
@@ -316,11 +328,9 @@ const {
           <!-- Submit Button -->
           <button
             type="submit"
-            id="submit-button"
-            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <svg
-              id="send-icon"
               class="w-5 h-5"
               fill="none"
               stroke="currentColor"
@@ -332,124 +342,10 @@ const {
                 stroke-width="2"
                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
             </svg>
-            <svg
-              id="loading-icon"
-              class="w-5 h-5 animate-spin hidden"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <span id="button-text">Envoyer le message</span>
+            <span>Envoyer le message</span>
           </button>
         </form>
       </div>
-
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const form = document.getElementById('contact-form');
-          const submitButton = document.getElementById('submit-button');
-          const buttonText = document.getElementById('button-text');
-          const sendIcon = document.getElementById('send-icon');
-          const loadingIcon = document.getElementById('loading-icon');
-          const formMessage = document.getElementById('form-message');
-
-          form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // Récupérer les données du formulaire
-            const formData = new FormData(form);
-            const data = {
-              name: formData.get('name'),
-              email: formData.get('email'),
-              phone: formData.get('phone'),
-              subject: formData.get('subject'),
-              message: formData.get('message'),
-            };
-
-            // Désactiver le bouton et afficher le loader
-            submitButton.disabled = true;
-            buttonText.textContent = 'Envoi en cours...';
-            sendIcon.classList.add('hidden');
-            loadingIcon.classList.remove('hidden');
-            formMessage.classList.add('hidden');
-
-            try {
-              const response = await fetch('/.netlify/functions/send-contact', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-              });
-
-              const result = await response.json();
-
-              if (response.ok) {
-                // Succès
-                formMessage.innerHTML = `
-                  <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-lg">
-                    <div class="flex items-start">
-                      <svg class="w-6 h-6 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                      </svg>
-                      <div class="ml-3">
-                        <h3 class="text-sm font-semibold text-green-800 dark:text-green-200">Message envoyé avec succès !</h3>
-                        <p class="text-sm text-green-700 dark:text-green-300 mt-1">${result.message}</p>
-                      </div>
-                    </div>
-                  </div>
-                `;
-                formMessage.classList.remove('hidden');
-
-                // Réinitialiser le formulaire
-                form.reset();
-
-                // Faire défiler vers le message de succès
-                formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              } else {
-                // Erreur
-                throw new Error(result.error || 'Une erreur est survenue');
-              }
-            } catch (error) {
-              // Erreur réseau ou autre
-              formMessage.innerHTML = `
-                <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-lg">
-                  <div class="flex items-start">
-                    <svg class="w-6 h-6 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="ml-3">
-                      <h3 class="text-sm font-semibold text-red-800 dark:text-red-200">Erreur lors de l'envoi</h3>
-                      <p class="text-sm text-red-700 dark:text-red-300 mt-1">${error.message}</p>
-                      <p class="text-sm text-red-600 dark:text-red-400 mt-2">Vous pouvez également nous contacter directement à <a href="mailto:contact@vr-cafe.fr" class="underline font-medium">contact@vr-cafe.fr</a></p>
-                    </div>
-                  </div>
-                </div>
-              `;
-              formMessage.classList.remove('hidden');
-              formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } finally {
-              // Réactiver le bouton
-              submitButton.disabled = false;
-              buttonText.textContent = 'Envoyer le message';
-              sendIcon.classList.remove('hidden');
-              loadingIcon.classList.add('hidden');
-            }
-          });
-        });
-      </script>
     </div>
   </div>
 </section>
