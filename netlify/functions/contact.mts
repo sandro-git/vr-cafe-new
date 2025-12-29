@@ -61,7 +61,7 @@ export default async (req: Request, context: Context) => {
           },
           To: [
             {
-              Email: "contact@vr-cafe.fr",
+              Email: "sandro@vr-cafe.fr",
               Name: "VR Café",
             },
           ],
