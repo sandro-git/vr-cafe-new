@@ -33,9 +33,21 @@ export default async (req: Request, context: Context) => {
     }
 
     // Initialiser Mailjet avec les variables d'environnement
+    // Utiliser process.env pour compatibilité dev local et production
+    const apiKey = process.env.MAILJET_API_KEY || Netlify.env.get("MAILJET_API_KEY");
+    const apiSecret = process.env.MAILJET_API_SECRET || Netlify.env.get("MAILJET_API_SECRET");
+
+    if (!apiKey || !apiSecret) {
+      console.error("Missing Mailjet credentials");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const mailjet = new Mailjet({
-      apiKey: Netlify.env.get("MAILJET_API_KEY"),
-      apiSecret: Netlify.env.get("MAILJET_API_SECRET"),
+      apiKey,
+      apiSecret,
     });
 
     // Envoyer l'email via Mailjet
@@ -43,7 +55,7 @@ export default async (req: Request, context: Context) => {
       Messages: [
         {
           From: {
-            Email: Netlify.env.get("MAILJET_SENDER_EMAIL") || "noreply@vr-cafe.fr",
+            Email: process.env.MAILJET_SENDER_EMAIL || Netlify.env.get("MAILJET_SENDER_EMAIL") || "noreply@vr-cafe.fr",
             Name: "VR Café - Formulaire de contact",
           },
           To: [
