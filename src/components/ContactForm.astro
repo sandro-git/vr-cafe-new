@@ -164,7 +164,24 @@ const {
           Envoyez-nous un message
         </h3>
 
-        <form action="mailto:contact@vr-cafe.fr" method="POST" class="flex flex-col flex-grow space-y-6">
+        <form
+          name="contact"
+          method="POST"
+          data-netlify="true"
+          data-netlify-honeypot="bot-field"
+          action="/contact/merci"
+          class="flex flex-col flex-grow space-y-6"
+        >
+          <!-- Netlify Forms - Champ caché requis -->
+          <input type="hidden" name="form-name" value="contact" />
+
+          <!-- Honeypot anti-spam (caché pour les humains) -->
+          <p class="hidden" aria-hidden="true">
+            <label>
+              Ne pas remplir si vous êtes humain : <input name="bot-field" />
+            </label>
+          </p>
+
           <!-- Email Field -->
           <div>
             <label
