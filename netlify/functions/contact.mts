@@ -21,7 +21,8 @@ export default async (req: Request, context: Context) => {
     // Protection anti-spam honeypot
     if (botField) {
       console.log("Bot detected via honeypot");
-      return Response.redirect("/contact/merci", 303);
+      const url = new URL("/contact/merci", req.url);
+      return Response.redirect(url.toString(), 303);
     }
 
     // Validation
@@ -94,7 +95,8 @@ export default async (req: Request, context: Context) => {
     console.log(`Email sent successfully from ${email}`);
 
     // Rediriger vers la page de confirmation
-    return Response.redirect("/contact/merci", 303);
+    const redirectUrl = new URL("/contact/merci", req.url);
+    return Response.redirect(redirectUrl.toString(), 303);
 
   } catch (error) {
     console.error("Error sending email:", error);
