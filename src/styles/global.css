@@ -1,3 +1,14 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Amélioration de l'accessibilité - Focus visible */
+*:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* Assurer que le focus est visible même sur fond sombre */
+.dark *:focus-visible {
+  outline-color: rgb(96, 165, 250);
+}
