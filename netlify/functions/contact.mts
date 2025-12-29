@@ -56,7 +56,7 @@ export default async (req: Request, context: Context) => {
       Messages: [
         {
           From: {
-            Email: Netlify.env.get("MAILJET_SENDER_EMAIL") || process.env.MAILJET_SENDER_EMAIL || "noreply@vr-cafe.fr",
+            Email: Netlify.env.get("MAILJET_SENDER_EMAIL") || process.env.MAILJET_SENDER_EMAIL || "contact@vr-cafe.fr",
             Name: "VR Café - Formulaire de contact",
           },
           To: [
