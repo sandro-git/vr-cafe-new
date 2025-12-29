@@ -167,14 +167,9 @@ const {
         <form
           name="contact"
           method="POST"
-          data-netlify="true"
-          data-netlify-honeypot="bot-field"
-          action="/contact/merci"
+          action="/api/contact"
           class="flex flex-col flex-grow space-y-6"
         >
-          <!-- Netlify Forms - Champ caché requis -->
-          <input type="hidden" name="form-name" value="contact" />
-
           <!-- Honeypot anti-spam (caché pour les humains) -->
           <p class="hidden" aria-hidden="true">
             <label>
