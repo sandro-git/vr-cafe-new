@@ -4,6 +4,25 @@ import keystaticConfig from '../../keystatic.config';
 // Create reader instance
 export const reader = createReader(process.cwd(), keystaticConfig);
 
+// Helper to extract plain text from Keystatic document field
+function extractTextFromDocument(doc: any): string {
+  if (!doc || !Array.isArray(doc)) return '';
+
+  let text = '';
+  for (const block of doc) {
+    if (block.children) {
+      for (const child of block.children) {
+        if (typeof child.text === 'string') {
+          text += child.text;
+        }
+      }
+    }
+    text += '\n\n';
+  }
+
+  return text.trim();
+}
+
 // Type for a game with resolved relations
 export interface GameWithRelations {
   slug: string;
@@ -11,7 +30,7 @@ export interface GameWithRelations {
   image: string;
   imageAlt: string;
   youtubeLink?: string;
-  description: () => Promise<any>;
+  description?: string;
   tag: {
     slug: string;
     title: string;
@@ -80,13 +99,20 @@ export async function getGameWithRelations(slug: string): Promise<GameWithRelati
     }
   }
 
+  // Extract description text
+  let description: string | undefined;
+  if (game.description) {
+    const descDoc = await game.description();
+    description = extractTextFromDocument(descDoc);
+  }
+
   return {
     slug,
     name: game.name,
     image: game.image,
     imageAlt: game.imageAlt,
     youtubeLink: game.youtubeLink || undefined,
-    description: game.description,
+    description,
     tag,
     tags,
     editeur,

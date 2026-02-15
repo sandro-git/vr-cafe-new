@@ -7,56 +7,45 @@ export default config({
   collections: {
     games: collection({
       label: 'Games',
-      slugField: 'name',
       path: 'src/content/games/*',
       format: { contentField: 'description' },
       schema: {
-        name: fields.slug({
-          name: {
-            label: 'Name',
-            validation: { isRequired: true },
-          },
+        name: fields.text({
+          label: 'Name',
+          validation: { isRequired: true },
         }),
-        image: fields.image({
-          label: 'Image',
-          directory: 'public/images/games',
-          publicPath: '/images/games/',
+        image: fields.text({
+          label: 'Image Path',
           validation: { isRequired: true },
         }),
         imageAlt: fields.text({
           label: 'Image Alt Text',
           validation: { isRequired: true },
         }),
-        youtubeLink: fields.url({
+        youtubeLink: fields.text({
           label: 'YouTube Link',
         }),
-        description: fields.markdoc({
+        description: fields.document({
           label: 'Description',
-          options: {
-            image: {
-              directory: 'public/images/games',
-              publicPath: '/images/games/',
-            },
-          },
+          formatting: true,
+          dividers: true,
+          links: true,
         }),
-        tag: fields.relationship({
+        tag: fields.text({
           label: 'Primary Tag',
-          collection: 'tags',
           validation: { isRequired: true },
         }),
         tags: fields.array(
-          fields.relationship({
+          fields.text({
             label: 'Tag',
-            collection: 'tags',
           }),
           {
             label: 'Additional Tags',
             itemLabel: (props) => props.value || 'Tag',
           }
         ),
-        editeur: fields.relationship({
+        editeur: fields.text({
           label: 'Publisher',
-          collection: 'editeurs',
         }),
         players: fields.text({
           label: 'Number of Players',
@@ -78,29 +67,29 @@ export default config({
     }),
     tags: collection({
       label: 'Tags',
-      slugField: 'title',
       path: 'src/content/tags/*',
-      format: { data: true },
+      format: { contentField: 'description' },
       schema: {
-        title: fields.slug({
-          name: {
-            label: 'Title',
-            validation: { isRequired: true },
-          },
+        title: fields.text({
+          label: 'Title',
+          validation: { isRequired: true },
+        }),
+        description: fields.document({
+          label: 'Description (optional)',
         }),
       },
     }),
     editeurs: collection({
       label: 'Publishers',
-      slugField: 'name',
       path: 'src/content/editeurs/*',
-      format: { data: true },
+      format: { contentField: 'description' },
       schema: {
-        name: fields.slug({
-          name: {
-            label: 'Name',
-            validation: { isRequired: true },
-          },
+        name: fields.text({
+          label: 'Name',
+          validation: { isRequired: true },
+        }),
+        description: fields.document({
+          label: 'Description (optional)',
         }),
       },
     }),

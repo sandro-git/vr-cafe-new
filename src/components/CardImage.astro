@@ -9,11 +9,11 @@ const imagePath = typeof image === 'string' ? image : image?.asset?.url;
 const imageAlt = alt || title;
 ---
 
-<a href={"/" + slug} class="block w-full relative group overflow-hidden rounded-lg">
+<a href={"/" + slug} class="block w-full relative group overflow-hidden rounded-lg aspect-square">
   <LocalPicture
     image={imagePath}
     alt={imageAlt}
-    className="w-full transition-all hover:shadow-xl"
+    className="w-full h-full transition-all hover:shadow-xl"
   />
   <!-- Dégradé sombre en bas pour améliorer la lisibilité -->
   <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>

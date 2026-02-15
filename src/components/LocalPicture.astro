@@ -1,15 +1,11 @@
 ---
 // src/components/LocalPicture.astro
-// Replacement for SanityPicture using local images with Astro Image
-import { Image } from "astro:assets";
-
+// Replacement for SanityPicture using local images from public/
 interface Props {
   image: string; // Path to image like "/images/games/slug.jpg"
   alt: string;
   className?: string;
   loading?: "lazy" | "eager";
-  width?: number;
-  height?: number;
 }
 
 const {
@@ -17,17 +13,13 @@ const {
   alt,
   className = "",
   loading = "lazy",
-  width = 1200,
-  height = 800,
 } = Astro.props;
 ---
 
-<Image
+<img
   src={image}
   alt={alt}
-  width={width}
-  height={height}
   class={className}
   loading={loading}
-  format="webp"
+  style="width: 100%; height: 100%; object-fit: cover; display: block;"
 />
