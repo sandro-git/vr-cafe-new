@@ -7,6 +7,7 @@ export default config({
   collections: {
     games: collection({
       label: 'Games',
+      slugField: 'name',
       path: 'src/content/games/*',
       format: { contentField: 'description' },
       schema: {
@@ -67,6 +68,7 @@ export default config({
     }),
     tags: collection({
       label: 'Tags',
+      slugField: 'title',
       path: 'src/content/tags/*',
       format: { contentField: 'description' },
       schema: {
@@ -81,6 +83,7 @@ export default config({
     }),
     editeurs: collection({
       label: 'Publishers',
+      slugField: 'name',
       path: 'src/content/editeurs/*',
       format: { contentField: 'description' },
       schema: {
