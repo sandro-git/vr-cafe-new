@@ -81,7 +81,7 @@ if (!game) {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div
                       class={`w-3 h-3 rounded-full border border-white ${
-                        i < game.difficulty ? 'bg-white' : 'bg-transparent'
+                        i < (game.difficulty ?? 0) ? 'bg-white' : 'bg-transparent'
                       }`}
                     />
                   ))}

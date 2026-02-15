@@ -26,27 +26,27 @@ function extractTextFromDocument(doc: any): string {
 // Type for a game with resolved relations
 export interface GameWithRelations {
   slug: string;
-  name: string;
-  image: string;
-  imageAlt: string;
-  youtubeLink?: string;
+  name: string | null;
+  image: string | null;
+  imageAlt: string | null;
+  youtubeLink?: string | null;
   description?: string;
   tag: {
     slug: string;
-    title: string;
+    title: string | null;
   } | null;
   tags: Array<{
     slug: string;
-    title: string;
+    title: string | null;
   }>;
   editeur: {
     slug: string;
-    name: string;
+    name: string | null;
   } | null;
-  players?: string;
-  duration?: string;
-  difficulty?: number;
-  age?: string;
+  players?: string | null;
+  duration?: string | null;
+  difficulty?: number | null;
+  age?: string | null;
 }
 
 /**
@@ -108,18 +108,18 @@ export async function getGameWithRelations(slug: string): Promise<GameWithRelati
 
   return {
     slug,
-    name: game.name,
-    image: game.image,
-    imageAlt: game.imageAlt,
-    youtubeLink: game.youtubeLink || undefined,
+    name: game.name ?? null,
+    image: game.image ?? null,
+    imageAlt: game.imageAlt ?? null,
+    youtubeLink: game.youtubeLink ?? null,
     description,
     tag,
     tags,
     editeur,
-    players: game.players || undefined,
-    duration: game.duration || undefined,
-    difficulty: game.difficulty != null ? game.difficulty : undefined,
-    age: game.age || undefined,
+    players: game.players ?? null,
+    duration: game.duration ?? null,
+    difficulty: game.difficulty ?? null,
+    age: game.age ?? null,
   };
 }
 
