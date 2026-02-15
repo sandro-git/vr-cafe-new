@@ -2,61 +2,35 @@
 // src/pages/[...slug].astro
 import BaseLayout from "../layouts/BaseLayout.astro";
 import YoutubePlayer from "../components/YoutubePlayer.astro";
-import SanityPicture from "../components/SanityPicture.astro";
+import { Image } from "astro:assets";
 import Play from "../components/Play.astro";
 
 export const prerender = true;
 
-import type { SanityDocument } from "@sanity/client";
-import { loadQuery } from "../sanity/lib/load-query";
+import { reader, getGameWithRelations } from "../lib/keystatic-reader";
 
 export async function getStaticPaths() {
-  const { data: games } = await loadQuery<SanityDocument[]>({
-    query: `*[_type == "games"] {
-      slug
-    }`,
-  });
+  const allGames = await reader.collections.games.all();
 
-  return games.map(({ slug }) => {
+  return allGames.map(({ slug }) => {
     return {
       params: {
-        slug: slug.current,
+        slug,
       },
     };
   });
 }
-const { params } = Astro;
 
-interface Game {
-  name: string;
-  description: string;
-  youtubeLink: string;
-  slug: { current: string };
-  image: any;
-  tag: { name: string; title: string };
-  players: string;
-  duration: string;
-  difficulty: number;
-  age: string;
-  tags: { title: string }[];
+const { slug } = Astro.params;
+const game = await getGameWithRelations(slug!);
+
+if (!game) {
+  return Astro.redirect('/404');
 }
 
-const { data: game } = await loadQuery<Game>({
-  query: `*[_type == "games" && slug.current == $slug][0]{
-    name,
-    description,
-    youtubeLink,
-    slug,
-    image,
-    tag->{name, title},
-    players,
-    duration,
-    difficulty,
-    age,
-    tags[]->{title}
-  }`,
-  params,
-});
+// Render Markdoc description to string
+const descriptionNode = await game.description();
+const descriptionText = typeof descriptionNode === 'string' ? descriptionNode : '';
 ---
 
 <BaseLayout>
@@ -65,10 +39,13 @@ const { data: game } = await loadQuery<Game>({
       <!-- Image à gauche -->
       <div class="relative rounded-2xl overflow-hidden shadow-2xl">
         {game.image && (
-          <SanityPicture
-            image={game.image}
-            alt={game.name}
-            className="w-full h-auto"
+          <Image
+            src={game.image}
+            alt={game.imageAlt}
+            width={1200}
+            height={800}
+            class="w-full h-auto"
+            loading="eager"
           />
         )}
       </div>
@@ -129,7 +106,7 @@ const { data: game } = await loadQuery<Game>({
 
         <!-- Description -->
         <div class="text-white space-y-4">
-          <p class="text-lg leading-relaxed">{game.description}</p>
+          <p class="text-lg leading-relaxed">{descriptionText}</p>
         </div>
 
         <!-- Boutons d'action -->

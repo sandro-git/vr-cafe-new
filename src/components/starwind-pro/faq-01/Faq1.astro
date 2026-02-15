@@ -1,0 +1,68 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/starwind/accordion";
+
+export interface FaqItem {
+  title: string;
+  content: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Section heading */
+  heading?: string;
+  /** Section description */
+  description?: string;
+  /** Array of FAQ items */
+  items?: FaqItem[];
+}
+
+const faq1Styles = tv({
+  base: "mx-auto w-full max-w-2xl px-4 py-24",
+});
+
+const {
+  heading = "Common Questions and Answers",
+  description = "Answers to your most pressing questions about Astro.",
+  items = [
+    {
+      title: "What is Astro?",
+      content: "Astro is an web framework for building fast, scalable, and secure websites.",
+    },
+    {
+      title: "Why should I use Astro?",
+      content:
+        "Astro provides a set of features that make it an ideal choice for building fast, scalable, and secure websites.",
+    },
+    {
+      title: "How do I get started with Astro?",
+      content: "To get started with Astro, follow the instructions in the documentation.",
+    },
+  ],
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={faq1Styles({ class: className })} {...rest}>
+  <div class="flex flex-col">
+    <h2 class="font-heading text-4xl font-semibold">{heading}</h2>
+    <p class="text-muted-foreground mt-2">{description}</p>
+  </div>
+  <Accordion defaultValue="item-1" class="mt-10 space-y-2">
+    {
+      items.map((item, idx) => (
+        <AccordionItem value={`item-${idx + 1}`}>
+          <AccordionTrigger>{item.title}</AccordionTrigger>
+          <AccordionContent>{item.content}</AccordionContent>
+        </AccordionItem>
+      ))
+    }
+  </Accordion>
+</section>

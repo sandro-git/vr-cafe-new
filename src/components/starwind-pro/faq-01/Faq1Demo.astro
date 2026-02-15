@@ -1,0 +1,25 @@
+---
+import Faq1, { type FaqItem } from "./Faq1.astro";
+
+const faqItems: FaqItem[] = [
+  {
+    title: "What is Astro?",
+    content: "Astro is a web framework for building fast, scalable, and secure websites.",
+  },
+  {
+    title: "Why should I use Astro?",
+    content:
+      "Astro provides a set of features that make it an ideal choice for building fast, scalable, and secure websites.",
+  },
+  {
+    title: "How do I get started with Astro?",
+    content: "To get started with Astro, follow the instructions in the documentation.",
+  },
+];
+---
+
+<Faq1
+  heading="Common Questions and Answers"
+  description="Answers to your most pressing questions about Astro."
+  items={faqItems}
+/>

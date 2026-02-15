@@ -1,0 +1,147 @@
+---
+import IconCheck from "@tabler/icons/outline/check.svg";
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Badge } from "@/components/starwind/badge";
+import { Button } from "@/components/starwind/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/starwind/card";
+
+/** Feature item for pricing plan */
+export interface PricingFeature {
+  /** Feature description text */
+  text: string;
+  /** Whether the feature is included */
+  included: boolean;
+}
+
+/** Pricing plan data */
+export interface PricingPlan {
+  /** Plan name */
+  name: string;
+  /** Plan description */
+  description: string;
+  /** Price display string */
+  price: string;
+  /** Billing period */
+  period: string;
+  /** List of features */
+  features: PricingFeature[];
+  /** CTA button text */
+  buttonText: string;
+  /** CTA button href */
+  buttonHref: string;
+  /** Whether this plan is highlighted */
+  highlighted?: boolean;
+  /** Badge text for highlighted plans */
+  badge?: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Section heading */
+  heading?: string;
+  /** Section description */
+  description?: string;
+  /** Array of pricing plans */
+  plans?: PricingPlan[];
+}
+
+const pricing5Styles = tv({
+  base: "@container mx-auto w-full max-w-7xl px-4 py-24",
+});
+
+const {
+  heading = "Pricing Plans",
+  description:
+    sectionDescription = "Choose the perfect plan for your team. Start with a free trial on any plan.",
+  plans = [],
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={pricing5Styles({ class: className })} {...rest}>
+  <div class="mb-12 text-center">
+    <h2 class="font-heading mb-3 text-3xl font-semibold tracking-tight @lg:text-4xl">{heading}</h2>
+    <p class="text-muted-foreground mx-auto max-w-2xl text-pretty">
+      {sectionDescription}
+    </p>
+  </div>
+
+  <div class="grid gap-8 @lg:grid-cols-2 @4xl:grid-cols-3">
+    {
+      plans.map((plan) => (
+        <Card
+          class:list={[
+            "relative flex flex-col",
+            { "border-primary-accent bg-muted": plan.highlighted },
+          ]}
+        >
+          {plan.badge && (
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge variant="primary">{plan.badge}</Badge>
+            </div>
+          )}
+          <CardHeader class="text-center">
+            <CardTitle class="text-2xl">{plan.name}</CardTitle>
+            <CardDescription class:list={[{ "text-foreground/80": plan.highlighted }]}>
+              {plan.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="flex-1">
+            <div class="mb-6 text-center">
+              <div class="flex items-baseline justify-center gap-1">
+                <span class="text-5xl font-bold">{plan.price}</span>
+                <span
+                  class:list={[
+                    "text-sm",
+                    plan.highlighted ? "text-foreground/70" : "text-muted-foreground",
+                  ]}
+                >
+                  /{plan.period}
+                </span>
+              </div>
+            </div>
+            <ul class="space-y-3">
+              {plan.features.map((feature) => (
+                <li class="flex items-start gap-3">
+                  <IconCheck
+                    class:list={[
+                      "size-5 shrink-0",
+                      plan.highlighted ? "text-primary-accent" : "text-primary-accent/80",
+                    ]}
+                    aria-hidden="true"
+                  />
+                  <span
+                    class:list={[
+                      "text-sm",
+                      plan.highlighted ? "text-foreground" : "text-muted-foreground",
+                    ]}
+                  >
+                    {feature.text}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter class="border-t-0 bg-transparent">
+            <Button
+              variant={plan.highlighted ? "primary" : "default"}
+              class="w-full"
+              href={plan.buttonHref}
+            >
+              {plan.buttonText}
+            </Button>
+          </CardFooter>
+        </Card>
+      ))
+    }
+  </div>
+</section>

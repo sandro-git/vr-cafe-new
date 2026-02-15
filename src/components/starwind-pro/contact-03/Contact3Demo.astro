@@ -1,0 +1,21 @@
+---
+import Contact3, { type ServiceOption } from "./Contact3.astro";
+
+const services: ServiceOption[] = [
+  { value: "residential", label: "Residential Service" },
+  { value: "commercial", label: "Commercial Service" },
+  { value: "emergency", label: "Emergency Call" },
+  { value: "estimate", label: "Free Estimate" },
+  { value: "other", label: "Other Inquiry" },
+];
+---
+
+<Contact3
+  badge="Our Location"
+  heading="Come See Us"
+  description="Visit our showroom to see our work firsthand, or send us a message to schedule a consultation."
+  address="456 Commerce Drive, Business Park, Anytown, ST 12345"
+  phone="(555) 987-6543"
+  email="info@elitehvac.com"
+  services={services}
+/>

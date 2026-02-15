@@ -1,22 +1,16 @@
 ---
 import Card from "../components/Card.astro";
 const { experiences } = Astro.props;
-// Interface pour les données spécifiques à l'expérience
+// Interface pour les données spécifiques à l'expérience (Keystatic format)
 interface Experience {
   name: string;
-  description: string;
-  image: {
-    alt: string;
-    asset: {
-      url: string;
-    };
+  description?: string | (() => Promise<any>);
+  image: string; // Local path like "/images/games/slug.jpg"
+  imageAlt: string;
+  tag?: {
+    title: string;
   };
-  tag: {
-    name: string;
-  };
-  slug: {
-    current: string;
-  };
+  slug: string;
 }
 ---
 
@@ -26,7 +20,13 @@ interface Experience {
   {
     experiences.map((exp: Experience) => (
       <div class="w-full">
-        <Card game={exp} slug={exp.slug.current} />
+        <Card
+          game={{
+            ...exp,
+            image: exp.image,
+          }}
+          slug={exp.slug}
+        />
       </div>
     ))
   }

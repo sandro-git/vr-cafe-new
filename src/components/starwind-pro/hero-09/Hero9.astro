@@ -1,0 +1,181 @@
+---
+import IconArrowRight from "@tabler/icons/outline/arrow-right.svg";
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Button } from "@/components/starwind/button";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/starwind/carousel";
+
+export interface CarouselImage {
+  src: string;
+  alt: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Main heading text */
+  heading?: string;
+  /** Description text */
+  description?: string;
+  /** Primary button text */
+  primaryButtonText?: string;
+  /** Primary button href */
+  primaryButtonHref?: string;
+  /** Secondary button text */
+  secondaryButtonText?: string;
+  /** Secondary button href */
+  secondaryButtonHref?: string;
+  /** Array of carousel images */
+  carouselImages?: CarouselImage[];
+}
+
+const hero9Styles = tv({
+  base: "dark bg-background text-foreground @container relative h-full max-h-[70vh] w-full overflow-hidden",
+});
+
+const {
+  heading = "Accelerate Your Development Workflow",
+  description = "Build production-ready applications in half the time. Our comprehensive toolkit and intuitive components help teams ship faster without compromising quality.",
+  primaryButtonText = "Start Free Trial",
+  primaryButtonHref = "#",
+  secondaryButtonText,
+  secondaryButtonHref = "#",
+  carouselImages = [],
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={hero9Styles({ class: className })} {...rest}>
+  <Carousel id="hero9-carousel" autoInit={false} opts={{ loop: true }} class="relative min-h-full">
+    <CarouselContent>
+      {
+        carouselImages.map((image) => (
+          <CarouselItem>
+            {/* you may need to adjust the "min-h-[500px]" class here depending on your content overlay size */}
+            <img src={image.src} alt={image.alt} class="h-full min-h-[500px] w-full object-cover" />
+          </CarouselItem>
+        ))
+      }
+    </CarouselContent>
+    <div
+      class="absolute inset-0 h-full w-full bg-linear-to-r from-black/70 to-black/50 @2xl:to-black/40"
+    >
+    </div>
+  </Carousel>
+
+  <!-- Content Overlay -->
+  <div class="absolute inset-0 flex items-center">
+    <div class="relative mx-auto w-full max-w-7xl px-4 @md:pr-10 @lg:px-8">
+      <div class="max-w-2xl">
+        <!-- Heading -->
+        <h1
+          class="text-foreground font-heading text-4xl font-semibold tracking-tight text-pretty @xl:text-5xl @4xl:text-6xl"
+        >
+          {heading}
+        </h1>
+
+        <!-- Description -->
+        <p class="text-foreground/90 mt-6 text-pretty @xl:text-lg @4xl:text-xl">
+          {description}
+        </p>
+
+        <!-- Buttons -->
+        <div class="mt-8 flex flex-col gap-4 @sm:flex-row">
+          <Button variant="primary" class="rounded-full" href={primaryButtonHref}
+            >{primaryButtonText}</Button
+          >
+          {
+            secondaryButtonText && (
+              <Button variant="ghost" class="group rounded-full" href={secondaryButtonHref}>
+                {secondaryButtonText}
+                <IconArrowRight class="transition-transform group-hover:translate-x-1" />
+              </Button>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Dots (Right Side) -->
+  <div class="absolute top-1/2 right-8 -translate-y-1/2">
+    <div id="hero9-dots" class="hidden flex-col items-center gap-3 @2xl:flex">
+      {
+        carouselImages.map((_, index) => (
+          <button
+            type="button"
+            data-index={index}
+            class="carousel-dot size-2.5 shrink-0 rounded-full bg-white/40 transition-all hover:bg-white/60"
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .carousel-dot.active {
+    background: white;
+    height: calc(var(--spacing) * 5);
+  }
+</style>
+
+<script>
+  import Autoplay from "embla-carousel-autoplay";
+
+  import { initCarousel } from "@/components/starwind/carousel";
+
+  function initHero9Carousel() {
+    const carouselElement = document.getElementById("hero9-carousel");
+    if (!carouselElement) return;
+
+    const dotsContainer = document.getElementById("hero9-dots");
+    if (!dotsContainer) return;
+
+    const dots = dotsContainer.querySelectorAll<HTMLButtonElement>(".carousel-dot");
+
+    // Initialize carousel with autoplay
+    const carouselManager = initCarousel(carouselElement, {
+      opts: { loop: true },
+      plugins: [
+        Autoplay({
+          delay: 5000,
+          stopOnInteraction: true,
+        }),
+      ],
+      setApi: (api) => {
+        // Update dots on slide change
+        const updateDots = () => {
+          const selectedIndex = api.selectedScrollSnap();
+          dots.forEach((dot, index) => {
+            if (index === selectedIndex) {
+              dot.classList.add("active");
+            } else {
+              dot.classList.remove("active");
+            }
+          });
+        };
+
+        // Initial update
+        updateDots();
+
+        // Listen for slide changes
+        api.on("select", updateDots);
+
+        // Add click handlers to dots
+        dots.forEach((dot, index) => {
+          dot.addEventListener("click", () => {
+            api.scrollTo(index);
+          });
+        });
+      },
+    });
+  }
+
+  // Initialize on page load
+  initHero9Carousel();
+
+  // Reinitialize on Astro page transitions
+  document.addEventListener("astro:after-swap", initHero9Carousel);
+</script>

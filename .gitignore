@@ -4,6 +4,9 @@ dist/
 # generated types
 .astro/
 
+# Keystatic
+.keystatic/
+
 # dependencies
 node_modules/
 
@@ -26,3 +29,4 @@ pnpm-debug.log*
 # Local Netlify folder
 .netlify
 .claude/
+.env.local

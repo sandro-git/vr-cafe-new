@@ -1,0 +1,44 @@
+---
+import Footer2, { type FooterColumn } from "./Footer2.astro";
+
+const columns: FooterColumn[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Features", href: "/features" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Changelog", href: "/changelog" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Blog", href: "/blog" },
+      { label: "Careers", href: "/careers" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Documentation", href: "/docs" },
+      { label: "API Reference", href: "/api" },
+      { label: "Community", href: "/community" },
+      { label: "Support", href: "/support" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "License", href: "/license" },
+      { label: "Cookies", href: "/cookies" },
+    ],
+  },
+];
+---
+
+<Footer2 columns={columns} companyName="Your Company" />

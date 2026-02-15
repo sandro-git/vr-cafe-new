@@ -1,0 +1,202 @@
+[
+  {
+    "_createdAt": "2025-07-26T13:35:07Z",
+    "_id": "06d1d6b4-defc-4d9b-94b4-053a39d4011d",
+    "_rev": "74Q4u3bawJE1o0RxYyxGsF",
+    "_type": "tag",
+    "_updatedAt": "2025-07-26T13:35:07Z",
+    "title": "escapeFreeroaming"
+  },
+  {
+    "_createdAt": "2025-11-21T11:13:32Z",
+    "_id": "2d1aaba4-e922-4398-a3c2-b07371d64f4a",
+    "_rev": "LMPdxHHSG2qS9TFKuspu3O",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:13:37Z",
+    "title": "Relaxant"
+  },
+  {
+    "_createdAt": "2025-11-21T11:13:06Z",
+    "_id": "330f55e1-98dc-438d-8451-eaed7468615a",
+    "_rev": "LMPdxHHSG2qS9TFKusprDB",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:13:17Z",
+    "title": "Pour enfant"
+  },
+  {
+    "_createdAt": "2025-11-21T10:48:53Z",
+    "_id": "381cf143-c1c2-4cba-8b4d-c590b7790ab3",
+    "_rev": "v8HkxtuyvjMd3GB0aFcX9f",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:49:07Z",
+    "title": "Multiplayer"
+  },
+  {
+    "_createdAt": "2025-11-21T11:01:02Z",
+    "_id": "3b4584b2-7931-4d92-a7a0-a252f7419e1f",
+    "_rev": "LMPdxHHSG2qS9TFKusogvK",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:01:09Z",
+    "title": "Cinématique"
+  },
+  {
+    "_createdAt": "2025-11-21T10:58:24Z",
+    "_id": "4d3e6007-f5b7-4c79-91ee-bceb21d0c3c1",
+    "_rev": "qGGcN5zW8sqUgIO80r3d1O",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:58:28Z",
+    "title": "Puzzle"
+  },
+  {
+    "_createdAt": "2025-11-21T11:09:09Z",
+    "_id": "54ce389f-d72e-4e19-955d-11e8f67c23fd",
+    "_rev": "qGGcN5zW8sqUgIO80r57DU",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:09:13Z",
+    "title": "Arcade"
+  },
+  {
+    "_createdAt": "2025-11-03T10:46:56Z",
+    "_id": "557c2e14-8598-4a35-8134-f3b40d4f3e07",
+    "_rev": "vthC0F4s522qak7Yptx354",
+    "_type": "tag",
+    "_updatedAt": "2025-11-03T10:47:00Z",
+    "title": "Tir"
+  },
+  {
+    "_createdAt": "2025-11-03T10:47:33Z",
+    "_id": "59f72986-8742-43ad-ad02-b275493b7437",
+    "_rev": "a1IfX4BHwOCzN3LuRP0prD",
+    "_type": "tag",
+    "_updatedAt": "2025-11-03T10:47:37Z",
+    "title": "Médiéval"
+  },
+  {
+    "_createdAt": "2025-11-21T10:50:36Z",
+    "_id": "601db6b9-08fb-4d71-abc3-230cc35d1b8e",
+    "_rev": "FWFQyfDFh2k4Pa1Aljd1GW",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:50:45Z",
+    "title": "A partir de 1 personne"
+  },
+  {
+    "_createdAt": "2025-07-26T13:36:04Z",
+    "_id": "63c79cb8-7fec-42cc-b7d4-98984cea6c96",
+    "_rev": "74Q4u3bawJE1o0RxYyxKlc",
+    "_type": "tag",
+    "_updatedAt": "2025-07-26T13:36:04Z",
+    "title": "jeuxVR"
+  },
+  {
+    "_createdAt": "2025-11-03T14:40:59Z",
+    "_id": "71c5c452-c17c-49d3-bc01-9c5ff0b7a71f",
+    "_rev": "zDMAsMWArcpkPduoZQ0IY9",
+    "_type": "tag",
+    "_updatedAt": "2025-11-03T14:41:06Z",
+    "title": "Fantastique"
+  },
+  {
+    "_createdAt": "2025-07-26T13:34:38Z",
+    "_id": "73e47067-8b74-48e7-b694-485730f8d6e9",
+    "_rev": "ZvxiW5JwCbzpvY83ZM1fea",
+    "_type": "tag",
+    "_updatedAt": "2025-07-26T13:34:38Z",
+    "title": "escapeGame"
+  },
+  {
+    "_createdAt": "2025-11-21T11:08:35Z",
+    "_id": "80270d4a-8052-4ee5-b1e6-8383197e83ee",
+    "_rev": "LMPdxHHSG2qS9TFKuspT4A",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:08:43Z",
+    "title": "Shooters"
+  },
+  {
+    "_createdAt": "2025-11-21T11:08:57Z",
+    "_id": "84ed592a-368a-4ea4-a1e7-0d200a12db2a",
+    "_rev": "FWFQyfDFh2k4Pa1AljgJqi",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:09:00Z",
+    "title": "PVP"
+  },
+  {
+    "_createdAt": "2025-11-21T11:41:12Z",
+    "_id": "8b7b45d1-48f5-42c8-8da9-fb3eb5b783d8",
+    "_rev": "qGGcN5zW8sqUgIO80rFiR8",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:41:20Z",
+    "title": "Jeux de rythme"
+  },
+  {
+    "_createdAt": "2025-11-21T10:58:48Z",
+    "_id": "93760c0d-a6c0-43e5-89fb-3eec8b91042a",
+    "_rev": "qGGcN5zW8sqUgIO80r3hKO",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:58:59Z",
+    "title": "Co-opération"
+  },
+  {
+    "_createdAt": "2025-11-21T11:21:26Z",
+    "_id": "9b450c83-5969-4a35-96c5-5ccff460c20d",
+    "_rev": "qGGcN5zW8sqUgIO80r7Wmi",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T11:21:33Z",
+    "title": "Futuriste"
+  },
+  {
+    "_createdAt": "2025-11-21T10:48:18Z",
+    "_id": "9c2e6761-06ec-4257-adc1-1e9e33671360",
+    "_rev": "mP3HAXyXoZW8LvjNBdvuIj",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:48:24Z",
+    "title": "Aventure"
+  },
+  {
+    "_createdAt": "2025-11-03T10:46:34Z",
+    "_id": "a6094cb2-394a-448c-b26a-6150e859d525",
+    "_rev": "vthC0F4s522qak7Yptx1fy",
+    "_type": "tag",
+    "_updatedAt": "2025-11-03T10:46:45Z",
+    "title": "Horreur"
+  },
+  {
+    "_createdAt": "2025-11-21T10:58:09Z",
+    "_id": "bef41b07-44d9-4216-ab37-09fd18093b3d",
+    "_rev": "LMPdxHHSG2qS9TFKusnk6Y",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:58:14Z",
+    "title": "Exploration"
+  },
+  {
+    "_createdAt": "2025-07-26T13:35:39Z",
+    "_id": "c7edc0f4-8565-45aa-a994-19f210bdb555",
+    "_rev": "74Q4u3bawJE1o0RxYyxIWk",
+    "_type": "tag",
+    "_updatedAt": "2025-07-26T13:35:39Z",
+    "title": "freeroaming"
+  },
+  {
+    "_createdAt": "2025-11-21T10:50:12Z",
+    "_id": "fc02b527-9239-4798-bb5f-b51a065ccb9c",
+    "_rev": "4nJ3upCbsZzKTLv8C5tlTe",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:50:16Z",
+    "title": "Voyage"
+  },
+  {
+    "_createdAt": "2025-11-21T10:49:52Z",
+    "_id": "fcec5094-1037-4129-811c-95e0813d1e5c",
+    "_rev": "LMPdxHHSG2qS9TFKusmJpK",
+    "_type": "tag",
+    "_updatedAt": "2025-11-21T10:49:56Z",
+    "title": "Action"
+  },
+  {
+    "_createdAt": "2025-11-03T14:39:23Z",
+    "_id": "ff3b1aac-b45d-4989-a50f-8d725f832b54",
+    "_rev": "wIcg340W1G3CImbr4kmk5G",
+    "_type": "tag",
+    "_updatedAt": "2025-11-03T14:39:30Z",
+    "title": "Multi Univers"
+  }
+]

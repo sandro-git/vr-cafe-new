@@ -1,0 +1,34 @@
+---
+import IconBolt from "@tabler/icons/outline/bolt.svg";
+import IconCloud from "@tabler/icons/outline/cloud.svg";
+import IconLock from "@tabler/icons/outline/lock.svg";
+import IconUsers from "@tabler/icons/outline/users.svg";
+
+import Feature4, { type FeatureCard } from "./Feature4.astro";
+
+const features: FeatureCard[] = [
+  {
+    icon: IconBolt,
+    title: "Lightning Fast",
+    description:
+      "Optimized for speed and performance. Experience blazing fast load times and smooth interactions.",
+  },
+  {
+    icon: IconCloud,
+    title: "Cloud Sync",
+    description: "Access your data anywhere, anytime. Automatic syncing across all your devices.",
+  },
+  {
+    icon: IconLock,
+    title: "Secure by Default",
+    description: "Enterprise-grade security with end-to-end encryption to keep your data safe.",
+  },
+  {
+    icon: IconUsers,
+    title: "Team Collaboration",
+    description: "Work together seamlessly with real-time collaboration and shared workspaces.",
+  },
+];
+---
+
+<Feature4 heading="Features" subheading="Everything you need in one platform" features={features} />

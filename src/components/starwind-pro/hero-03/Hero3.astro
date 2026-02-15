@@ -1,0 +1,74 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { AspectRatio } from "@/components/starwind/aspect-ratio";
+import { Button } from "@/components/starwind/button";
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Main heading text */
+  heading?: string;
+  /** Description text */
+  description?: string;
+  /** Primary button text */
+  primaryButtonText?: string;
+  /** Primary button href */
+  primaryButtonHref?: string;
+  /** Secondary button text */
+  secondaryButtonText?: string;
+  /** Secondary button href */
+  secondaryButtonHref?: string;
+  /** Image configuration */
+  image?: {
+    src: string;
+    alt: string;
+  };
+}
+
+const hero3Styles = tv({
+  base: "@container mx-auto w-full max-w-7xl px-4 py-24",
+});
+
+const {
+  heading = "Transform Your Ideas Into Reality",
+  description = "Powerful tools and components designed to help you build exceptional web experiences. Start creating today with our intuitive design system.",
+  primaryButtonText = "Get Started Free",
+  primaryButtonHref = "#",
+  secondaryButtonText,
+  secondaryButtonHref = "#",
+  image = {
+    src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    alt: "Analytics dashboard preview",
+  },
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={hero3Styles({ class: className })} {...rest}>
+  <div class="grid gap-12 @2xl:grid-cols-2 @2xl:items-center @2xl:gap-16">
+    <div class="flex flex-col">
+      <h1 class="font-heading text-4xl font-semibold tracking-tight @4xl:text-5xl">
+        {heading}
+      </h1>
+      <p class="text-muted-foreground mt-6 text-lg">
+        {description}
+      </p>
+      <div class="mt-8 flex flex-col flex-wrap gap-4 @md:flex-row">
+        <Button variant="primary" href={primaryButtonHref}>{primaryButtonText}</Button>
+        {
+          secondaryButtonText && (
+            <Button variant="outline" href={secondaryButtonHref}>
+              {secondaryButtonText}
+            </Button>
+          )
+        }
+      </div>
+    </div>
+    <div class="">
+      <AspectRatio ratio={4 / 3} class="overflow-hidden rounded-lg">
+        <img src={image.src} alt={image.alt} class="size-full object-cover" />
+      </AspectRatio>
+    </div>
+  </div>
+</section>

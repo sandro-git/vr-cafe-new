@@ -1,0 +1,80 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Button } from "@/components/starwind/button";
+
+export interface ButtonConfig {
+  text: string;
+  href: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Main heading text */
+  title?: string;
+  /** Description text */
+  description?: string;
+  /** Background image URL */
+  backgroundImage?: string;
+  /** Primary button configuration */
+  primaryButton?: ButtonConfig;
+  /** Secondary button configuration */
+  secondaryButton?: ButtonConfig;
+}
+
+const cta6Styles = tv({
+  base: "@container mx-auto w-full max-w-7xl px-4 py-24",
+});
+
+const {
+  title = "Ready to transform your business?",
+  description = "Join thousands of companies already using our platform to streamline operations and drive growth. Start your journey today.",
+  backgroundImage = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&h=900&fit=crop",
+  primaryButton = { text: "Get Started", href: "/signup" },
+  secondaryButton,
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={cta6Styles({ class: className })} {...rest}>
+  <div class="dark bg-background text-foreground relative overflow-hidden rounded-2xl border">
+    <!-- Background Image -->
+    <div class="absolute inset-0">
+      <img
+        src={backgroundImage}
+        alt=""
+        class="size-full object-cover"
+        loading="lazy"
+        aria-hidden="true"
+      />
+    </div>
+
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/50"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 px-8 py-24 text-center @lg:px-12 @lg:py-24 @3xl:px-16 @3xl:py-32">
+      <h2
+        class="font-heading mb-4 text-3xl font-semibold tracking-tight @lg:text-4xl @2xl:text-5xl"
+      >
+        {title}
+      </h2>
+      <p class="text-foreground/80 mx-auto mb-8 max-w-2xl text-pretty @lg:text-lg">
+        {description}
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <Button variant="primary" href={primaryButton.href}>
+          {primaryButton.text}
+        </Button>
+        {
+          secondaryButton && (
+            <Button variant="default" href={secondaryButton.href}>
+              {secondaryButton.text}
+            </Button>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>

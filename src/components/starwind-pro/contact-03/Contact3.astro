@@ -1,0 +1,241 @@
+---
+import IconMail from "@tabler/icons/outline/mail.svg";
+import IconMapPin from "@tabler/icons/outline/map-pin.svg";
+import IconPhone from "@tabler/icons/outline/phone.svg";
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Button } from "@/components/starwind/button";
+import { Card, CardContent } from "@/components/starwind/card";
+import { Input } from "@/components/starwind/input";
+import { Label } from "@/components/starwind/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/starwind/select";
+import { Textarea } from "@/components/starwind/textarea";
+
+/** Service option for the select dropdown */
+export interface ServiceOption {
+  value: string;
+  label: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Badge/eyebrow text */
+  badge?: string;
+  /** Section heading */
+  heading?: string;
+  /** Section description */
+  description?: string;
+  /** Business address */
+  address?: string;
+  /** Business phone */
+  phone?: string;
+  /** Business email */
+  email?: string;
+  /** Map embed URL (Google Maps, OpenStreetMap, etc.) */
+  mapEmbedUrl?: string;
+  /** Service options for dropdown */
+  services?: ServiceOption[];
+}
+
+const sectionStyles = tv({
+  base: "@container mx-auto w-full max-w-7xl px-4 py-24",
+});
+
+const {
+  badge = "Find Us",
+  heading = "Visit Our Location",
+  description = "Stop by our office or send us a message. We're here to help with all your needs.",
+  address = "123 Main Street, Anytown, ST 12345",
+  phone = "(555) 123-4567",
+  email = "contact@business.com",
+  mapEmbedUrl = "",
+  services = [],
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={sectionStyles({ class: className })} {...rest}>
+  <!-- Header -->
+  <div class="mb-12 text-center">
+    <span
+      class="border-primary/30 text-primary-accent mb-4 inline-block border-b-2 pb-1 text-sm font-bold tracking-[0.2em] uppercase"
+    >
+      {badge}
+    </span>
+    <h2 class="font-heading mt-4 text-3xl font-bold tracking-tight @xl:text-4xl @3xl:text-5xl">
+      {heading}
+    </h2>
+    <p class="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
+      {description}
+    </p>
+  </div>
+
+  <div class="grid gap-8 @3xl:grid-cols-5">
+    <!-- Map Section -->
+    <div class="@3xl:col-span-3">
+      <div
+        class="bg-muted relative aspect-[4/3] overflow-hidden rounded-2xl border @3xl:aspect-auto @3xl:h-full"
+      >
+        {
+          mapEmbedUrl ? (
+            <iframe
+              src={mapEmbedUrl}
+              class="absolute inset-0 h-full w-full"
+              style="border:0;"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Business location map"
+            />
+          ) : (
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+              <div class="bg-primary/10 mb-4 rounded-full p-4">
+                <IconMapPin class="text-primary-accent size-8" />
+              </div>
+              <p class="text-muted-foreground text-sm">Map placeholder</p>
+              <p class="text-muted-foreground mt-1 text-xs">
+                Add your Google Maps or OpenStreetMap embed URL
+              </p>
+            </div>
+          )
+        }
+
+        <!-- Floating Contact Cards -->
+        <div
+          class="absolute right-4 bottom-4 left-4 flex flex-wrap gap-3 @xl:right-6 @xl:bottom-6 @xl:left-6"
+        >
+          <a
+            href={`tel:${phone.replace(/[^0-9+]/g, "")}`}
+            class="bg-background/95 hover:bg-background flex items-center gap-2 rounded-lg px-4 py-2.5 shadow-lg backdrop-blur-sm transition-colors"
+          >
+            <IconPhone class="text-primary-accent size-4" />
+            <span class="text-sm font-medium">{phone}</span>
+          </a>
+          <a
+            href={`mailto:${email}`}
+            class="bg-background/95 hover:bg-background flex items-center gap-2 rounded-lg px-4 py-2.5 shadow-lg backdrop-blur-sm transition-colors"
+          >
+            <IconMail class="text-primary-accent size-4" />
+            <span class="text-sm font-medium">{email}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="@3xl:col-span-2">
+      <Card class="h-full">
+        <CardContent class="flex h-full flex-col">
+          <div class="mb-6">
+            <h3 class="font-heading text-xl font-semibold">Send a Message</h3>
+            <p class="text-muted-foreground mt-1 text-sm">We'll respond within 24 hours</p>
+          </div>
+
+          <form class="flex flex-1 flex-col space-y-4" id="contact-form-03" name="contact-form">
+            <div class="flex flex-col gap-1">
+              <Label for="contact-name-03">Name</Label>
+              <Input
+                id="contact-name-03"
+                name="name"
+                type="text"
+                placeholder="Your full name"
+                required
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <Label for="contact-email-03">Email</Label>
+              <Input
+                id="contact-email-03"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <Label for="contact-phone-03">Phone</Label>
+              <Input id="contact-phone-03" name="phone" type="tel" placeholder="(555) 123-4567" />
+            </div>
+
+            {
+              services.length > 0 && (
+                <div class="flex flex-col gap-1">
+                  <Label for="contact-service-03">Service Type</Label>
+                  <Select id="contact-service-03" name="service">
+                    <SelectTrigger class="w-full">
+                      <SelectValue placeholder="Select a service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {services.map((service) => (
+                          <SelectItem value={service.value}>{service.label}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            }
+
+            <div class="flex flex-1 flex-col gap-1">
+              <Label for="contact-message-03">Message</Label>
+              <Textarea
+                id="contact-message-03"
+                name="message"
+                placeholder="How can we help you?"
+                class="min-h-[100px] resize-none"
+                required
+              />
+            </div>
+
+            <Button variant="primary" type="submit" class="w-full"> Send Message </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+
+  <!-- Address Bar -->
+  <div
+    class="bg-muted/50 mt-8 flex flex-wrap items-center justify-center gap-2 rounded-xl border px-6 py-4 text-center"
+  >
+    <IconMapPin class="text-primary-accent size-5" />
+    <span class="text-foreground font-medium">{address}</span>
+  </div>
+</section>
+
+<script>
+  function handleFormSubmit() {
+    const form = document.querySelector("#contact-form-03") as HTMLFormElement;
+
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const formValues = Object.fromEntries(formData.entries());
+
+        // demo form data logging
+        console.log("Contact form:", formValues);
+
+        // You can add additional logic here like:
+        // - Form validation
+        // - API submission
+        // - Success/error handling
+      });
+    }
+  }
+
+  handleFormSubmit();
+
+  document.addEventListener("astro:after-swap", handleFormSubmit);
+</script>

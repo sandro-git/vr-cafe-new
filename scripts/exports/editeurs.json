@@ -1,0 +1,58 @@
+[
+  {
+    "_createdAt": "2025-07-26T13:38:58Z",
+    "_id": "086a37fc-de28-4f9e-b7e9-df51d3a1a468",
+    "_rev": "ZvxiW5JwCbzpvY83ZM1wqa",
+    "_type": "editeur",
+    "_updatedAt": "2025-07-26T13:39:00Z",
+    "name": "arvi"
+  },
+  {
+    "_createdAt": "2025-07-26T13:40:42Z",
+    "_id": "11b919cc-782c-43b2-9553-155e0343534f",
+    "_rev": "ZvxiW5JwCbzpvY83ZM24M8",
+    "_type": "editeur",
+    "_updatedAt": "2025-07-26T13:40:42Z",
+    "name": "octopod"
+  },
+  {
+    "_createdAt": "2025-07-26T13:40:03Z",
+    "_id": "ab53a43d-9ab7-4f58-b00b-abab5c21b12e",
+    "_rev": "ZvxiW5JwCbzpvY83ZM20TQ",
+    "_type": "editeur",
+    "_updatedAt": "2025-07-26T13:40:03Z",
+    "name": "ubisoft"
+  },
+  {
+    "_createdAt": "2025-07-26T13:39:30Z",
+    "_id": "d0f588fb-9cc0-4396-b9f1-b67dd63028c4",
+    "_rev": "pnkFeZ6saTOgO27Op37U9z",
+    "_type": "editeur",
+    "_updatedAt": "2025-07-26T13:39:30Z",
+    "name": "vex"
+  },
+  {
+    "_createdAt": "2026-02-05T15:55:08Z",
+    "_id": "da3eff7f-9928-44ed-a991-5a9610f3d202",
+    "_rev": "HfB3M0xBzdJXWLtP6v30KF",
+    "_type": "editeur",
+    "_updatedAt": "2026-02-05T15:55:17Z",
+    "name": "VR CAVE"
+  },
+  {
+    "_createdAt": "2025-07-26T13:39:23Z",
+    "_id": "dbd04ade-e1d6-44b0-a8dc-5b204bdbd345",
+    "_rev": "ZvxiW5JwCbzpvY83ZM1xs4",
+    "_type": "editeur",
+    "_updatedAt": "2025-07-26T13:39:23Z",
+    "name": "ldlc"
+  },
+  {
+    "_createdAt": "2026-02-05T15:54:47Z",
+    "_id": "e1c62327-175b-4800-85f3-d94390ac936b",
+    "_rev": "HfB3M0xBzdJXWLtP6zvkvH",
+    "_type": "editeur",
+    "_updatedAt": "2026-02-06T15:12:24Z",
+    "name": "VR CAVE"
+  }
+]

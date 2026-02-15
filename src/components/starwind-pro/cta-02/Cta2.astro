@@ -1,0 +1,60 @@
+---
+import IconArrowRight from "@tabler/icons/outline/arrow-right.svg";
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Button } from "@/components/starwind/button";
+
+export interface ButtonConfig {
+  text: string;
+  href: string;
+}
+
+interface Props extends HTMLAttributes<"section"> {
+  /** Main heading text */
+  title?: string;
+  /** Description text */
+  description?: string;
+  /** Primary button configuration */
+  primaryButton?: ButtonConfig;
+  /** Secondary button configuration (optional) */
+  secondaryButton?: ButtonConfig;
+}
+
+const cta2Styles = tv({
+  base: "@container mx-auto w-full max-w-7xl px-4 py-24",
+});
+
+const {
+  title = "Start building today.",
+  description = "Join thousands of developers and teams already shipping faster with our platform.",
+  primaryButton = { text: "Start Free Trial", href: "/signup" },
+  secondaryButton,
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<section class={cta2Styles({ class: className })} {...rest}>
+  <div>
+    <h2 class="font-heading mb-4 text-3xl font-semibold tracking-tight @lg:text-4xl @2xl:text-5xl">
+      {title}
+    </h2>
+    <p class="text-muted-foreground mb-10 max-w-xl text-pretty @2xl:text-lg">
+      {description}
+    </p>
+    <div class="flex flex-wrap items-center gap-4">
+      <Button variant="primary" href={primaryButton.href}>
+        {primaryButton.text}
+      </Button>
+      {
+        secondaryButton && (
+          <Button variant="ghost" class="group" href={secondaryButton.href}>
+            {secondaryButton.text}
+            <IconArrowRight class="transition-transform group-hover:translate-x-1" />
+          </Button>
+        )
+      }
+    </div>
+  </div>
+</section>

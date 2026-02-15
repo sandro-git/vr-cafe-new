@@ -1,14 +1,18 @@
 ---
 // src/components/CardImage.astro - VERSION MISE À JOUR
-import SanityPicture from "./SanityPicture.astro";
+import LocalPicture from "./LocalPicture.astro";
 import Play from "./Play.astro";
 const { image, alt, slug, title } = Astro.props;
+
+// Handle both old Sanity format and new Keystatic format
+const imagePath = typeof image === 'string' ? image : image?.asset?.url;
+const imageAlt = alt || title;
 ---
 
 <a href={"/" + slug} class="block w-full relative group overflow-hidden rounded-lg">
-  <SanityPicture
-    image={image}
-    alt={alt}
+  <LocalPicture
+    image={imagePath}
+    alt={imageAlt}
     className="w-full transition-all hover:shadow-xl"
   />
   <!-- Dégradé sombre en bas pour améliorer la lisibilité -->

@@ -1,24 +1,407 @@
 ---
-// Welcome to Astro! Everything between these triple-dash code fences
-// is your "component frontmatter". It never runs in the browser.
+// Updated with StarWind Pro blocks
 
 //components
 import LandingImage from "../components/LandingImage.astro";
-import Title from "../components/Title.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Pricing from "../components/Pricing.astro";
-import Hero from "../components/Hero.astro";
-import Features from "../components/Features.astro";
-import FAQ from "../components/FAQ.astro";
 import Partners from "../components/Partners.astro";
+
+// StarWind Pro blocks
+import Hero3 from "@/components/starwind-pro/hero-03/Hero3.astro";
+import Feature4 from "@/components/starwind-pro/feature-04/Feature4.astro";
+import Pricing5 from "@/components/starwind-pro/pricing-05/Pricing5.astro";
+import Faq1 from "@/components/starwind-pro/faq-01/Faq1.astro";
+import Cta2 from "@/components/starwind-pro/cta-02/Cta2.astro";
+
+// StarWind base components
+import Button from "@/components/starwind/button/Button.astro";
+import Card from "@/components/starwind/card/Card.astro";
+import CardHeader from "@/components/starwind/card/CardHeader.astro";
+import CardContent from "@/components/starwind/card/CardContent.astro";
+import Badge from "@/components/starwind/badge/Badge.astro";
+import Accordion from "@/components/starwind/accordion/Accordion.astro";
+import AccordionItem from "@/components/starwind/accordion/AccordionItem.astro";
+import AccordionTrigger from "@/components/starwind/accordion/AccordionTrigger.astro";
+import AccordionContent from "@/components/starwind/accordion/AccordionContent.astro";
+
+// FAQ data
+const faqs = [
+  {
+    question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
+    answer: "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti."
+  },
+  {
+    question: "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
+    answer: "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter."
+  },
+  {
+    question: "Y aura-t-il d'autres personnes dans notre partie ?",
+    answer: "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe."
+  },
+  {
+    question: "Vos jeux sont-ils adaptés aux enfants ?",
+    answer: "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place."
+  },
+  {
+    question: "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
+    answer: 'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.'
+  },
+  {
+    question: "Je suis en fauteuil roulant, est-ce accessible ?",
+    answer: "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap."
+  },
+  {
+    question: "Peut-on annuler ou reporter ?",
+    answer: "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux."
+  },
+  {
+    question: "Peut-on venir sans réserver ?",
+    answer: "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités."
+  }
+];
 ---
 
 <BaseLayout>
   <LandingImage />
-  <Hero />
-  <Features />
-  <Title title="Tarifs" />
-  <Pricing />
+
+  <!-- Hero Section with StarWind -->
+  <section class="relative bg-white dark:bg-gray-900">
+    <div class="py-16 px-4 mx-auto max-w-screen-xl text-center lg:py-24 lg:px-12">
+      <h1 class="mb-8 text-4xl font-extrabold tracking-tight leading-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+        Explorez les possibilités de la réalité virtuelle au VR Café !
+      </h1>
+
+      <div class="max-w-5xl mx-auto mb-12 space-y-6">
+        <!-- Carte 1 -->
+        <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
+              Plongez au cœur d'univers extraordinaires grâce à nos casques de réalité virtuelle dernière génération ! Au VR Café, chaque visite devient une véritable aventure : explorez des mondes fantastiques, défiez les lois de la gravité, vivez des sensations fortes ou découvrez des expériences contemplatives plus apaisantes.
+            </p>
+          </div>
+        </div>
+
+        <!-- Carte 2 -->
+        <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-pink-400 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+              </svg>
+            </div>
+            <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
+              Que vous soyez en famille, entre amis ou en session de team-building, notre équipe vous accompagne pour créer des moments inoubliables. Notre espace chaleureux et convivial est pensé pour tous : débutants curieux, joueurs passionnés ou groupes en quête d'une activité originale.
+            </p>
+          </div>
+        </div>
+
+        <!-- Carte 3 -->
+        <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
+              Partagez des fous rires, des frissons et des émotions intenses dans un environnement moderne, accueillant et immersif. Au VR Café de Canet, ce ne sont pas seulement des jeux… mais des souvenirs uniques qui vous attendent.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton CTA -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button href="/reservation" size="lg" class="bg-white text-purple-900 hover:bg-yellow-300 transform hover:scale-110 transition-all duration-300 shadow-2xl rounded-full px-8 py-4">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          Réserver maintenant
+        </Button>
+        <Button href="/jeux" variant="outline" size="lg" class="border-2 border-white text-white hover:bg-white/20 backdrop-blur-sm transform hover:scale-110 transition-all duration-300 rounded-full px-8 py-4">
+          Découvrir nos jeux
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section with StarWind -->
+  <section class="bg-white dark:bg-gray-900">
+    <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
+      <div class="max-w-screen mb-8 lg:mb-16">
+        <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">
+          Pour Qui ?
+        </h2>
+        <p class="text-gray-500 sm:text-xl dark:text-gray-400">
+          Un espace convivial pour tous. Profitez de notre coin café entre deux sessions VR !
+        </p>
+      </div>
+      <div class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0">
+        <div>
+          <div class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-blue-100 lg:h-12 lg:w-12 dark:bg-blue-900">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+            </svg>
+          </div>
+          <h3 class="mb-2 text-xl font-bold dark:text-white">En Famille</h3>
+          <p class="text-gray-500 dark:text-gray-400">
+            Créez des souvenirs inoubliables en partageant des aventures VR avec vos proches.
+            De 7 à 77 ans, tout le monde trouve son bonheur !
+          </p>
+        </div>
+        <div>
+          <div class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-green-100 lg:h-12 lg:w-12 dark:bg-green-900">
+            <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+            </svg>
+          </div>
+          <h3 class="mb-2 text-xl font-bold dark:text-white">Entre Amis</h3>
+          <p class="text-gray-500 dark:text-gray-400">
+            Anniversaires, EVG/EVJF, ou simple soirée fun : vivez des aventures épiques
+            et créez des souvenirs impérissables ensemble !
+          </p>
+        </div>
+        <div>
+          <div class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-purple-100 lg:h-12 lg:w-12 dark:bg-purple-900">
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
+            </svg>
+          </div>
+          <h3 class="mb-2 text-xl font-bold dark:text-white">Entreprises</h3>
+          <p class="text-gray-500 dark:text-gray-400">
+            Team-building innovant, séminaires ou événements corporate : renforcez la cohésion
+            d'équipe à travers des défis VR stimulants et mémorables.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="bg-white dark:bg-gray-900 py-8">
+    <div class="container mx-auto px-4">
+      <h2 class="my-16 text-center text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
+        Tarifs
+      </h2>
+      <div class="md:container mx-4 md:mx-auto flex flex-col lg:flex-row gap-6 md:gap-8 md:justify-center items-center md:items-stretch pt-6 pb-12 flex-wrap">
+
+        <!-- 30 min Card -->
+        <Card class="relative w-full max-w-sm p-6 sm:p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+          <CardHeader>
+            <h2 class="text-center mb-4 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              30 min
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div class="flex flex-col text-gray-900 dark:text-white mb-4">
+              <div class="text-center">
+                <span class="text-5xl md:text-6xl font-extrabold tracking-tight">18</span>
+                <span class="text-3xl font-semibold">€</span>
+                <span class="ms-1 text-xl font-normal text-gray-500 dark:text-gray-400">/personne</span>
+              </div>
+            </div>
+            <ul role="list" class="space-y-5 my-7">
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">30 min de jeu</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 20 escapes games</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 10 jeux VR</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 10 jeux Free Roaming</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Pour tous les goûts de jeu</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Pour tous les âges de 7 à 77 ans</span>
+              </li>
+            </ul>
+            <Button href="/reservation" class="w-full bg-blue-700 hover:bg-blue-800 text-white">
+              Réserver maintenant
+            </Button>
+          </CardContent>
+        </Card>
+
+        <!-- 1 Heure Card - Popular -->
+        <Card class="relative w-full max-w-sm p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-500 md:scale-105 hover:scale-110 transition-all duration-300 hover:shadow-2xl">
+          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <Badge class="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold px-6 py-2 shadow-lg whitespace-nowrap">
+              ⭐ Meilleur choix
+            </Badge>
+          </div>
+          <CardHeader>
+            <h2 class="text-center mb-4 text-5xl font-extrabold tracking-tight text-blue-700 dark:text-blue-400">
+              1 Heure
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div class="flex flex-col text-gray-900 dark:text-white mb-4">
+              <div class="mb-4">
+                <div class="flex items-baseline justify-center mb-2">
+                  <span class="text-xl font-normal text-gray-500 dark:text-gray-400">et à partir de:</span>
+                </div>
+                <div class="text-center mb-4">
+                  <span class="text-5xl md:text-6xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400">25</span>
+                  <span class="text-3xl font-semibold text-blue-600 dark:text-blue-400">€</span>
+                  <span class="ms-1 text-xl font-normal text-gray-500 dark:text-gray-400">/personne</span>
+                </div>
+                <div class="bg-blue-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
+                  <p class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Prix de groupe :</p>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-gray-600 dark:text-gray-300">1-2 personnes</span>
+                    <span class="font-bold text-blue-600 dark:text-blue-400">29€/pers</span>
+                  </div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-gray-600 dark:text-gray-300">3-4 personnes</span>
+                    <span class="font-bold text-blue-600 dark:text-blue-400">27€/pers</span>
+                  </div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-gray-600 dark:text-gray-300">5+ personnes</span>
+                    <span class="font-bold text-blue-600 dark:text-blue-400">25€/pers</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ul role="list" class="space-y-5 my-7">
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">1h de jeu effectif</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 20 escapes games</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 10 jeux VR</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">+ de 10 jeux Free Roaming</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Pour tous les goûts de jeu</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Pour tous les âges de 7 à 77 ans</span>
+              </li>
+            </ul>
+            <Button href="/reservation" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transform hover:scale-105">
+              Réserver maintenant
+            </Button>
+          </CardContent>
+        </Card>
+
+        <!-- Anniversaire Card -->
+        <Card class="relative w-full max-w-sm p-6 sm:p-8 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-gray-800 dark:to-gray-900 border-2 border-pink-400 hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+          <CardHeader>
+            <h2 class="text-center mb-4 text-5xl font-extrabold tracking-tight text-pink-600 dark:text-pink-400">
+              🎉 Anniversaire 🎂
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div class="mb-6">
+              <div class="text-center">
+                <span class="text-5xl md:text-6xl font-extrabold tracking-tight text-pink-600 dark:text-pink-400">25</span>
+                <span class="text-3xl font-semibold text-pink-600 dark:text-pink-400">€</span>
+                <span class="ms-1 text-xl font-normal text-gray-500 dark:text-gray-400">/personne</span>
+              </div>
+            </div>
+            <ul role="list" class="space-y-5 my-7">
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">25€ par personne</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">1h de jeu VR par enfant</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Table mise à disposition</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Apportez votre goûter et boissons</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Choix parmi tous nos jeux</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">Encadrement et animation inclus</span>
+              </li>
+            </ul>
+            <Button href="/reservation" class="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white transform hover:scale-105">
+              Réserver maintenant
+            </Button>
+          </CardContent>
+        </Card>
+
+      </div>
+    </div>
+  </section>
+
   <Partners />
-  <FAQ ctaLink="/contact" />
+
+  <!-- FAQ Section with StarWind -->
+  <section class="bg-white dark:bg-gray-900 py-12 md:py-20">
+    <div class="container mx-auto px-4 max-w-4xl">
+      <h2 class="mb-8 text-4xl md:text-5xl font-extrabold text-center text-gray-900 dark:text-white">
+        FAQ VR Café
+      </h2>
+      <p class="text-center text-gray-600 dark:text-gray-300 mb-12 text-lg">
+        Les réponses à vos questions les plus fréquentes
+      </p>
+
+      <Accordion type="single" collapsible class="space-y-4">
+        {faqs.map((faq, index) => (
+          <AccordionItem value={`item-${index}`} class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+            <AccordionTrigger class="px-6 py-5 text-left hover:no-underline">
+              <span class="text-lg font-semibold text-gray-900 dark:text-white pr-8">
+                {faq.question}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent class="px-6 pb-5 border-t border-gray-200 dark:border-gray-700">
+              <p class="text-gray-700 dark:text-gray-300 leading-relaxed pt-4">
+                {faq.answer}
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+
+      <!-- CTA Section -->
+      <div class="mt-12 text-center">
+        <p class="text-gray-600 dark:text-gray-300 mb-4">Vous avez d'autres questions ?</p>
+        <Button href="/contact" size="lg" class="bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105 shadow-lg hover:shadow-xl">
+          Contactez-nous
+        </Button>
+      </div>
+    </div>
+  </section>
+
 </BaseLayout>

@@ -1,8 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-import sanity from '@sanity/astro';
-import react from '@astrojs/react';
+import keystatic from '@keystatic/astro';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -12,14 +11,7 @@ import partytown from '@astrojs/partytown';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [sanity(
-    {
-      projectId: '0oshw5tf',
-      dataset: 'production',
-      useCdn: true, // See note on using the CDN
-      apiVersion: "2025-01-28", // insert the current date to access the latest version of the API
-      studioBasePath: '/studio'
-    }), react(), partytown()],
+	integrations: [keystatic(), partytown()],
 
   vite: {
     plugins: [
@@ -29,9 +21,9 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Grouper tout Sanity ensemble pour éviter les problèmes de dépendances circulaires
-            if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
-              return 'sanity';
+            // Grouper tout Keystatic ensemble
+            if (id.includes('@keystatic/')) {
+              return 'keystatic';
             }
             // Séparer VideoPlayer
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
