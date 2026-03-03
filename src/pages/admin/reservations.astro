@@ -1,0 +1,340 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-6xl mx-auto">
+
+      <!-- En-tête -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Réservations</h1>
+          <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <label for="date-filter" class="text-sm text-gray-400 shrink-0">Date :</label>
+          <input
+            type="date" id="date-filter"
+            class="bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            id="btn-today"
+            class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl transition-colors border border-gray-600"
+          >
+            Aujourd'hui
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistiques du jour -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
+          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Total</p>
+          <p id="stat-total" class="text-2xl font-bold text-white">—</p>
+        </div>
+        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
+          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Confirmées</p>
+          <p id="stat-confirmed" class="text-2xl font-bold text-green-400">—</p>
+        </div>
+        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
+          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Annulées</p>
+          <p id="stat-cancelled" class="text-2xl font-bold text-red-400">—</p>
+        </div>
+        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
+          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Joueurs</p>
+          <p id="stat-players" class="text-2xl font-bold text-blue-400">—</p>
+        </div>
+      </div>
+
+      <!-- Erreur -->
+      <div id="admin-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+      <!-- Chargement -->
+      <div id="admin-loading" class="py-16 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-400">Chargement...</p>
+      </div>
+
+      <!-- Vide -->
+      <div id="admin-empty" class="hidden py-16 text-center">
+        <p class="text-4xl mb-3">📅</p>
+        <p class="text-white font-medium">Aucune réservation ce jour</p>
+        <p class="text-gray-400 text-sm mt-1">Profitez-en pour vous reposer !</p>
+      </div>
+
+      <!-- Tableau -->
+      <div id="admin-table-wrap" class="hidden">
+
+        <!-- Vue mobile : cartes -->
+        <div id="admin-cards" class="sm:hidden space-y-3"></div>
+
+        <!-- Vue desktop : tableau -->
+        <div class="hidden sm:block overflow-x-auto rounded-2xl border border-gray-700">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-800">
+              <tr class="text-left text-gray-400 text-xs uppercase tracking-wide">
+                <th class="px-5 py-3 font-medium">Horaire</th>
+                <th class="px-5 py-3 font-medium">Client</th>
+                <th class="px-5 py-3 font-medium">Contact</th>
+                <th class="px-5 py-3 font-medium">Session</th>
+                <th class="px-5 py-3 font-medium">Boxes</th>
+                <th class="px-5 py-3 font-medium">Statut</th>
+                <th class="px-5 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="reservations-body" class="divide-y divide-gray-700"></tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  // @ts-nocheck
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  let currentDate = localDateStr(new Date());
+  let reservationsCache = [];
+
+  // ── Chargement ────────────────────────────────────────────────────────────
+  async function loadReservations(dateStr) {
+    showState('loading');
+    hideError();
+
+    const start = new Date(dateStr + 'T00:00:00');
+    const end = new Date(dateStr + 'T23:59:59');
+
+    const { data, error } = await supabase
+      .from('reservations')
+      .select(`
+        *,
+        reservation_boxes (
+          box_id,
+          boxes ( nom )
+        )
+      `)
+      .gte('creneau_debut', start.toISOString())
+      .lte('creneau_debut', end.toISOString())
+      .order('creneau_debut');
+
+    if (error) {
+      showState('error');
+      showError('Erreur Supabase : ' + error.message);
+      updateStats([]);
+      return;
+    }
+
+    reservationsCache = data ?? [];
+    updateStats(reservationsCache);
+
+    if (!reservationsCache.length) {
+      showState('empty');
+      return;
+    }
+
+    renderTable(reservationsCache);
+    renderCards(reservationsCache);
+    showState('table');
+  }
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  function updateStats(reservations) {
+    const confirmed = reservations.filter(r => r.statut === 'confirmée');
+    const cancelled = reservations.filter(r => r.statut === 'annulée');
+    const players = confirmed.reduce((sum, r) => sum + (r.nb_personnes || 0), 0);
+
+    document.getElementById('stat-total').textContent = String(reservations.length);
+    document.getElementById('stat-confirmed').textContent = String(confirmed.length);
+    document.getElementById('stat-cancelled').textContent = String(cancelled.length);
+    document.getElementById('stat-players').textContent = String(players);
+  }
+
+  // ── Tableau desktop ────────────────────────────────────────────────────────
+  function renderTable(reservations) {
+    const tbody = document.getElementById('reservations-body');
+    tbody.innerHTML = '';
+
+    reservations.forEach(res => {
+      const { h1, h2, boxNames, badge } = resDisplay(res);
+
+      const tr = document.createElement('tr');
+      tr.className = 'text-gray-300 hover:bg-gray-700/30 transition-colors';
+      tr.dataset.id = res.id;
+      tr.innerHTML = `
+        <td class="px-5 py-4">
+          <span class="font-semibold text-white">${h1}</span>
+          <span class="text-gray-500"> → ${h2}</span>
+        </td>
+        <td class="px-5 py-4">
+          <p class="font-medium text-white">${esc(res.client_nom)}</p>
+          ${res.notes ? `<p class="text-gray-500 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
+        </td>
+        <td class="px-5 py-4">
+          <p>${esc(res.client_email)}</p>
+          <p class="text-gray-500 text-xs mt-0.5">${esc(res.client_telephone)}</p>
+        </td>
+        <td class="px-5 py-4">
+          <p>${res.duree_minutes} min</p>
+          <p class="text-gray-500 text-xs mt-0.5">${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</p>
+        </td>
+        <td class="px-5 py-4 text-gray-400 text-xs">${esc(boxNames)}</td>
+        <td class="px-5 py-4">
+          <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
+        </td>
+        <td class="px-5 py-4">
+          ${res.statut === 'confirmée'
+            ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors" data-id="${res.id}">Annuler</button>`
+            : res.statut === 'annulée'
+              ? `<button class="btn-noshow text-xs text-gray-500 hover:text-yellow-400 transition-colors" data-id="${res.id}">No-show</button>`
+              : ''
+          }
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── Cartes mobile ──────────────────────────────────────────────────────────
+  function renderCards(reservations) {
+    const container = document.getElementById('admin-cards');
+    container.innerHTML = '';
+
+    reservations.forEach(res => {
+      const { h1, h2, boxNames, badge } = resDisplay(res);
+
+      const card = document.createElement('div');
+      card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5';
+      card.dataset.id = res.id;
+      card.innerHTML = `
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <span class="text-white font-bold text-lg">${h1}</span>
+            <span class="text-gray-400"> → ${h2}</span>
+          </div>
+          <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
+        </div>
+        <p class="font-medium text-white mb-1">${esc(res.client_nom)}</p>
+        <p class="text-gray-400 text-sm">${esc(res.client_email)}</p>
+        <p class="text-gray-400 text-sm">${esc(res.client_telephone)}</p>
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-600">
+          <div class="text-xs text-gray-500">
+            ${res.duree_minutes} min · ${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''} · ${esc(boxNames)}
+          </div>
+          ${res.statut === 'confirmée'
+            ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors" data-id="${res.id}">Annuler</button>`
+            : ''
+          }
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ── Helper affichage réservation ──────────────────────────────────────────
+  function resDisplay(res) {
+    const debut = new Date(res.creneau_debut);
+    const fin = new Date(res.creneau_fin);
+    const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const boxNames = res.reservation_boxes
+      ?.map(rb => rb.boxes?.nom ?? `Box ${rb.box_id}`)
+      .join(', ') ?? '—';
+    const badges = {
+      'confirmée': 'bg-green-900/50 text-green-400 border-green-800',
+      'annulée': 'bg-red-900/50 text-red-400 border-red-800',
+      'no_show': 'bg-yellow-900/50 text-yellow-400 border-yellow-800',
+    };
+    const badge = badges[res.statut] ?? 'bg-gray-700 text-gray-400 border-gray-600';
+    return { h1, h2, boxNames, badge };
+  }
+
+  // ── Actions (event delegation) ────────────────────────────────────────────
+  document.addEventListener('click', async e => {
+    const cancelBtn = /** @type {HTMLElement} */ (e.target).closest('.btn-cancel');
+    const noshowBtn = /** @type {HTMLElement} */ (e.target).closest('.btn-noshow');
+
+    if (cancelBtn) {
+      const id = cancelBtn.dataset.id;
+      if (!id) return;
+      if (!confirm('Confirmer l\'annulation de cette réservation ?')) return;
+      await updateStatut(id, 'annulée', cancelBtn);
+    }
+
+    if (noshowBtn) {
+      const id = noshowBtn.dataset.id;
+      if (!id) return;
+      if (!confirm('Marquer ce client comme no-show ?')) return;
+      await updateStatut(id, 'no_show', noshowBtn);
+    }
+  });
+
+  async function updateStatut(id, newStatut, btn) {
+    /** @type {HTMLButtonElement} */ (btn).disabled = true;
+    btn.textContent = '...';
+
+    const { error } = await supabase
+      .from('reservations')
+      .update({ statut: newStatut })
+      .eq('id', id);
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = newStatut === 'annulée' ? 'Annuler' : 'No-show';
+      showError('Erreur : ' + error.message);
+    } else {
+      loadReservations(currentDate);
+    }
+  }
+
+  // ── UI helpers ────────────────────────────────────────────────────────────
+  function showState(state) {
+    ['loading', 'error', 'empty', 'table'].forEach(s => {
+      const el = document.getElementById(`admin-${s}${s === 'table' ? '-wrap' : ''}`);
+      if (el) el.classList.toggle('hidden', s !== state);
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('admin-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function hideError() {
+    document.getElementById('admin-error').classList.add('hidden');
+  }
+
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function esc(str) {
+    return String(str ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ── Contrôles date ─────────────────────────────────────────────────────────
+  const dateInput = /** @type {HTMLInputElement} */ (document.getElementById('date-filter'));
+  dateInput.value = currentDate;
+  dateInput.addEventListener('change', e => {
+    currentDate = /** @type {HTMLInputElement} */ (e.target).value;
+    loadReservations(currentDate);
+  });
+
+  document.getElementById('btn-today').addEventListener('click', () => {
+    currentDate = localDateStr(new Date());
+    dateInput.value = currentDate;
+    loadReservations(currentDate);
+  });
+
+  // ── Démarrage ─────────────────────────────────────────────────────────────
+  loadReservations(currentDate);
+</script>
