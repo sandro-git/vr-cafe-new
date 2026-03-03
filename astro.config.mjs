@@ -28,13 +28,6 @@ export default defineConfig({
     build: {
       chunkSizeWarningLimit: 8000,
       rollupOptions: {
-        onwarn(warning, warn) {
-          // Warning connu de @sanity/astro en mode SSR — pas actionnable
-          if (warning.message?.includes('getStaticPaths')) return;
-          // Warning interne d'Astro sur des imports inutilisés dans ses propres fichiers
-          if (warning.message?.includes('@astrojs/internal-helpers/remote')) return;
-          warn(warning);
-        },
         output: {
           manualChunks: (id) => {
             // Studio Sanity (lourd) : séparé du client léger
