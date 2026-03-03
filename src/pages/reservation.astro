@@ -193,6 +193,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
+    // UI immédiate — pas besoin de Supabase
+    setupDateInput();
+    setupNbPersonnes();
+    setupButtons();
+
+    // Supabase uniquement pour config + durées
     try {
       await Promise.all([loadConfig(), loadDurees()]);
     } catch (err) {
@@ -200,10 +206,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
       return;
     }
-    setupDateInput();
-    setupNbPersonnes();
     renderDurees();
-    setupButtons();
   }
 
   async function loadConfig() {
