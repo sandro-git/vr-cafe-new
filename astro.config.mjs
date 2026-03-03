@@ -43,6 +43,10 @@ export default defineConfig({
     }
   },
 
+  image: {
+    domains: ['cdn.sanity.io'],
+  },
+
   output: "server",
   adapter: netlify({
     edgeMiddleware: true,
