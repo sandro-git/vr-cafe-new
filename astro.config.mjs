@@ -30,13 +30,9 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Studio Sanity (lourd) : séparé du client léger
-            if (id.includes('@sanity/ui') || id.includes('@sanity/icons') || id.includes('studio-component') || id.includes('sanity/dist/studio')) {
-              return 'sanity-studio';
-            }
-            // Client Sanity utilisé sur les pages publiques
-            if (id.includes('@sanity/') || id.includes('sanity/lib')) {
-              return 'sanity-core';
+            // Tout Sanity dans un seul chunk pour éviter les dépendances circulaires
+            if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
+              return 'sanity';
             }
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
