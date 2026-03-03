@@ -26,14 +26,25 @@ export default defineConfig({
       tailwindcss()
     ],
     build: {
+      chunkSizeWarningLimit: 8000,
       rollupOptions: {
+        onwarn(warning, warn) {
+          // Warning connu de @sanity/astro en mode SSR — pas actionnable
+          if (warning.message?.includes('getStaticPaths')) return;
+          // Warning interne d'Astro sur des imports inutilisés dans ses propres fichiers
+          if (warning.message?.includes('@astrojs/internal-helpers/remote')) return;
+          warn(warning);
+        },
         output: {
           manualChunks: (id) => {
-            // Grouper tout Sanity ensemble pour éviter les problèmes de dépendances circulaires
-            if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
-              return 'sanity';
+            // Studio Sanity (lourd) : séparé du client léger
+            if (id.includes('@sanity/ui') || id.includes('@sanity/icons') || id.includes('studio-component') || id.includes('sanity/dist/studio')) {
+              return 'sanity-studio';
             }
-            // Séparer VideoPlayer
+            // Client Sanity utilisé sur les pages publiques
+            if (id.includes('@sanity/') || id.includes('sanity/lib')) {
+              return 'sanity-core';
+            }
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
             }
