@@ -32,6 +32,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               id="date-input"
               class="w-full min-w-0 appearance-none bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [color-scheme:dark]"
             />
+            <p id="date-error" class="hidden mt-2 text-sm text-red-400">Les réservations pour une date passée ne sont pas possibles.</p>
           </div>
 
           <!-- Nombre de joueurs -->
@@ -246,9 +247,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   // ── Setup UI ──────────────────────────────────────────────────────────────
   function setupDateInput() {
     const input = /** @type {HTMLInputElement} */ (document.getElementById('date-input'));
-    input.min = localDateStr(new Date());
+    const dateError = document.getElementById('date-error');
+    const today = localDateStr(new Date());
+    input.min = today;
     input.addEventListener('change', () => {
-      selectedDate = input.value;
+      const isPast = input.value && input.value < today;
+      dateError.classList.toggle('hidden', !isPast);
+      input.classList.toggle('border-red-500', isPast);
+      selectedDate = isPast ? '' : input.value;
       checkStep1Valid();
     });
   }

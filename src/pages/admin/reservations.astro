@@ -24,12 +24,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             type="date" id="date-filter"
             class="bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button
-            id="btn-today"
-            class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl transition-colors border border-gray-600"
-          >
-            Aujourd'hui
-          </button>
         </div>
       </div>
 
@@ -72,11 +66,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       <!-- Tableau -->
       <div id="admin-table-wrap" class="hidden">
 
-        <!-- Vue mobile : cartes -->
-        <div id="admin-cards" class="sm:hidden space-y-3"></div>
+        <!-- Vue mobile/tablette : cartes -->
+        <div id="admin-cards" class="lg:hidden space-y-3"></div>
 
         <!-- Vue desktop : tableau -->
-        <div class="hidden sm:block overflow-x-auto rounded-2xl border border-gray-700">
+        <div class="hidden lg:block overflow-x-auto rounded-2xl border border-gray-700">
           <table class="w-full text-sm">
             <thead class="bg-gray-800">
               <tr class="text-left text-gray-400 text-xs uppercase tracking-wide">
@@ -209,7 +203,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     });
   }
 
-  // ── Cartes mobile ──────────────────────────────────────────────────────────
+  // ── Cartes mobile/tablette ─────────────────────────────────────────────────
   function renderCards(reservations) {
     const container = document.getElementById('admin-cards');
     container.innerHTML = '';
@@ -235,10 +229,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <div class="text-xs text-gray-500">
             ${res.duree_minutes} min · ${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''} · ${esc(boxNames)}
           </div>
-          ${res.statut === 'confirmée'
-            ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors" data-id="${res.id}">Annuler</button>`
-            : ''
-          }
+          <div class="flex gap-3">
+            ${res.statut === 'confirmée'
+              ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors font-medium" data-id="${res.id}">Annuler</button>`
+              : ''
+            }
+            ${res.statut === 'annulée'
+              ? `<button class="btn-noshow text-xs text-yellow-500 hover:text-yellow-300 transition-colors font-medium" data-id="${res.id}">No-show</button>`
+              : ''
+            }
+          </div>
         </div>
       `;
       container.appendChild(card);
@@ -332,12 +332,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   dateInput.value = currentDate;
   dateInput.addEventListener('change', e => {
     currentDate = /** @type {HTMLInputElement} */ (e.target).value;
-    loadReservations(currentDate);
-  });
-
-  document.getElementById('btn-today').addEventListener('click', () => {
-    currentDate = localDateStr(new Date());
-    dateInput.value = currentDate;
     loadReservations(currentDate);
   });
 

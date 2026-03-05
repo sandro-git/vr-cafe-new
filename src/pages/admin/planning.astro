@@ -158,15 +158,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   // ── Couleurs statut + durée ───────────────────────────────────────────────
-  function statusClass(statut, duree) {
-    if (statut === 'annulée')  return 'bg-red-900/60 border-red-800 text-red-200';
-    if (statut === 'no_show')  return 'bg-yellow-900/60 border-yellow-700 text-yellow-200';
-    if (statut === 'confirmée') {
-      return duree <= 30
-        ? 'bg-violet-700/60 border-violet-500 text-violet-100'  // 30 min → violet
-        : 'bg-blue-700/60 border-blue-500 text-blue-100';        // 60 min → bleu
-    }
-    return 'bg-gray-700/60 border-gray-600 text-gray-300';
+  function statusClass(duree) {
+    return duree <= 30
+      ? 'bg-violet-700/60 border-violet-500 text-violet-100'
+      : 'bg-blue-700/60 border-blue-500 text-blue-100';
   }
 
   // ── Chargement données ─────────────────────────────────────────────────────
@@ -195,6 +190,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       `)
       .gte('creneau_debut', start.toISOString())
       .lte('creneau_debut', end.toISOString())
+      .not('statut', 'in', '("annulée","no_show")')
       .order('creneau_debut');
     return { data: data ?? [], error };
   }
@@ -254,7 +250,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     // Grille CSS
     const gridEl = document.createElement('div');
     gridEl.style.display = 'grid';
-    gridEl.style.gridTemplateColumns = '3rem repeat(7, 1fr)';
+    gridEl.style.gridTemplateColumns = '3rem repeat(7, minmax(90px, 1fr))';
 
     // Ligne d'en-tête
     const headerSpacer = document.createElement('div');
@@ -316,7 +312,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       right: 0;
       bottom: 0;
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(90px, 1fr));
       pointer-events: none;
     `;
 
@@ -354,7 +350,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
         const bloc = document.createElement('div');
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
-        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-default ${statusClass(res.statut, res.duree_minutes)}`;
+        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-default ${statusClass(res.duree_minutes)}`;
         bloc.title = `${esc(res.client_nom)} · ${res.nb_personnes} pers. · ${res.duree_minutes} min\n${formatTime(debut)} → ${formatTime(new Date(res.creneau_fin))}`;
         bloc.innerHTML = `<span class="font-medium truncate block">${esc(res.client_nom)}</span><span class="opacity-70">👥${res.nb_personnes} · ${res.duree_minutes}min</span>`;
         colEls[Number(d)].appendChild(bloc);
@@ -488,7 +484,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           pointer-events: auto;
           overflow: hidden;
         `;
-        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-default ${statusClass(res.statut, res.duree_minutes)}`;
+        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-default ${statusClass(res.duree_minutes)}`;
         bloc.title = `${esc(res.client_nom)} · ${res.nb_personnes} pers. · ${res.duree_minutes} min\n${formatTime(debut)} → ${formatTime(new Date(res.creneau_fin))}`;
         bloc.innerHTML = `
           <div class="font-semibold truncate">${esc(res.client_nom)}</div>
