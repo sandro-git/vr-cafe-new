@@ -73,6 +73,76 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     </div>
   </main>
+
+  <!-- ── Modal réservation ─────────────────────────────────────────────────── -->
+  <div id="res-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div id="res-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative bg-gray-800 border border-gray-600 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+
+      <!-- Vue détail -->
+      <div id="modal-detail">
+        <div class="p-6">
+          <button id="modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+          <h3 id="modal-title" class="text-lg font-bold text-white mb-4 pr-8"></h3>
+          <div id="modal-body" class="space-y-0 text-sm"></div>
+        </div>
+        <div class="px-6 pb-6 flex gap-2">
+          <button id="modal-btn-edit" type="button" class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-xl text-sm font-medium transition-colors">
+            Modifier
+          </button>
+          <button id="modal-btn-cancel" type="button" class="flex-1 py-2.5 bg-red-900/50 hover:bg-red-900/80 text-red-400 hover:text-red-300 border border-red-800 rounded-xl text-sm font-medium transition-colors">
+            Annuler
+          </button>
+        </div>
+      </div>
+
+      <!-- Vue édition -->
+      <div id="modal-edit" class="hidden p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <button id="modal-btn-back" type="button" class="text-gray-400 hover:text-white transition-colors text-sm">← Retour</button>
+          <h3 class="text-lg font-bold text-white">Modifier</h3>
+        </div>
+        <form id="modal-edit-form" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1.5">Date</label>
+              <input id="edit-date" type="date" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1.5">Heure de début</label>
+              <select id="edit-heure" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Nom complet</label>
+            <input id="edit-nom" type="text" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+            <input id="edit-email" type="email" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Téléphone</label>
+            <input id="edit-telephone" type="tel" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
+            <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
+            <textarea id="edit-notes" rows="2" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+          </div>
+          <p id="modal-edit-error" class="hidden text-red-400 text-xs"></p>
+          <button type="submit" id="modal-btn-save" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors">
+            Enregistrer
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
 </AdminLayout>
 
 <script>
@@ -103,6 +173,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let currentWeekStart = getMonday(new Date());
   let currentDay = stripTime(new Date());
   let boxes = [];
+  let modalRes = null; // réservation couramment affichée dans le modal
 
   // ── Utilitaires date ──────────────────────────────────────────────────────
   function stripTime(d) {
@@ -111,7 +182,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   function getMonday(d) {
     const date = stripTime(d);
-    const day = date.getDay(); // 0=dim, 1=lun, …
+    const day = date.getDay();
     const diff = (day === 0 ? -6 : 1 - day);
     date.setDate(date.getDate() + diff);
     return date;
@@ -133,6 +204,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
 
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   function esc(str) {
     return String(str ?? '—')
       .replace(/&/g, '&amp;')
@@ -152,7 +227,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         el.textContent = `${currentWeekStart.getDate()} ${MONTH_NAMES[currentWeekStart.getMonth()]} – ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
       }
     } else {
-      const dayIdx = (currentDay.getDay() + 6) % 7; // 0=lun, 6=dim
+      const dayIdx = (currentDay.getDay() + 6) % 7;
       el.textContent = `${DAY_NAMES_FULL[dayIdx]} ${currentDay.getDate()} ${MONTH_NAMES[currentDay.getMonth()]} ${currentDay.getFullYear()}`;
     }
   }
@@ -185,7 +260,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       .from('reservations')
       .select(`
         id, creneau_debut, creneau_fin, duree_minutes,
-        client_nom, nb_personnes, statut,
+        client_nom, client_email, client_telephone, nb_personnes, statut, notes,
         reservation_boxes ( box_id, boxes ( nom ) )
       `)
       .gte('creneau_debut', start.toISOString())
@@ -197,10 +272,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Layout côte-à-côte (anti-overlap) ─────────────────────────────────────
   function layoutBlocs(evts) {
-    // Tri par heure de début
     evts.sort((a, b) => a.startMin - b.startMin);
-
-    // Regroupement en clusters chevauchants
     const clusters = [];
     let cur = [], maxEnd = -1;
     for (const ev of evts) {
@@ -214,8 +286,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       }
     }
     if (cur.length) clusters.push(cur);
-
-    // Assignation des colonnes dans chaque cluster
     clusters.forEach(cluster => {
       const lanes = [];
       cluster.forEach(ev => {
@@ -243,16 +313,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const grid = document.getElementById('week-grid');
     grid.innerHTML = '';
 
-    // Conteneur grille avec position relative pour les lignes de fond
     const wrapper = document.createElement('div');
     wrapper.className = 'relative border border-gray-700 rounded-2xl overflow-hidden';
 
-    // Grille CSS
     const gridEl = document.createElement('div');
     gridEl.style.display = 'grid';
     gridEl.style.gridTemplateColumns = '3rem repeat(7, minmax(90px, 1fr))';
 
-    // Ligne d'en-tête
     const headerSpacer = document.createElement('div');
     headerSpacer.className = 'bg-gray-800 border-b border-r border-gray-700 h-10';
     gridEl.appendChild(headerSpacer);
@@ -261,11 +328,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     for (let d = 0; d < 7; d++) {
       const day = addDays(currentWeekStart, d);
       const isToday = isSameDay(day, today);
-      const dayIdx = d; // 0=lun
-
       const hCell = document.createElement('div');
       hCell.className = `bg-gray-800 border-b border-gray-700 h-10 flex items-center justify-center text-xs font-medium cursor-pointer transition-colors hover:bg-gray-700 ${d < 6 ? 'border-r' : ''}`;
-      hCell.innerHTML = `<span class="${isToday ? 'text-blue-400 font-bold' : 'text-gray-400'}">${DAY_NAMES[dayIdx]} ${day.getDate()}</span>`;
+      hCell.innerHTML = `<span class="${isToday ? 'text-blue-400 font-bold' : 'text-gray-400'}">${DAY_NAMES[d]} ${day.getDate()}</span>`;
       hCell.dataset.day = day.toISOString();
       hCell.addEventListener('click', () => {
         currentDay = stripTime(new Date(hCell.dataset.day));
@@ -274,49 +339,28 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       gridEl.appendChild(hCell);
     }
 
-    // Lignes horaires
     for (let row = 0; row < TOTAL_ROWS; row++) {
       const hour = OPEN_HOUR + Math.floor(row / 2);
-      const min = row % 2 === 0 ? '00' : '30';
       const isHalfHour = row % 2 !== 0;
-
-      // Cellule heure
       const timeCell = document.createElement('div');
       timeCell.className = `bg-gray-800/50 border-r border-gray-700 flex items-start justify-end pr-1 pt-0.5 ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50`;
       timeCell.style.height = ROW_H + 'px';
-      if (!isHalfHour) {
-        timeCell.innerHTML = `<span class="text-gray-500 text-xs">${hour}h</span>`;
-      }
+      if (!isHalfHour) timeCell.innerHTML = `<span class="text-gray-500 text-xs">${hour}h</span>`;
       gridEl.appendChild(timeCell);
-
-      // Cellules jour
       for (let d = 0; d < 7; d++) {
-        const dayDate = addDays(currentWeekStart, d);
         const cell = document.createElement('div');
         cell.className = `relative ${d < 6 ? 'border-r' : ''} ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50 ${isHalfHour ? 'border-dashed' : ''}`;
         cell.style.height = ROW_H + 'px';
-        cell.dataset.day = d;
-        cell.dataset.row = row;
         gridEl.appendChild(cell);
       }
     }
 
     wrapper.appendChild(gridEl);
 
-    // Overlay absolu : 7 colonnes (une par jour)
     const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: absolute;
-      top: 40px;
-      left: 3rem;
-      right: 0;
-      bottom: 0;
-      display: grid;
-      grid-template-columns: repeat(7, minmax(90px, 1fr));
-      pointer-events: none;
-    `;
+    overlay.style.cssText = `position:absolute;top:40px;left:3rem;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));pointer-events:none;`;
 
-    const colEls = Array.from({ length: 7 }, (_, i) => {
+    const colEls = Array.from({ length: 7 }, () => {
       const col = document.createElement('div');
       col.style.position = 'relative';
       overlay.appendChild(col);
@@ -326,7 +370,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const openMin = OPEN_HOUR * 60;
     const totalH = TOTAL_ROWS * ROW_H;
 
-    // Grouper par jour et calculer le layout côte-à-côte
     const byDay = {};
     reservations.forEach(res => {
       const debut = new Date(res.creneau_debut);
@@ -336,6 +379,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       if (!byDay[d]) byDay[d] = [];
       byDay[d].push({ res, startMin, endMin: startMin + res.duree_minutes });
     });
+
     Object.entries(byDay).forEach(([d, evts]) => {
       layoutBlocs(evts);
       evts.forEach(({ res, startMin, colIdx, totalCols }) => {
@@ -343,26 +387,19 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const top = ((startMin - openMin) / 30) * ROW_H;
         const height = Math.max((res.duree_minutes / 30) * ROW_H - 4, ROW_H - 4);
         if (top < 0 || top >= totalH) return;
-
         const pct = 100 / totalCols;
         const left = `calc(${colIdx * pct}% + 2px)`;
         const width = `calc(${pct}% - 4px)`;
-
         const bloc = document.createElement('div');
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
-        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-default ${statusClass(res.duree_minutes)}`;
-        bloc.title = `${esc(res.client_nom)} · ${res.nb_personnes} pers. · ${res.duree_minutes} min\n${formatTime(debut)} → ${formatTime(new Date(res.creneau_fin))}`;
+        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res.duree_minutes)}`;
         bloc.innerHTML = `<span class="font-medium truncate block">${esc(res.client_nom)}</span><span class="opacity-70">👥${res.nb_personnes} · ${res.duree_minutes}min</span>`;
+        bloc.addEventListener('click', () => openModal(res));
         colEls[Number(d)].appendChild(bloc);
-
-        // Zone buffer
         if (BUFFER_MIN > 0) {
-          const bufTop = top + height + 4;
-          const bufH = (BUFFER_MIN / 30) * ROW_H - 2;
           const buf = document.createElement('div');
-          buf.style.cssText = `position:absolute;top:${bufTop}px;left:${left};width:${width};height:${bufH}px;pointer-events:none;`;
+          buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:${left};width:${width};height:${(BUFFER_MIN / 30) * ROW_H - 2}px;pointer-events:none;`;
           buf.className = 'rounded-sm border border-dashed border-gray-500/50 bg-gray-700/20';
-          buf.title = `Buffer ${BUFFER_MIN} min`;
           colEls[Number(d)].appendChild(buf);
         }
       });
@@ -370,7 +407,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     wrapper.appendChild(overlay);
     grid.appendChild(wrapper);
-
     showView('week');
     updateDateLabel();
   }
@@ -398,7 +434,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     gridEl.style.display = 'grid';
     gridEl.style.gridTemplateColumns = `3rem repeat(${colCount}, 1fr)`;
 
-    // Ligne d'en-tête
     const headerSpacer = document.createElement('div');
     headerSpacer.className = 'bg-gray-800 border-b border-r border-gray-700 h-10';
     gridEl.appendChild(headerSpacer);
@@ -410,22 +445,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       gridEl.appendChild(hCell);
     });
 
-    // Colonnes pour les blocs (position relative)
-    // On va créer une superposition : la grille de fond (lignes) + les colonnes de blocs
-
-    // Lignes horaires (grille de fond uniquement)
     for (let row = 0; row < TOTAL_ROWS; row++) {
       const hour = OPEN_HOUR + Math.floor(row / 2);
       const isHalfHour = row % 2 !== 0;
-
       const timeCell = document.createElement('div');
       timeCell.className = `bg-gray-800/50 border-r border-gray-700 flex items-start justify-end pr-1 pt-0.5 ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50`;
       timeCell.style.height = ROW_H + 'px';
-      if (!isHalfHour) {
-        timeCell.innerHTML = `<span class="text-gray-500 text-xs">${hour}h</span>`;
-      }
+      if (!isHalfHour) timeCell.innerHTML = `<span class="text-gray-500 text-xs">${hour}h</span>`;
       gridEl.appendChild(timeCell);
-
       for (let c = 0; c < colCount; c++) {
         const cell = document.createElement('div');
         cell.className = `${c < colCount - 1 ? 'border-r' : ''} ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50 ${isHalfHour ? 'border-dashed' : ''}`;
@@ -436,23 +463,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     wrapper.appendChild(gridEl);
 
-    // Superposition pour les blocs absolus par colonne
     const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: absolute;
-      top: 40px;
-      left: 3rem;
-      right: 0;
-      bottom: 0;
-      display: grid;
-      grid-template-columns: repeat(${colCount}, 1fr);
-      pointer-events: none;
-    `;
+    overlay.style.cssText = `position:absolute;top:40px;left:3rem;right:0;bottom:0;display:grid;grid-template-columns:repeat(${colCount},1fr);pointer-events:none;`;
 
-    // Créer une colonne relative par box
     const colEls = boxes.map((_, i) => {
       const col = document.createElement('div');
-      col.style.cssText = `position: relative; ${i < colCount - 1 ? 'border-right: 1px solid transparent;' : ''}`;
+      col.style.cssText = `position:relative;${i < colCount - 1 ? 'border-right:1px solid transparent;' : ''}`;
       overlay.appendChild(col);
       return col;
     });
@@ -465,43 +481,25 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       const debutMin = debut.getHours() * 60 + debut.getMinutes();
       const top = ((debutMin - openMin) / 30) * ROW_H;
       const height = Math.max((res.duree_minutes / 30) * ROW_H - 4, ROW_H - 4);
-
       if (top < 0 || top >= totalH) return;
-
-      // Boxes concernées par cette réservation
       const resBoxIds = res.reservation_boxes?.map(rb => rb.box_id) ?? [];
-
       boxes.forEach((box, colIdx) => {
         if (!resBoxIds.includes(box.id)) return;
-
         const bloc = document.createElement('div');
-        bloc.style.cssText = `
-          position: absolute;
-          top: ${top}px;
-          left: 4px;
-          right: 4px;
-          height: ${height}px;
-          pointer-events: auto;
-          overflow: hidden;
-        `;
-        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-default ${statusClass(res.duree_minutes)}`;
-        bloc.title = `${esc(res.client_nom)} · ${res.nb_personnes} pers. · ${res.duree_minutes} min\n${formatTime(debut)} → ${formatTime(new Date(res.creneau_fin))}`;
+        bloc.style.cssText = `position:absolute;top:${top}px;left:4px;right:4px;height:${height}px;pointer-events:auto;overflow:hidden;`;
+        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-pointer ${statusClass(res.duree_minutes)}`;
         bloc.innerHTML = `
           <div class="font-semibold truncate">${esc(res.client_nom)}</div>
           <div class="opacity-80 mt-0.5">👥 ${res.nb_personnes} · ${res.duree_minutes} min</div>
           <div class="opacity-70">${formatTime(debut)}</div>
         `;
+        bloc.addEventListener('click', () => openModal(res));
         if (colEls[colIdx]) {
           colEls[colIdx].appendChild(bloc);
-
-          // Zone buffer
           if (BUFFER_MIN > 0) {
-            const bufTop = top + height + 4;
-            const bufH = (BUFFER_MIN / 30) * ROW_H - 2;
             const buf = document.createElement('div');
-            buf.style.cssText = `position:absolute;top:${bufTop}px;left:4px;right:4px;height:${bufH}px;pointer-events:none;`;
+            buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:4px;right:4px;height:${(BUFFER_MIN / 30) * ROW_H - 2}px;pointer-events:none;`;
             buf.className = 'rounded-sm border border-dashed border-gray-500/50 bg-gray-700/20';
-            buf.title = `Buffer ${BUFFER_MIN} min`;
             colEls[colIdx].appendChild(buf);
           }
         }
@@ -510,7 +508,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     wrapper.appendChild(overlay);
     grid.appendChild(wrapper);
-
     showView('day');
     updateDateLabel();
   }
@@ -540,10 +537,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   // ── Changement de vue ──────────────────────────────────────────────────────
   function switchView(view) {
     currentView = view;
-
     const tabWeek = document.getElementById('tab-week');
     const tabDay = document.getElementById('tab-day');
-
     if (view === 'week') {
       tabWeek.className = 'px-4 py-2 text-sm font-medium transition-colors bg-blue-600 text-white';
       tabDay.className = 'px-4 py-2 text-sm font-medium transition-colors text-gray-400 hover:text-white';
@@ -555,38 +550,153 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
   }
 
-  // ── Event listeners ────────────────────────────────────────────────────────
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  function openModal(res) {
+    modalRes = res;
+    const debut = new Date(res.creneau_debut);
+    const fin = new Date(res.creneau_fin);
+    const dateFmt = debut.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const boxNames = res.reservation_boxes?.map(rb => rb.boxes?.nom ?? `Box ${rb.box_id}`).join(', ') ?? '—';
+
+    document.getElementById('modal-title').textContent = res.client_nom ?? '—';
+    document.getElementById('modal-body').innerHTML = `
+      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Date</span><span class="text-white text-right">${dateFmt}</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Horaire</span><span class="text-white">${formatTime(debut)} → ${formatTime(fin)}</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Durée</span><span class="text-white">${res.duree_minutes} min</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Joueurs</span><span class="text-white">${res.nb_personnes}</span></div>
+      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Boxes</span><span class="text-white">${esc(boxNames)}</span></div>
+      ${res.client_email ? `<div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Email</span><a href="mailto:${esc(res.client_email)}" class="text-blue-400 hover:text-blue-300 truncate ml-4">${esc(res.client_email)}</a></div>` : ''}
+      ${res.client_telephone ? `<div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Téléphone</span><a href="tel:${esc(res.client_telephone)}" class="text-blue-400 hover:text-blue-300">${esc(res.client_telephone)}</a></div>` : ''}
+      ${res.notes ? `<div class="py-2"><span class="text-gray-400 block mb-1">Notes</span><span class="text-gray-300">${esc(res.notes)}</span></div>` : ''}
+    `;
+
+    // Pré-remplir le formulaire d'édition
+    document.getElementById('edit-date').value = localDateStr(debut);
+    populateHeures(debut);
+    document.getElementById('edit-nom').value = res.client_nom ?? '';
+    document.getElementById('edit-email').value = res.client_email ?? '';
+    document.getElementById('edit-telephone').value = res.client_telephone ?? '';
+    document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
+    document.getElementById('edit-notes').value = res.notes ?? '';
+    document.getElementById('modal-edit-error').classList.add('hidden');
+
+    // Afficher vue détail
+    document.getElementById('modal-detail').classList.remove('hidden');
+    document.getElementById('modal-edit').classList.add('hidden');
+    document.getElementById('res-modal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('res-modal').classList.add('hidden');
+    modalRes = null;
+  }
+
+  function populateHeures(selectedDate) {
+    const sel = document.getElementById('edit-heure');
+    sel.innerHTML = '';
+    const selectedMin = selectedDate.getHours() * 60 + selectedDate.getMinutes();
+    for (let m = OPEN_HOUR * 60; m < CLOSE_HOUR * 60; m += 30) {
+      const h = String(Math.floor(m / 60)).padStart(2, '0');
+      const min = m % 60 === 0 ? '00' : '30';
+      const opt = document.createElement('option');
+      opt.value = `${h}:${min}`;
+      opt.textContent = `${h}:${min}`;
+      if (m === selectedMin) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  // Fermeture modal
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('res-modal-backdrop').addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // Bouton Modifier → vue édition
+  document.getElementById('modal-btn-edit').addEventListener('click', () => {
+    document.getElementById('modal-detail').classList.add('hidden');
+    document.getElementById('modal-edit').classList.remove('hidden');
+  });
+
+  // Bouton Retour → vue détail
+  document.getElementById('modal-btn-back').addEventListener('click', () => {
+    document.getElementById('modal-edit').classList.add('hidden');
+    document.getElementById('modal-detail').classList.remove('hidden');
+  });
+
+  // Bouton Annuler la réservation
+  document.getElementById('modal-btn-cancel').addEventListener('click', async () => {
+    if (!modalRes) return;
+    if (!confirm('Confirmer l\'annulation de cette réservation ?')) return;
+    const btn = document.getElementById('modal-btn-cancel');
+    btn.disabled = true;
+    btn.textContent = '...';
+    const { error } = await supabase.from('reservations').update({ statut: 'annulée' }).eq('id', modalRes.id);
+    btn.disabled = false;
+    btn.textContent = 'Annuler';
+    if (error) {
+      document.getElementById('plan-error').textContent = 'Erreur : ' + error.message;
+      document.getElementById('plan-error').classList.remove('hidden');
+    } else {
+      closeModal();
+      currentView === 'week' ? renderWeek() : renderDay();
+    }
+  });
+
+  // Formulaire d'édition
+  document.getElementById('modal-edit-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!modalRes) return;
+    const btn = document.getElementById('modal-btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement...';
+
+    const dateVal = document.getElementById('edit-date').value;
+    const heureVal = document.getElementById('edit-heure').value;
+    const newDebut = new Date(`${dateVal}T${heureVal}:00`);
+    const newFin = new Date(newDebut.getTime() + modalRes.duree_minutes * 60000);
+    const newFinBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
+
+    const { error } = await supabase.from('reservations').update({
+      client_nom: document.getElementById('edit-nom').value.trim(),
+      client_email: document.getElementById('edit-email').value.trim(),
+      client_telephone: document.getElementById('edit-telephone').value.trim(),
+      nb_personnes: parseInt(document.getElementById('edit-nb').value),
+      notes: document.getElementById('edit-notes').value.trim() || null,
+      creneau_debut: newDebut.toISOString(),
+      creneau_fin: newFin.toISOString(),
+      creneau_fin_blocage: newFinBlocage.toISOString(),
+    }).eq('id', modalRes.id);
+
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer';
+
+    if (error) {
+      const errEl = document.getElementById('modal-edit-error');
+      errEl.textContent = 'Erreur : ' + error.message;
+      errEl.classList.remove('hidden');
+    } else {
+      closeModal();
+      currentView === 'week' ? renderWeek() : renderDay();
+    }
+  });
+
+  // ── Event listeners navigation ─────────────────────────────────────────────
   document.getElementById('tab-week').addEventListener('click', () => switchView('week'));
   document.getElementById('tab-day').addEventListener('click', () => switchView('day'));
 
   document.getElementById('btn-today').addEventListener('click', () => {
-    if (currentView === 'week') {
-      currentWeekStart = getMonday(new Date());
-      renderWeek();
-    } else {
-      currentDay = stripTime(new Date());
-      renderDay();
-    }
+    if (currentView === 'week') { currentWeekStart = getMonday(new Date()); renderWeek(); }
+    else { currentDay = stripTime(new Date()); renderDay(); }
   });
 
   document.getElementById('btn-prev').addEventListener('click', () => {
-    if (currentView === 'week') {
-      currentWeekStart = addDays(currentWeekStart, -7);
-      renderWeek();
-    } else {
-      currentDay = addDays(currentDay, -1);
-      renderDay();
-    }
+    if (currentView === 'week') { currentWeekStart = addDays(currentWeekStart, -7); renderWeek(); }
+    else { currentDay = addDays(currentDay, -1); renderDay(); }
   });
 
   document.getElementById('btn-next').addEventListener('click', () => {
-    if (currentView === 'week') {
-      currentWeekStart = addDays(currentWeekStart, 7);
-      renderWeek();
-    } else {
-      currentDay = addDays(currentDay, 1);
-      renderDay();
-    }
+    if (currentView === 'week') { currentWeekStart = addDays(currentWeekStart, 7); renderWeek(); }
+    else { currentDay = addDays(currentDay, 1); renderDay(); }
   });
 
   // ── Démarrage ──────────────────────────────────────────────────────────────
