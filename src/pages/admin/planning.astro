@@ -550,6 +550,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidPhone(v) {
+    return /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/.test(v.trim());
+  }
+
   // ── Modal ──────────────────────────────────────────────────────────────────
   function openModal(res) {
     modalRes = res;
@@ -656,6 +664,24 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const newFin = new Date(newDebut.getTime() + modalRes.duree_minutes * 60000);
     const newFinBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
 
+    const emailVal = document.getElementById('edit-email').value.trim();
+    const telVal = document.getElementById('edit-telephone').value.trim();
+    if (emailVal && !isValidEmail(emailVal)) {
+      const errEl = document.getElementById('modal-edit-error');
+      errEl.textContent = 'Adresse email invalide.';
+      errEl.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer';
+      return;
+    }
+    if (telVal && !isValidPhone(telVal)) {
+      const errEl = document.getElementById('modal-edit-error');
+      errEl.textContent = 'Numéro de téléphone invalide (format français attendu).';
+      errEl.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer';
+      return;
+    }
     const { error } = await supabase.from('reservations').update({
       client_nom: document.getElementById('edit-nom').value.trim(),
       client_email: document.getElementById('edit-email').value.trim(),

@@ -452,6 +452,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       showError('form-error', 'Veuillez remplir tous les champs obligatoires.');
       return;
     }
+    if (!isValidEmail(email)) {
+      showError('form-error', 'Adresse email invalide.');
+      return;
+    }
+    if (!isValidPhone(tel)) {
+      showError('form-error', 'Numéro de téléphone invalide (format français attendu).');
+      return;
+    }
 
     const btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-submit'));
     btn.disabled = true;
@@ -553,6 +561,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidPhone(v) {
+    return /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/.test(v.trim());
+  }
   function showStep(n) {
     [1, 2, 3, 4].forEach(i => {
       document.getElementById(`step-${i}`).classList.toggle('hidden', i !== n);
