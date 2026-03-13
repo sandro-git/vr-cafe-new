@@ -41,6 +41,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <div id="nb-personnes-grid" class="grid grid-cols-6 gap-2"></div>
           </div>
 
+          <!-- Type VR -->
+          <div>
+            <p class="text-sm font-medium text-gray-300 mb-3">Type VR *</p>
+            <div id="vr-type-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+
           <!-- Durée -->
           <div>
             <p class="text-sm font-medium text-gray-300 mb-3">Durée *</p>
@@ -189,6 +195,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   let dureeOptions = [];
   let selectedDate = '';
   let selectedNb = 0;
+  let selectedVrType = null;
   let selectedDuree = null;
   let selectedSlot = null;
 
@@ -197,6 +204,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     // UI immédiate — pas besoin de Supabase
     setupDateInput();
     setupNbPersonnes();
+    setupVrType();
     setupButtons();
 
     // Supabase uniquement pour config + durées
@@ -277,6 +285,28 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     }
   }
 
+  function setupVrType() {
+    const grid = document.getElementById('vr-type-grid');
+    const types = [
+      { id: 'filaire', label: '🔌 VR Filaire', desc: '6 boxes individuelles' },
+      { id: 'sans_fil', label: '📡 VR Sans Fil', desc: 'Espace libre jusqu\'à 6 joueurs' },
+    ];
+    types.forEach(t => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = vrTypeBtnClass(false);
+      btn.innerHTML = `<span class="font-semibold">${t.label}</span><span class="block text-xs mt-1 opacity-70">${t.desc}</span>`;
+      btn.addEventListener('click', () => {
+        selectedVrType = t.id;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = vrTypeBtnClass(types[idx].id === t.id);
+        });
+        checkStep1Valid();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
   function renderDurees() {
     const list = document.getElementById('durees-list');
     const loading = document.getElementById('durees-loading');
@@ -311,7 +341,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   function checkStep1Valid() {
     /** @type {HTMLButtonElement} */ (document.getElementById('btn-search')).disabled =
-      !(selectedDate && selectedNb > 0 && selectedDuree);
+      !(selectedDate && selectedNb > 0 && selectedVrType && selectedDuree);
   }
 
   // ── Étape 2 : Recherche de créneaux ──────────────────────────────────────
@@ -321,8 +351,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const dateFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long',
     });
+    const vrLabel = selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
     document.getElementById('step2-summary').innerHTML =
-      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${selectedDuree.label}`;
+      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${selectedDuree.label} &nbsp;·&nbsp; ${vrLabel}`;
 
     document.getElementById('slots-loading').classList.remove('hidden');
     document.getElementById('slots-grid').classList.add('hidden');
@@ -385,8 +416,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const { data, error } = await supabase.rpc('get_boxes_disponibles', {
       p_debut: slot.debut.toISOString(),
       p_fin_blocage: slot.finBlocage.toISOString(),
+      p_vr_type: selectedVrType,
     });
-    if (error || !data || data.length < selectedNb) return null;
+    const isAvailable = selectedVrType === 'sans_fil' ? data?.length > 0 : data?.length >= selectedNb;
+    if (error || !data || !isAvailable) return null;
     return { ...slot, boxes: data };
   }
 
@@ -399,19 +432,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     slots.forEach(slot => {
       const time = slot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       const dispo = slot.boxes.length;
-      const ratio = dispo / total;
+      const ratio = selectedVrType === 'sans_fil' ? (dispo > 0 ? 1 : 0) : dispo / total;
+      const caption = selectedVrType === 'sans_fil' ? 'Disponible' : `${dispo} / ${total} box${dispo > 1 ? 'es' : ''}`;
 
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = slotBtnClass(false, ratio);
       btn.innerHTML = `
         <span class="block text-base font-semibold">${time}</span>
-        <span class="block text-xs mt-0.5 opacity-75">${dispo} / ${total} box${dispo > 1 ? 'es' : ''}</span>
+        <span class="block text-xs mt-0.5 opacity-75">${caption}</span>
       `;
       btn.addEventListener('click', () => {
         grid.querySelectorAll('button').forEach(b => {
           const s = slots.find(sl => sl === b._slot);
-          b.className = slotBtnClass(false, s ? s.boxes.length / total : 1);
+          const r = selectedVrType === 'sans_fil' ? 1 : (s ? s.boxes.length / total : 1);
+          b.className = slotBtnClass(false, r);
         });
         btn.className = slotBtnClass(true, ratio);
         selectedSlot = slot;
@@ -430,10 +465,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
+    const vrLabel3 = selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
     document.getElementById('step3-summary').innerHTML =
       `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
       `⏰ ${h1} → ${h2} (${selectedDuree.label})<br>` +
-      `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''}`;
+      `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${vrLabel3}`;
 
     showStep(3);
   }
@@ -470,9 +506,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const { data: boxes, error: checkErr } = await supabase.rpc('get_boxes_disponibles', {
         p_debut: selectedSlot.debut.toISOString(),
         p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+        p_vr_type: selectedVrType,
       });
 
-      if (checkErr || !boxes || boxes.length < selectedNb) {
+      const enoughBoxes = selectedVrType === 'sans_fil' ? boxes?.length > 0 : boxes?.length >= selectedNb;
+      if (checkErr || !boxes || !enoughBoxes) {
         showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
         btn.disabled = false;
         btn.textContent = 'Confirmer la réservation';
@@ -500,7 +538,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (resErr) throw resErr;
 
       // Attribuer les boxes
-      const assignedBoxes = boxes.slice(0, selectedNb);
+      const assignedBoxes = selectedVrType === 'sans_fil' ? boxes.slice(0, 1) : boxes.slice(0, selectedNb);
       const { error: boxErr } = await supabase
         .from('reservation_boxes')
         .insert(assignedBoxes.map(b => ({ reservation_id: res.id, box_id: b.box_id })));
@@ -602,6 +640,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     return active
       ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white font-bold text-lg transition-all'
       : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-lg transition-all hover:border-blue-400';
+  }
+
+  function vrTypeBtnClass(active) {
+    return active
+      ? 'py-4 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center transition-all'
+      : 'py-4 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-blue-400';
   }
 
   function dureeBtnClass(active) {

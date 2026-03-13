@@ -233,8 +233,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   // ── Couleurs statut + durée ───────────────────────────────────────────────
-  function statusClass(duree) {
-    return duree <= 30
+  function isSansFil(res) {
+    return res.reservation_boxes?.some(rb => rb.boxes?.type === 'sans_fil') ?? false;
+  }
+
+  function statusClass(res) {
+    if (isSansFil(res)) return 'bg-emerald-700/60 border-emerald-500 text-emerald-100';
+    return res.duree_minutes <= 30
       ? 'bg-violet-700/60 border-violet-500 text-violet-100'
       : 'bg-blue-700/60 border-blue-500 text-blue-100';
   }
@@ -251,7 +256,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   async function loadBoxes() {
-    const { data } = await supabase.from('boxes').select('id, nom').order('nom');
+    const { data } = await supabase.from('boxes').select('id, nom, type').order('nom');
     boxes = data ?? [];
   }
 
@@ -261,7 +266,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       .select(`
         id, creneau_debut, creneau_fin, duree_minutes,
         client_nom, client_email, client_telephone, nb_personnes, statut, notes,
-        reservation_boxes ( box_id, boxes ( nom ) )
+        reservation_boxes ( box_id, boxes ( nom, type ) )
       `)
       .gte('creneau_debut', start.toISOString())
       .lte('creneau_debut', end.toISOString())
@@ -392,7 +397,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const width = `calc(${pct}% - 4px)`;
         const bloc = document.createElement('div');
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
-        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res.duree_minutes)}`;
+        bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
         bloc.innerHTML = `<span class="font-medium truncate block">${esc(res.client_nom)}</span><span class="opacity-70">👥${res.nb_personnes} · ${res.duree_minutes}min</span>`;
         bloc.addEventListener('click', () => openModal(res));
         colEls[Number(d)].appendChild(bloc);
@@ -441,7 +446,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     boxes.forEach((box, i) => {
       const hCell = document.createElement('div');
       hCell.className = `bg-gray-800 border-b border-gray-700 h-10 flex items-center justify-center text-xs font-medium text-gray-300 ${i < colCount - 1 ? 'border-r' : ''}`;
-      hCell.textContent = box.nom;
+      hCell.textContent = (box.type === 'sans_fil' ? '📡 ' : '') + box.nom;
       gridEl.appendChild(hCell);
     });
 
@@ -487,7 +492,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         if (!resBoxIds.includes(box.id)) return;
         const bloc = document.createElement('div');
         bloc.style.cssText = `position:absolute;top:${top}px;left:4px;right:4px;height:${height}px;pointer-events:auto;overflow:hidden;`;
-        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-pointer ${statusClass(res.duree_minutes)}`;
+        bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
         bloc.innerHTML = `
           <div class="font-semibold truncate">${esc(res.client_nom)}</div>
           <div class="opacity-80 mt-0.5">👥 ${res.nb_personnes} · ${res.duree_minutes} min</div>
@@ -564,7 +569,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const debut = new Date(res.creneau_debut);
     const fin = new Date(res.creneau_fin);
     const dateFmt = debut.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const boxNames = res.reservation_boxes?.map(rb => rb.boxes?.nom ?? `Box ${rb.box_id}`).join(', ') ?? '—';
+    const boxNames = res.reservation_boxes?.map(rb => {
+      const prefix = rb.boxes?.type === 'sans_fil' ? '📡 ' : '🔌 ';
+      return prefix + (rb.boxes?.nom ?? `Box ${rb.box_id}`);
+    }).join(', ') ?? '—';
 
     document.getElementById('modal-title').textContent = res.client_nom ?? '—';
     document.getElementById('modal-body').innerHTML = `
