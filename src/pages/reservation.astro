@@ -546,6 +546,25 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (boxErr) throw boxErr;
 
       showConfirmation(res, assignedBoxes);
+
+      // Envoi email (fire-and-forget, ne bloque pas la confirmation)
+      fetch('/api/reservation-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_nom: res.client_nom,
+          client_email: res.client_email,
+          client_telephone: res.client_telephone,
+          nb_personnes: res.nb_personnes,
+          duree_minutes: res.duree_minutes,
+          vr_type: selectedVrType,
+          creneau_debut: res.creneau_debut,
+          creneau_fin: res.creneau_fin,
+          box_names: assignedBoxes.map(b => b.box_nom).join(', '),
+          ref: res.id.split('-')[0].toUpperCase(),
+          notes: res.notes ?? null,
+        }),
+      }).catch(err => console.error('Email notification failed:', err));
     } catch (err) {
       console.error(err);
       showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
