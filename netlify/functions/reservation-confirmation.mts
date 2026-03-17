@@ -65,9 +65,10 @@ export default async (req: Request, context: Context) => {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "Europe/Paris",
   });
-  const heureFmt = debut.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  const heureFinFmt = fin.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const heureFmt = debut.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+  const heureFinFmt = fin.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
   const vrIcon = vr_type === "sans_fil" ? "📡" : "🔌";
   const vrLabel = vr_type === "sans_fil" ? "VR Sans Fil" : "VR Filaire";
 
