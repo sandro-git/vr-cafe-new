@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import DatePicker from "../components/DatePicker.astro";
 ---
 
 <BaseLayout>
@@ -26,13 +27,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
           <!-- Date -->
           <div>
-            <label for="date-input" class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
-            <input
-              type="date"
-              id="date-input"
-              class="w-full min-w-0 appearance-none bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [color-scheme:dark]"
-            />
-            <p id="date-error" class="hidden mt-2 text-sm text-red-400">Les réservations pour une date passée ne sont pas possibles.</p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+            <DatePicker id="dp" />
+            <p id="date-error" class="hidden mt-2 text-sm text-red-400"></p>
           </div>
 
           <!-- Nombre de joueurs -->
@@ -193,6 +190,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   // ── État ──────────────────────────────────────────────────────────────────
   let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 30, nb_boxes: 6 };
   let dureeOptions = [];
+  let datesFermees = new Set();
+  let periodesVacances = []; // [{ date_debut: 'YYYY-MM-DD', date_fin: 'YYYY-MM-DD' }]
+  // Jours d'ouverture hors vacances : 0=dim, 3=mer, 5=ven, 6=sam
+  const JOURS_OUVERTURE_NORMAL = new Set([0, 3, 5, 6]);
   let selectedDate = '';
   let selectedNb = 0;
   let selectedVrType = null;
@@ -202,19 +203,37 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
     // UI immédiate — pas besoin de Supabase
-    setupDateInput();
     setupNbPersonnes();
     setupVrType();
     setupButtons();
 
-    // Supabase uniquement pour config + durées
+    // Supabase uniquement pour config + durées + disponibilités
     try {
-      await Promise.all([loadConfig(), loadDurees()]);
+      await Promise.all([loadConfig(), loadDurees(), loadJoursFermes(), loadPeriodesVacances()]);
     } catch (err) {
       console.error('Init error:', err);
       showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
       return;
     }
+
+    // Initialiser le datepicker custom avec les données de fermeture
+    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
+      id: 'dp',
+      datesFermees: [...datesFermees],
+      periodesVacances,
+      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+    }}));
+
+    // Écouter la sélection de date
+    document.addEventListener('datepicker:select', (e) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== 'dp') return;
+      const dateError = document.getElementById('date-error');
+      selectedDate = detail.date;
+      dateError.classList.add('hidden');
+      checkStep1Valid();
+    });
+
     renderDurees();
   }
 
@@ -242,6 +261,36 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     appConfig.nb_boxes = parseInt(String(appConfig.nb_boxes)) || 6;
   }
 
+  async function loadJoursFermes() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('jours_fermeture')
+      .select('date')
+      .gte('date', today);
+    if (error) throw error;
+    datesFermees = new Set(data?.map(j => j.date) ?? []);
+  }
+
+  async function loadPeriodesVacances() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('periodes_vacances')
+      .select('date_debut, date_fin')
+      .gte('date_fin', today)
+      .order('date_debut');
+    if (error) throw error;
+    periodesVacances = data ?? [];
+  }
+
+  // Retourne true si le café est ouvert ce jour-là
+  function estJourOuvert(dateStr) {
+    if (datesFermees.has(dateStr)) return false;
+    const d = new Date(dateStr + 'T12:00:00');
+    const enVacances = periodesVacances.some(p => dateStr >= p.date_debut && dateStr <= p.date_fin);
+    if (enVacances) return true;
+    return JOURS_OUVERTURE_NORMAL.has(d.getDay());
+  }
+
   async function loadDurees() {
     const { data, error } = await supabase
       .from('durees_session')
@@ -253,20 +302,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   // ── Setup UI ──────────────────────────────────────────────────────────────
-  function setupDateInput() {
-    const input = /** @type {HTMLInputElement} */ (document.getElementById('date-input'));
-    const dateError = document.getElementById('date-error');
-    const today = localDateStr(new Date());
-    input.min = today;
-    input.addEventListener('change', () => {
-      const isPast = input.value && input.value < today;
-      dateError.classList.toggle('hidden', !isPast);
-      input.classList.toggle('border-red-500', isPast);
-      selectedDate = isPast ? '' : input.value;
-      checkStep1Valid();
-    });
-  }
-
   function setupNbPersonnes() {
     const grid = document.getElementById('nb-personnes-grid');
     for (let i = 1; i <= 6; i++) {

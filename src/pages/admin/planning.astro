@@ -71,6 +71,97 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         <div id="day-grid" class="min-w-[640px]"></div>
       </div>
 
+      <!-- ===== Périodes de vacances ===== -->
+      <div class="mt-10 border-t border-gray-700 pt-8">
+        <h2 class="text-lg font-semibold text-white mb-1">Périodes de vacances scolaires</h2>
+        <p class="text-gray-400 text-sm mb-5">Pendant ces périodes, le café est ouvert tous les jours. Hors vacances : mercredi, vendredi, samedi et dimanche uniquement.</p>
+
+        <!-- Formulaire ajout -->
+        <form id="form-ajout-vacances" class="flex flex-wrap gap-3 items-end mb-6">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Du *</label>
+            <input
+              id="vacances-debut"
+              type="date"
+              required
+              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Au *</label>
+            <input
+              id="vacances-fin"
+              type="date"
+              required
+              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]"
+            />
+          </div>
+          <div class="flex-1 min-w-[180px]">
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Label (optionnel)</label>
+            <input
+              id="vacances-label"
+              type="text"
+              placeholder="Vacances de Pâques..."
+              class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+            />
+          </div>
+          <button
+            type="submit"
+            id="btn-ajout-vacances"
+            class="px-4 py-2.5 bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+          >
+            Ajouter
+          </button>
+        </form>
+        <p id="vacances-error" class="hidden mb-4 text-sm text-red-400"></p>
+
+        <!-- Liste périodes -->
+        <div id="vacances-loading" class="text-gray-500 text-sm py-4">Chargement...</div>
+        <div id="vacances-liste" class="hidden space-y-2"></div>
+        <p id="vacances-vide" class="hidden text-gray-500 text-sm py-4">Aucune période de vacances configurée.</p>
+      </div>
+
+      <!-- ===== Jours de fermeture ===== -->
+      <div class="mt-10 border-t border-gray-700 pt-8">
+        <h2 class="text-lg font-semibold text-white mb-1">Jours de fermeture</h2>
+        <p class="text-gray-400 text-sm mb-5">Les clients ne pourront pas réserver ces jours-là.</p>
+
+        <!-- Formulaire ajout -->
+        <form id="form-ajout-fermeture" class="flex flex-wrap gap-3 items-end mb-6">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Date *</label>
+            <input
+              id="fermeture-date"
+              type="date"
+              required
+              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]"
+            />
+          </div>
+          <div class="flex-1 min-w-[180px]">
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Motif (optionnel)</label>
+            <input
+              id="fermeture-motif"
+              type="text"
+              placeholder="Jour férié, congés..."
+              class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+            />
+          </div>
+          <button
+            type="submit"
+            id="btn-ajout-fermeture"
+            class="px-4 py-2.5 bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+          >
+            Ajouter
+          </button>
+        </form>
+        <p id="fermeture-error" class="hidden mb-4 text-sm text-red-400"></p>
+
+        <!-- Liste jours fermés -->
+        <div id="fermeture-loading" class="text-gray-500 text-sm py-4">Chargement...</div>
+        <div id="fermeture-liste" class="hidden space-y-2"></div>
+        <p id="fermeture-vide" class="hidden text-gray-500 text-sm py-4">Aucun jour de fermeture planifié.</p>
+      </div>
+
     </div>
   </main>
 
@@ -750,7 +841,206 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     else { currentDay = addDays(currentDay, 1); renderDay(); }
   });
 
+  // ── Périodes de vacances ──────────────────────────────────────────────────
+  async function loadPeriodesVacances() {
+    document.getElementById('vacances-loading').classList.remove('hidden');
+    document.getElementById('vacances-liste').classList.add('hidden');
+    document.getElementById('vacances-vide').classList.add('hidden');
+
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('periodes_vacances')
+      .select('id, date_debut, date_fin, label')
+      .gte('date_fin', today)
+      .order('date_debut');
+
+    document.getElementById('vacances-loading').classList.add('hidden');
+
+    if (error) {
+      document.getElementById('vacances-error').textContent = 'Erreur : ' + error.message;
+      document.getElementById('vacances-error').classList.remove('hidden');
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      document.getElementById('vacances-vide').classList.remove('hidden');
+      return;
+    }
+
+    const liste = document.getElementById('vacances-liste');
+    liste.innerHTML = '';
+    data.forEach(p => {
+      const d1 = new Date(p.date_debut + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const d2 = new Date(p.date_fin + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-gray-700/40 border border-gray-600 rounded-xl text-sm';
+      item.innerHTML = `
+        <div>
+          <span class="text-white font-medium">Du ${esc(d1)} au ${esc(d2)}</span>
+          ${p.label ? `<span class="text-gray-400 ml-2">— ${esc(p.label)}</span>` : ''}
+        </div>
+        <button data-id="${p.id}" class="btn-suppr-vacances px-3 py-1.5 text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 rounded-lg text-xs transition-colors">
+          Supprimer
+        </button>
+      `;
+      liste.appendChild(item);
+    });
+    liste.classList.remove('hidden');
+
+    liste.querySelectorAll('.btn-suppr-vacances').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        btn.disabled = true;
+        btn.textContent = '...';
+        const { error } = await supabase.from('periodes_vacances').delete().eq('id', id);
+        if (error) {
+          btn.disabled = false;
+          btn.textContent = 'Supprimer';
+          document.getElementById('vacances-error').textContent = 'Erreur : ' + error.message;
+          document.getElementById('vacances-error').classList.remove('hidden');
+        } else {
+          loadPeriodesVacances();
+        }
+      });
+    });
+  }
+
+  document.getElementById('form-ajout-vacances').addEventListener('submit', async e => {
+    e.preventDefault();
+    const debutVal = document.getElementById('vacances-debut').value;
+    const finVal = document.getElementById('vacances-fin').value;
+    const labelVal = document.getElementById('vacances-label').value.trim();
+    const errEl = document.getElementById('vacances-error');
+    errEl.classList.add('hidden');
+
+    if (!debutVal || !finVal) return;
+    if (finVal < debutVal) {
+      errEl.textContent = 'La date de fin doit être après la date de début.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const btn = document.getElementById('btn-ajout-vacances');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const { error } = await supabase.from('periodes_vacances').insert({
+      date_debut: debutVal,
+      date_fin: finVal,
+      label: labelVal || null,
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Ajouter';
+
+    if (error) {
+      errEl.textContent = 'Erreur : ' + error.message;
+      errEl.classList.remove('hidden');
+    } else {
+      document.getElementById('vacances-debut').value = '';
+      document.getElementById('vacances-fin').value = '';
+      document.getElementById('vacances-label').value = '';
+      loadPeriodesVacances();
+    }
+  });
+
+  // ── Jours de fermeture ────────────────────────────────────────────────────
+  async function loadJoursFermeture() {
+    document.getElementById('fermeture-loading').classList.remove('hidden');
+    document.getElementById('fermeture-liste').classList.add('hidden');
+    document.getElementById('fermeture-vide').classList.add('hidden');
+
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('jours_fermeture')
+      .select('id, date, motif')
+      .gte('date', today)
+      .order('date');
+
+    document.getElementById('fermeture-loading').classList.add('hidden');
+
+    if (error) {
+      document.getElementById('fermeture-error').textContent = 'Erreur : ' + error.message;
+      document.getElementById('fermeture-error').classList.remove('hidden');
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      document.getElementById('fermeture-vide').classList.remove('hidden');
+      return;
+    }
+
+    const liste = document.getElementById('fermeture-liste');
+    liste.innerHTML = '';
+    data.forEach(jour => {
+      const d = new Date(jour.date + 'T12:00:00');
+      const dateFmt = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-gray-700/40 border border-gray-600 rounded-xl text-sm';
+      item.innerHTML = `
+        <div>
+          <span class="text-white font-medium capitalize">${esc(dateFmt)}</span>
+          ${jour.motif ? `<span class="text-gray-400 ml-2">— ${esc(jour.motif)}</span>` : ''}
+        </div>
+        <button data-id="${jour.id}" class="btn-suppr-fermeture px-3 py-1.5 text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 rounded-lg text-xs transition-colors">
+          Supprimer
+        </button>
+      `;
+      liste.appendChild(item);
+    });
+    liste.classList.remove('hidden');
+
+    liste.querySelectorAll('.btn-suppr-fermeture').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        btn.disabled = true;
+        btn.textContent = '...';
+        const { error } = await supabase.from('jours_fermeture').delete().eq('id', id);
+        if (error) {
+          btn.disabled = false;
+          btn.textContent = 'Supprimer';
+          document.getElementById('fermeture-error').textContent = 'Erreur : ' + error.message;
+          document.getElementById('fermeture-error').classList.remove('hidden');
+        } else {
+          loadJoursFermeture();
+        }
+      });
+    });
+  }
+
+  document.getElementById('form-ajout-fermeture').addEventListener('submit', async e => {
+    e.preventDefault();
+    const dateVal = document.getElementById('fermeture-date').value;
+    const motifVal = document.getElementById('fermeture-motif').value.trim();
+    const errEl = document.getElementById('fermeture-error');
+    errEl.classList.add('hidden');
+
+    if (!dateVal) return;
+
+    const btn = document.getElementById('btn-ajout-fermeture');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const { error } = await supabase.from('jours_fermeture').insert({ date: dateVal, motif: motifVal || null });
+
+    btn.disabled = false;
+    btn.textContent = 'Ajouter';
+
+    if (error) {
+      errEl.textContent = error.code === '23505'
+        ? 'Ce jour est déjà marqué comme fermé.'
+        : 'Erreur : ' + error.message;
+      errEl.classList.remove('hidden');
+    } else {
+      document.getElementById('fermeture-date').value = '';
+      document.getElementById('fermeture-motif').value = '';
+      loadJoursFermeture();
+    }
+  });
+
   // ── Démarrage ──────────────────────────────────────────────────────────────
   await Promise.all([loadConfig(), loadBoxes()]);
   renderWeek();
+  loadPeriodesVacances();
+  loadJoursFermeture();
 </script>

@@ -1,0 +1,204 @@
+---
+interface Props {
+  id?: string;
+}
+const { id = 'dp' } = Astro.props;
+---
+
+<div id={id} data-datepicker class="relative">
+  <!-- Trigger -->
+  <button
+    type="button"
+    id={`${id}-trigger`}
+    class="w-full text-left bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+  >
+    <span id={`${id}-display`} class="text-gray-500">Sélectionnez une date</span>
+  </button>
+  <input type="hidden" id={`${id}-value`} />
+
+  <!-- Popup -->
+  <div
+    id={`${id}-popup`}
+    class="hidden absolute z-50 top-full mt-2 left-0 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-4 w-72"
+  >
+    <!-- Header nav -->
+    <div class="flex items-center justify-between mb-3">
+      <button
+        id={`${id}-prev`}
+        type="button"
+        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors text-lg"
+      >‹</button>
+      <span id={`${id}-title`} class="text-white font-semibold text-sm capitalize"></span>
+      <button
+        id={`${id}-next`}
+        type="button"
+        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors text-lg"
+      >›</button>
+    </div>
+
+    <!-- Jours de la semaine -->
+    <div class="grid grid-cols-7 mb-1 text-center">
+      {['Lu','Ma','Me','Je','Ve','Sa','Di'].map(j => (
+        <span class="text-xs font-bold text-gray-600 py-1">{j}</span>
+      ))}
+    </div>
+
+    <!-- Grille des jours -->
+    <div id={`${id}-grid`} class="grid grid-cols-7 gap-0.5"></div>
+  </div>
+</div>
+
+<script>
+  function initPicker(rootId: string) {
+    let calYear: number, calMonth: number;
+    let selectedDate = '';
+    let datesFermees = new Set<string>();
+    let periodesVacances: { date_debut: string; date_fin: string }[] = [];
+    let joursNormaux = new Set<number>([0, 3, 5, 6]);
+
+    function pad(n: number) { return String(n).padStart(2, '0'); }
+    function localDateStr(d: Date) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+    const today = localDateStr(new Date());
+
+    function estOuvert(dateStr: string) {
+      if (datesFermees.has(dateStr)) return false;
+      const d = new Date(dateStr + 'T12:00:00');
+      const enVacances = periodesVacances.some(p => dateStr >= p.date_debut && dateStr <= p.date_fin);
+      if (enVacances) return true;
+      return joursNormaux.has(d.getDay());
+    }
+
+    function dayClass(isPast: boolean, isOpen: boolean, isSelected: boolean, isToday: boolean) {
+      const base = 'w-8 h-8 flex items-center justify-center text-sm rounded-lg mx-auto';
+      if (isPast || !isOpen) {
+        return `${base} text-gray-700 cursor-not-allowed line-through`;
+      }
+      if (isSelected) {
+        return `${base} bg-blue-700 text-white font-bold ${isToday ? 'ring-1 ring-blue-400' : ''}`;
+      }
+      if (isToday) {
+        return `${base} text-white ring-1 ring-blue-500 hover:bg-blue-700/40 cursor-pointer transition-colors`;
+      }
+      return `${base} text-white hover:bg-blue-700/40 cursor-pointer transition-colors`;
+    }
+
+    function render() {
+      const title = document.getElementById(`${rootId}-title`)!;
+      const grid = document.getElementById(`${rootId}-grid`)!;
+
+      // Titre du mois
+      const d = new Date(calYear, calMonth, 1);
+      title.textContent = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+      // Premier jour du mois (lundi=0 … dimanche=6)
+      const firstDow = (d.getDay() + 6) % 7; // convertit dim=0 en lun=0
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      grid.innerHTML = '';
+
+      // Cases vides avant le 1er
+      for (let i = 0; i < firstDow; i++) {
+        grid.appendChild(document.createElement('div'));
+      }
+
+      // Jours du mois
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calYear}-${pad(calMonth + 1)}-${pad(day)}`;
+        const isPast = dateStr < today;
+        const isOpen = estOuvert(dateStr);
+        const isSelected = dateStr === selectedDate;
+        const isToday = dateStr === today;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(day);
+        btn.className = dayClass(isPast, isOpen, isSelected, isToday);
+
+        if (!isPast && isOpen) {
+          btn.addEventListener('click', () => selectDate(dateStr));
+        } else {
+          btn.disabled = true;
+        }
+
+        grid.appendChild(btn);
+      }
+    }
+
+    function selectDate(dateStr: string) {
+      selectedDate = dateStr;
+
+      // Mettre à jour l'input caché
+      const input = document.getElementById(`${rootId}-value`) as HTMLInputElement;
+      input.value = dateStr;
+
+      // Mettre à jour le display
+      const display = document.getElementById(`${rootId}-display`)!;
+      const d = new Date(dateStr + 'T12:00:00');
+      display.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      display.classList.remove('text-gray-500');
+      display.classList.add('text-white');
+
+      // Fermer le popup
+      close();
+
+      // Émettre l'événement
+      document.dispatchEvent(new CustomEvent('datepicker:select', { detail: { id: rootId, date: dateStr } }));
+
+      // Re-render pour afficher la sélection
+      render();
+    }
+
+    function toggle() {
+      const popup = document.getElementById(`${rootId}-popup`)!;
+      popup.classList.toggle('hidden');
+    }
+
+    function close() {
+      document.getElementById(`${rootId}-popup`)!.classList.add('hidden');
+    }
+
+    // Clic en dehors → fermer
+    document.addEventListener('click', (e) => {
+      const root = document.getElementById(rootId);
+      if (root && !root.contains(e.target as Node)) close();
+    });
+
+    // Navigation mois
+    document.getElementById(`${rootId}-prev`)!.addEventListener('click', (e) => {
+      e.stopPropagation();
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      render();
+    });
+
+    document.getElementById(`${rootId}-next`)!.addEventListener('click', (e) => {
+      e.stopPropagation();
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      render();
+    });
+
+    document.getElementById(`${rootId}-trigger`)!.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggle();
+    });
+
+    // Écouter l'init depuis le parent
+    document.addEventListener('datepicker:init', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== rootId) return;
+      datesFermees = new Set(detail.datesFermees ?? []);
+      periodesVacances = detail.periodesVacances ?? [];
+      joursNormaux = new Set(detail.joursNormaux ?? [0, 3, 5, 6]);
+      render();
+    });
+
+    // Init sur le mois courant
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    render();
+  }
+
+  document.querySelectorAll('[data-datepicker]').forEach(el => initPicker(el.id));
+</script>
