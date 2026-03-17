@@ -146,7 +146,7 @@ export default async (req: Request, context: Context) => {
   try {
     const mailjet = new Mailjet({ apiKey, apiSecret });
 
-    const mjResult = await mailjet.post("send", { version: "v3.1" }).request({
+    await mailjet.post("send", { version: "v3.1" }).request({
       Messages: [
         {
           From: { Email: senderEmail, Name: "VR Café" },
@@ -164,18 +164,10 @@ export default async (req: Request, context: Context) => {
       ],
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new Response(JSON.stringify({ ok: true, mailjet: (mjResult as any).body }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.log(`Reservation emails sent for ref ${ref} to ${client_email}`);
   } catch (error) {
     console.error("Failed to send reservation emails:", error);
-    const errMsg = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ ok: false, error: errMsg }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    // Ne pas bloquer la confirmation — l'email est secondaire
   }
 
   return new Response(JSON.stringify({ ok: true }), {
