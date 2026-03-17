@@ -32,7 +32,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               id="date-input"
               class="w-full min-w-0 appearance-none bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [color-scheme:dark]"
             />
-            <p id="date-error" class="hidden mt-2 text-sm text-red-400">Les réservations pour une date passée ne sont pas possibles.</p>
+            <p id="date-error" class="hidden mt-2 text-sm text-red-400"></p>
           </div>
 
           <!-- Nombre de joueurs -->
@@ -193,6 +193,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   // ── État ──────────────────────────────────────────────────────────────────
   let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 30, nb_boxes: 6 };
   let dureeOptions = [];
+  let datesFermees = new Set();
   let selectedDate = '';
   let selectedNb = 0;
   let selectedVrType = null;
@@ -207,9 +208,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     setupVrType();
     setupButtons();
 
-    // Supabase uniquement pour config + durées
+    // Supabase uniquement pour config + durées + jours fermés
     try {
-      await Promise.all([loadConfig(), loadDurees()]);
+      await Promise.all([loadConfig(), loadDurees(), loadJoursFermes()]);
     } catch (err) {
       console.error('Init error:', err);
       showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
@@ -242,6 +243,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     appConfig.nb_boxes = parseInt(String(appConfig.nb_boxes)) || 6;
   }
 
+  async function loadJoursFermes() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('jours_fermeture')
+      .select('date')
+      .gte('date', today);
+    if (error) throw error;
+    datesFermees = new Set(data?.map(j => j.date) ?? []);
+  }
+
   async function loadDurees() {
     const { data, error } = await supabase
       .from('durees_session')
@@ -260,9 +271,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     input.min = today;
     input.addEventListener('change', () => {
       const isPast = input.value && input.value < today;
-      dateError.classList.toggle('hidden', !isPast);
-      input.classList.toggle('border-red-500', isPast);
-      selectedDate = isPast ? '' : input.value;
+      const isClosed = input.value && datesFermees.has(input.value);
+      const hasError = isPast || isClosed;
+      dateError.classList.toggle('hidden', !hasError);
+      if (isPast) dateError.textContent = 'Les réservations pour une date passée ne sont pas possibles.';
+      else if (isClosed) dateError.textContent = 'Le café est fermé ce jour-là. Veuillez choisir une autre date.';
+      input.classList.toggle('border-red-500', hasError);
+      selectedDate = hasError ? '' : input.value;
       checkStep1Valid();
     });
   }
