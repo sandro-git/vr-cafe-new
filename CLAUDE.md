@@ -8,13 +8,13 @@ This is a VR Café website built with Astro 5, using Sanity CMS for content mana
 
 ## Development Commands
 
-All commands use `pnpm` and should be run from the project root:
+All commands use `bun` and should be run from the project root:
 
-- **`pnpm install`** - Install dependencies
-- **`pnpm dev`** - Start development server at `localhost:4321`
-- **`pnpm build`** - Build production site to `./dist/`
-- **`pnpm preview`** - Preview production build locally
-- **`pnpm astro ...`** - Run Astro CLI commands (e.g., `pnpm astro check`)
+- **`bun install`** - Install dependencies
+- **`bun dev`** - Start development server at `localhost:4321`
+- **`bun run build`** - Build production site to `./dist/`
+- **`bun run preview`** - Preview production build locally
+- **`bun astro ...`** - Run Astro CLI commands (e.g., `bun astro check`)
 
 ## Architecture
 
@@ -102,7 +102,7 @@ PUBLIC_SANITY_DATASET=production
 ### Deployment
 
 - **Platform**: Netlify
-- **Build command**: `pnpm build`
+- **Build command**: `bun run build`
 - **Publish directory**: `dist`
 - **Special configuration**: `.well-known` directory is configured for Apple Pay and similar services (see `netlify.toml`)
 
