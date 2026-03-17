@@ -103,15 +103,11 @@ export default async (req: Request, context: Context) => {
               <td style="padding: 8px 0; color: #64748b; font-size: 14px;">${vrIcon} Type VR</td>
               <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px; text-align: right;">${vrLabel}</td>
             </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">🎯 Box</td>
-              <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px; text-align: right;">${box_names}</td>
-            </tr>
           </table>
         </div>
         <div style="background-color: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
           <p style="margin: 0; color: #94a3b8; font-size: 13px;">Une question ? Appelez-nous au</p>
-          <p style="margin: 4px 0 0; color: #7c3aed; font-size: 18px; font-weight: bold;">📞 04 00 00 00 00</p>
+          <p style="margin: 4px 0 0; color: #7c3aed; font-size: 18px; font-weight: bold;">📞 06 71 41 06 95</p>
         </div>
         <p style="color: #475569; font-size: 12px; text-align: center; margin: 0;">
           VR Café · Ce message a été envoyé automatiquement suite à votre réservation.
