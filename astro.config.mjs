@@ -26,14 +26,14 @@ export default defineConfig({
       tailwindcss()
     ],
     build: {
+      chunkSizeWarningLimit: 8000,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Grouper tout Sanity ensemble pour éviter les problèmes de dépendances circulaires
+            // Tout Sanity dans un seul chunk pour éviter les dépendances circulaires
             if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
               return 'sanity';
             }
-            // Séparer VideoPlayer
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
             }
@@ -41,6 +41,10 @@ export default defineConfig({
         }
       }
     }
+  },
+
+  image: {
+    domains: ['cdn.sanity.io'],
   },
 
   output: "server",
