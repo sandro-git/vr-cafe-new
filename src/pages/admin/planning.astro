@@ -653,6 +653,23 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       document.getElementById('plan-error').textContent = 'Erreur : ' + error.message;
       document.getElementById('plan-error').classList.remove('hidden');
     } else {
+      fetch('/api/reservation-annulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_nom: modalRes.client_nom,
+          client_email: modalRes.client_email,
+          client_telephone: modalRes.client_telephone,
+          nb_personnes: modalRes.nb_personnes,
+          duree_minutes: modalRes.duree_minutes,
+          vr_type: modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire',
+          creneau_debut: modalRes.creneau_debut,
+          creneau_fin: modalRes.creneau_fin,
+          box_names: modalRes.reservation_boxes.map(b => b.boxes.nom).join(', '),
+          ref: modalRes.id.split('-')[0].toUpperCase(),
+          notes: modalRes.notes ?? null,
+        }),
+      }).catch(err => console.error('Email annulation failed:', err));
       closeModal();
       currentView === 'week' ? renderWeek() : renderDay();
     }

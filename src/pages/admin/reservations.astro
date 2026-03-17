@@ -300,6 +300,28 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       btn.textContent = newStatut === 'annulée' ? 'Annuler' : 'No-show';
       showError('Erreur : ' + error.message);
     } else {
+      if (newStatut === 'annulée') {
+        const res = reservationsCache.find(r => r.id === id);
+        if (res) {
+          fetch('/api/reservation-annulation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              client_nom: res.client_nom,
+              client_email: res.client_email,
+              client_telephone: res.client_telephone,
+              nb_personnes: res.nb_personnes,
+              duree_minutes: res.duree_minutes,
+              vr_type: res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire',
+              creneau_debut: res.creneau_debut,
+              creneau_fin: res.creneau_fin,
+              box_names: res.reservation_boxes.map(b => b.boxes.nom).join(', '),
+              ref: res.id.split('-')[0].toUpperCase(),
+              notes: res.notes ?? null,
+            }),
+          }).catch(err => console.error('Email annulation failed:', err));
+        }
+      }
       loadReservations(currentDate);
     }
   }
