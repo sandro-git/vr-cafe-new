@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import DatePicker from "../components/DatePicker.astro";
 ---
 
 <BaseLayout>
@@ -26,12 +27,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
           <!-- Date -->
           <div>
-            <label for="date-input" class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
-            <input
-              type="date"
-              id="date-input"
-              class="w-full min-w-0 appearance-none bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [color-scheme:dark]"
-            />
+            <label class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+            <DatePicker id="dp" />
             <p id="date-error" class="hidden mt-2 text-sm text-red-400"></p>
           </div>
 
@@ -206,7 +203,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
     // UI immédiate — pas besoin de Supabase
-    setupDateInput();
     setupNbPersonnes();
     setupVrType();
     setupButtons();
@@ -219,6 +215,25 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
       return;
     }
+
+    // Initialiser le datepicker custom avec les données de fermeture
+    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
+      id: 'dp',
+      datesFermees: [...datesFermees],
+      periodesVacances,
+      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+    }}));
+
+    // Écouter la sélection de date
+    document.addEventListener('datepicker:select', (e) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== 'dp') return;
+      const dateError = document.getElementById('date-error');
+      selectedDate = detail.date;
+      dateError.classList.add('hidden');
+      checkStep1Valid();
+    });
+
     renderDurees();
   }
 
@@ -287,29 +302,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   // ── Setup UI ──────────────────────────────────────────────────────────────
-  function setupDateInput() {
-    const input = /** @type {HTMLInputElement} */ (document.getElementById('date-input'));
-    const dateError = document.getElementById('date-error');
-    const today = localDateStr(new Date());
-    input.min = today;
-    input.addEventListener('change', () => {
-      const isPast = input.value && input.value < today;
-      const isNotOpen = input.value && !isPast && !estJourOuvert(input.value);
-      const hasError = isPast || isNotOpen;
-      dateError.classList.toggle('hidden', !hasError);
-      if (isPast) {
-        dateError.textContent = 'Les réservations pour une date passée ne sont pas possibles.';
-      } else if (datesFermees.has(input.value)) {
-        dateError.textContent = 'Le café est fermé ce jour-là. Veuillez choisir une autre date.';
-      } else if (isNotOpen) {
-        dateError.textContent = 'Le café n\'est pas ouvert ce jour-là. Hors vacances scolaires, nous sommes ouverts le mercredi, vendredi, samedi et dimanche.';
-      }
-      input.classList.toggle('border-red-500', hasError);
-      selectedDate = hasError ? '' : input.value;
-      checkStep1Valid();
-    });
-  }
-
   function setupNbPersonnes() {
     const grid = document.getElementById('nb-personnes-grid');
     for (let i = 1; i <= 6; i++) {
