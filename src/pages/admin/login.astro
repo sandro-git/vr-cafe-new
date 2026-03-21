@@ -3,7 +3,7 @@ import BaseHead from "../../layouts/BaseHead.astro";
 
 // If already logged in, redirect to admin
 const cookie = Astro.cookies.get("admin_session");
-const password = import.meta.env.ADMIN_PASSWORD;
+const password = import.meta.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
 if (password && cookie?.value === password) {
   return Astro.redirect("/admin/reservations");
 }
