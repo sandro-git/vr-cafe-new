@@ -1,0 +1,77 @@
+---
+// If already logged in, redirect to admin
+const cookie = Astro.cookies.get("admin_session");
+const password = import.meta.env.ADMIN_PASSWORD;
+if (password && cookie?.value === password) {
+  return Astro.redirect("/admin/reservations");
+}
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const submitted = form.get("password")?.toString() ?? "";
+
+  if (submitted === password) {
+    Astro.cookies.set("admin_session", submitted, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: "/",
+    });
+    return Astro.redirect("/admin/reservations");
+  } else {
+    error = "Mot de passe incorrect.";
+  }
+}
+---
+
+<html lang="fr" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin – Connexion</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; }
+    </style>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+  </head>
+  <body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-white">Administration</h1>
+        <p class="text-gray-400 mt-1 text-sm">VR Café</p>
+      </div>
+
+      <form method="POST" class="bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl space-y-5">
+        {error && (
+          <div class="p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+            Mot de passe
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autofocus
+            class="w-full bg-gray-900 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors"
+        >
+          Se connecter
+        </button>
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 ---
 import BaseHead from "./BaseHead.astro";
+const PUBLIC_VAPID_KEY = import.meta.env.PUBLIC_VAPID_KEY ?? "";
 ---
 
 <html lang="fr" class="smooth scroll-smooth dark">
@@ -19,3 +20,26 @@ import BaseHead from "./BaseHead.astro";
     </div>
   </body>
 </html>
+
+<script define:vars={{ PUBLIC_VAPID_KEY }}>
+  if ("serviceWorker" in navigator && "PushManager" in window && PUBLIC_VAPID_KEY) {
+    navigator.serviceWorker.register("/sw.js").then(async (registration) => {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return;
+
+      const existing = await registration.pushManager.getSubscription();
+      if (existing) return; // Already subscribed
+
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: PUBLIC_VAPID_KEY,
+      });
+
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub.toJSON()),
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+</script>
