@@ -1,4 +1,6 @@
 ---
+import BaseHead from "../../layouts/BaseHead.astro";
+
 // If already logged in, redirect to admin
 const cookie = Astro.cookies.get("admin_session");
 const password = import.meta.env.ADMIN_PASSWORD;
@@ -28,15 +30,7 @@ if (Astro.request.method === "POST") {
 ---
 
 <html lang="fr" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin – Connexion</title>
-    <style>
-      body { margin: 0; font-family: system-ui, sans-serif; }
-    </style>
-    <link rel="stylesheet" href="/src/styles/global.css" />
-  </head>
+  <BaseHead />
   <body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
