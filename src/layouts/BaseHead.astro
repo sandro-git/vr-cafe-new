@@ -58,7 +58,6 @@ const isProd = import.meta.env.PROD;
         ["mousemove", "keydown", "touchstart", "scroll", "click"].forEach(function (e) {
           window.addEventListener(e, loadAnalytics, { once: true, passive: true });
         });
-        setTimeout(loadAnalytics, 5000);
       })();
     </script>
   )}
