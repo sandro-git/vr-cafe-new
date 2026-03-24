@@ -19,7 +19,7 @@ export default defineConfig({
       useCdn: true, // See note on using the CDN
       apiVersion: "2025-01-28", // insert the current date to access the latest version of the API
       studioBasePath: '/studio'
-    }), react(), partytown()],
+    }), react(), partytown({ config: { forward: ["dataLayer.push"] } })],
 
   vite: {
     plugins: [

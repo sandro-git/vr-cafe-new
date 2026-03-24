@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
 const isProd = import.meta.env.PROD;
 ---
 
@@ -14,7 +15,6 @@ const isProd = import.meta.env.PROD;
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://cdn.sanity.io" />
   <link href="/src/assets/vrcafe.webp" />
-  {isProd && <link rel="dns-prefetch" href="https://www.googletagmanager.com" />}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VR Café</title>
@@ -22,35 +22,16 @@ const isProd = import.meta.env.PROD;
     name="description"
     content="Le plus grand choix d'escape games VR Pour toute la famille"
   />
-  {isProd && (
+  {isProd && GA_ID && (
     <>
-      <!-- Google tag (gtag.js) -->
-      <script type="text/partytown">
-        src = "https://www.googletagmanager.com/gtag/js?id=G-J14FRYVVTZ";
-      </script>
-      <script type="text/partytown">
+      <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      <script type="text/partytown" src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script type="text/partytown" define:vars={{ GA_ID }}>
         window.dataLayer = window.dataLayer || [];
-        function gtag() {
-          dataLayer.push(arguments);
-        }
+        function gtag() { dataLayer.push(arguments); }
         gtag("js", new Date());
-
-        gtag("config", "G-J14FRYVVTZ");
+        gtag("config", GA_ID);
       </script>
-      <!-- Google Tag Manager -->
-      <script type="text/partytown">
-        (function (w, d, s, l, i) {
-          w[l] = w[l] || [];
-          w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-          var f = d.getElementsByTagName(s)[0],
-            j = d.createElement(s),
-            dl = l != "dataLayer" ? "&l=" + l : "";
-          j.async = true;
-          j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-          f.parentNode.insertBefore(j, f);
-        })(window, document, "script", "dataLayer", "GTM-NJ2HQDKS");
-      </script>
-      <!-- End Google Tag Manager -->
     </>
   )}
 </head>
