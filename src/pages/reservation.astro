@@ -600,6 +600,18 @@ import DatePicker from "../components/DatePicker.astro";
           notes: res.notes ?? null,
         }),
       }).catch(err => console.error('Email notification failed:', err));
+
+      // Push notification admin (fire-and-forget)
+      const h1 = selectedSlot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      fetch('/api/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Nouvelle réservation 🎮',
+          body: `${nom} — ${selectedNb} pers. — ${h1}`,
+          url: '/admin/reservations',
+        }),
+      }).catch(() => {});
     } catch (err) {
       console.error(err);
       showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
