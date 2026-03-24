@@ -42,7 +42,7 @@ export default async (req: Request, _context: Context) => {
 
   const supabase = createClient(
     process.env.PUBLIC_SUPABASE_URL!,
-    process.env.PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { error } = await supabase.from("push_subscriptions").upsert(

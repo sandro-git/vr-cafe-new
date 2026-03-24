@@ -245,6 +245,22 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   );
 
+  // Helper : toutes les écritures admin passent par la fonction serveur
+  async function adminDb(action, params = {}) {
+    const res = await fetch('/api/admin/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...params }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data.error ?? 'Erreur serveur');
+      err.code = data.code;
+      throw err;
+    }
+    return data;
+  }
+
   // ── Constantes ────────────────────────────────────────────────────────────
   let OPEN_HOUR = 10;
   let CLOSE_HOUR = 22;
@@ -737,11 +753,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const btn = document.getElementById('modal-btn-cancel');
     btn.disabled = true;
     btn.textContent = '...';
-    const { error } = await supabase.from('reservations').update({ statut: 'annulée' }).eq('id', modalRes.id);
+    let cancelError = null;
+    try {
+      await adminDb('update_reservation', { id: modalRes.id, fields: { statut: 'annulée' } });
+    } catch (e) {
+      cancelError = e;
+    }
     btn.disabled = false;
     btn.textContent = 'Annuler';
-    if (error) {
-      document.getElementById('plan-error').textContent = 'Erreur : ' + error.message;
+    if (cancelError) {
+      document.getElementById('plan-error').textContent = 'Erreur : ' + cancelError.message;
       document.getElementById('plan-error').classList.remove('hidden');
     } else {
       fetch('/api/reservation-annulation', {
@@ -798,23 +819,31 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       btn.textContent = 'Enregistrer';
       return;
     }
-    const { error } = await supabase.from('reservations').update({
-      client_nom: document.getElementById('edit-nom').value.trim(),
-      client_email: document.getElementById('edit-email').value.trim(),
-      client_telephone: document.getElementById('edit-telephone').value.trim(),
-      nb_personnes: parseInt(document.getElementById('edit-nb').value),
-      notes: document.getElementById('edit-notes').value.trim() || null,
-      creneau_debut: newDebut.toISOString(),
-      creneau_fin: newFin.toISOString(),
-      creneau_fin_blocage: newFinBlocage.toISOString(),
-    }).eq('id', modalRes.id);
+    let saveError = null;
+    try {
+      await adminDb('update_reservation', {
+        id: modalRes.id,
+        fields: {
+          client_nom: document.getElementById('edit-nom').value.trim(),
+          client_email: document.getElementById('edit-email').value.trim(),
+          client_telephone: document.getElementById('edit-telephone').value.trim(),
+          nb_personnes: parseInt(document.getElementById('edit-nb').value),
+          notes: document.getElementById('edit-notes').value.trim() || null,
+          creneau_debut: newDebut.toISOString(),
+          creneau_fin: newFin.toISOString(),
+          creneau_fin_blocage: newFinBlocage.toISOString(),
+        },
+      });
+    } catch (e) {
+      saveError = e;
+    }
 
     btn.disabled = false;
     btn.textContent = 'Enregistrer';
 
-    if (error) {
+    if (saveError) {
       const errEl = document.getElementById('modal-edit-error');
-      errEl.textContent = 'Erreur : ' + error.message;
+      errEl.textContent = 'Erreur : ' + saveError.message;
       errEl.classList.remove('hidden');
     } else {
       closeModal();
@@ -892,11 +921,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const id = btn.dataset.id;
         btn.disabled = true;
         btn.textContent = '...';
-        const { error } = await supabase.from('periodes_vacances').delete().eq('id', id);
-        if (error) {
+        let delVacError = null;
+        try {
+          await adminDb('delete_vacances', { id });
+        } catch (e) { delVacError = e; }
+        if (delVacError) {
           btn.disabled = false;
           btn.textContent = 'Supprimer';
-          document.getElementById('vacances-error').textContent = 'Erreur : ' + error.message;
+          document.getElementById('vacances-error').textContent = 'Erreur : ' + delVacError.message;
           document.getElementById('vacances-error').classList.remove('hidden');
         } else {
           loadPeriodesVacances();
@@ -924,17 +956,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     btn.disabled = true;
     btn.textContent = '...';
 
-    const { error } = await supabase.from('periodes_vacances').insert({
-      date_debut: debutVal,
-      date_fin: finVal,
-      label: labelVal || null,
-    });
+    let insVacError = null;
+    try {
+      await adminDb('insert_vacances', { date_debut: debutVal, date_fin: finVal, label: labelVal || null });
+    } catch (e) { insVacError = e; }
 
     btn.disabled = false;
     btn.textContent = 'Ajouter';
 
-    if (error) {
-      errEl.textContent = 'Erreur : ' + error.message;
+    if (insVacError) {
+      errEl.textContent = 'Erreur : ' + insVacError.message;
       errEl.classList.remove('hidden');
     } else {
       document.getElementById('vacances-debut').value = '';
@@ -995,11 +1026,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const id = btn.dataset.id;
         btn.disabled = true;
         btn.textContent = '...';
-        const { error } = await supabase.from('jours_fermeture').delete().eq('id', id);
-        if (error) {
+        let delFerError = null;
+        try {
+          await adminDb('delete_fermeture', { id });
+        } catch (e) { delFerError = e; }
+        if (delFerError) {
           btn.disabled = false;
           btn.textContent = 'Supprimer';
-          document.getElementById('fermeture-error').textContent = 'Erreur : ' + error.message;
+          document.getElementById('fermeture-error').textContent = 'Erreur : ' + delFerError.message;
           document.getElementById('fermeture-error').classList.remove('hidden');
         } else {
           loadJoursFermeture();
@@ -1021,15 +1055,18 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     btn.disabled = true;
     btn.textContent = '...';
 
-    const { error } = await supabase.from('jours_fermeture').insert({ date: dateVal, motif: motifVal || null });
+    let insFerError = null;
+    try {
+      await adminDb('insert_fermeture', { date: dateVal, motif: motifVal || null });
+    } catch (e) { insFerError = e; }
 
     btn.disabled = false;
     btn.textContent = 'Ajouter';
 
-    if (error) {
-      errEl.textContent = error.code === '23505'
+    if (insFerError) {
+      errEl.textContent = insFerError.code === '23505'
         ? 'Ce jour est déjà marqué comme fermé.'
-        : 'Erreur : ' + error.message;
+        : 'Erreur : ' + insFerError.message;
       errEl.classList.remove('hidden');
     } else {
       document.getElementById('fermeture-date').value = '';
