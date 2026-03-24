@@ -25,8 +25,8 @@ const isProd = import.meta.env.PROD;
   {isProd && GA_ID && (
     <>
       <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-      <script type="text/partytown" src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
-      <script type="text/partytown" define:vars={{ GA_ID }}>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script define:vars={{ GA_ID }}>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag("js", new Date());
