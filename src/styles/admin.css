@@ -1,5 +1,9 @@
 @import "tailwindcss";
-@source not "../pages/admin/**";
+@source not "../pages/**";
+@source not "../components/**";
+@source not "../layouts/BaseLayout.astro";
+@source "../pages/admin/**";
+@source "../layouts/AdminLayout.astro";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -9,7 +13,6 @@
   outline-offset: 2px;
 }
 
-/* Assurer que le focus est visible même sur fond sombre */
 .dark *:focus-visible {
   outline-color: rgb(96, 165, 250);
 }
