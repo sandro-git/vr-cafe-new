@@ -51,7 +51,6 @@ export default defineConfig({
 
   output: "server",
   adapter: netlify({
-    edgeMiddleware: true,
     imageCDN: false  // Désactive l'optimisation d'images Netlify en dev
   })
 });

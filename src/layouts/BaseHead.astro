@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
 const isProd = import.meta.env.PROD;
 ---
 
@@ -10,8 +11,10 @@ const isProd = import.meta.env.PROD;
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="sitemap" href="/sitemap-index.xml" />
-  {isProd && <link rel="preconnect" href="https://www.googletagmanager.com" />}
-  {isProd && <link rel="preconnect" href="https://www.google.com" />}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://www.google.com" />
+  <link rel="preconnect" href="https://cdn.sanity.io" />
+  <link href="/src/assets/vrcafe.webp" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VR Café</title>
@@ -19,46 +22,16 @@ const isProd = import.meta.env.PROD;
     name="description"
     content="Le plus grand choix d'escape games VR Pour toute la famille"
   />
-  {isProd && (
-    <script is:inline>
-      // Consent Mode v2 — must run before GTM loads
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { dataLayer.push(arguments); }
-      gtag("consent", "default", {
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-        analytics_storage: "denied"
-      });
-
-      (function () {
-        var loaded = false;
-        function loadAnalytics() {
-          if (loaded) return;
-          loaded = true;
-          // Google tag (gtag.js)
-          var s = document.createElement("script");
-          s.async = true;
-          s.src = "https://www.googletagmanager.com/gtag/js?id=G-J14FRYVVTZ";
-          document.head.appendChild(s);
-          gtag("js", new Date());
-          gtag("config", "G-J14FRYVVTZ");
-          // Google Tag Manager
-          (function (w, d, s, l, i) {
-            w[l] = w[l] || [];
-            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-            var f = d.getElementsByTagName(s)[0],
-              j = d.createElement(s),
-              dl = l != "dataLayer" ? "&l=" + l : "";
-            j.async = true;
-            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-            f.parentNode.insertBefore(j, f);
-          })(window, document, "script", "dataLayer", "GTM-NJ2HQDKS");
-        }
-        ["mousemove", "keydown", "touchstart", "scroll", "click"].forEach(function (e) {
-          window.addEventListener(e, loadAnalytics, { once: true, passive: true });
-        });
-      })();
-    </script>
+  {isProd && GA_ID && (
+    <>
+      <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script define:vars={{ GA_ID }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag("js", new Date());
+        gtag("config", GA_ID);
+      </script>
+    </>
   )}
 </head>
