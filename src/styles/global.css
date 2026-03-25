@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@source not "../pages/admin/**";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
