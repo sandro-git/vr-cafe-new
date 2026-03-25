@@ -1,16 +1,10 @@
 ---
-import "../styles/admin.css";
+import BaseHead from "./BaseHead.astro";
 const PUBLIC_VAPID_KEY = import.meta.env.PUBLIC_VAPID_KEY ?? "";
 ---
 
 <html lang="fr" class="smooth scroll-smooth dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin — VR Café</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <meta name="robots" content="noindex, nofollow" />
-  </head>
+  <BaseHead />
   <body class="dark:bg-gray-800">
     <div class="fixed top-0 inset-x-0 z-50 h-12 bg-gray-900/90 backdrop-blur border-b border-gray-700 flex items-center justify-center">
       <a

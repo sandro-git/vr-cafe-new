@@ -8,6 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 import netlify from '@astrojs/netlify';
 
+
 // https://astro.build/config
 export default defineConfig({
   integrations: [sanity(
@@ -43,10 +44,6 @@ export default defineConfig({
 
   image: {
     domains: ['cdn.sanity.io'],
-  },
-
-  build: {
-    inlineStylesheets: 'always',
   },
 
   output: "server",
