@@ -22,6 +22,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "6.0.8",
+    "execa": "^9.6.1",
     "node-mailjet": "^6.0.11",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
