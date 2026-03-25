@@ -618,7 +618,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     updateDateLabel();
     updateNowLine();
     const isWeekContainsToday = stripTime(new Date()) >= currentWeekStart && stripTime(new Date()) <= addDays(currentWeekStart, 6);
-    if (isWeekContainsToday) scrollToNow();
+    if (isWeekContainsToday) {
+      scrollToNow();
+      const todayIdx = (stripTime(new Date()).getDay() + 6) % 7; // 0=Lun … 6=Dim
+      const container = document.getElementById('view-week');
+      if (container) {
+        const colWidth = Math.max(90, (container.clientWidth - 48) / 7);
+        const colLeft = 48 + todayIdx * colWidth;
+        container.scrollLeft = Math.max(0, colLeft - container.clientWidth / 2 + colWidth / 2);
+      }
+    }
   }
 
   // ── Rendu Vue Jour ─────────────────────────────────────────────────────────
