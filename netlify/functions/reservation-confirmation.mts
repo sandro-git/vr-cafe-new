@@ -1,11 +1,27 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 
+const ALLOWED_ORIGINS = [
+  "https://vr-cafe.fr",
+  "https://www.vr-cafe.fr",
+  "http://localhost:4321",
+];
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { status: 405, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const origin = req.headers.get("origin");
+  if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+    return new Response(
+      JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -45,6 +61,20 @@ export default async (req: Request, context: Context) => {
     ref,
     notes,
   } = body;
+
+  // Validation des champs obligatoires
+  if (
+    !client_nom || typeof client_nom !== "string" || client_nom.length > 200 ||
+    !client_email || !EMAIL_REGEX.test(client_email) || client_email.length > 254 ||
+    !ref || typeof ref !== "string" || ref.length > 100 ||
+    !creneau_debut || !creneau_fin ||
+    typeof nb_personnes !== "number" || nb_personnes < 1 || nb_personnes > 50
+  ) {
+    return new Response(
+      JSON.stringify({ error: "Invalid input" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   const apiKey = Netlify.env.get("MAILJET_API_KEY") || process.env.MAILJET_API_KEY;
   const apiSecret = Netlify.env.get("MAILJET_API_SECRET") || process.env.MAILJET_API_SECRET;

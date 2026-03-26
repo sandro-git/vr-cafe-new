@@ -61,13 +61,29 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       <!-- Erreur -->
       <div id="plan-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
 
+      <!-- Légende couleurs -->
+      <div class="flex items-center gap-4 mb-3 text-xs text-gray-500 flex-wrap">
+        <span class="flex items-center gap-1.5">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(4,120,87,0.6);border:1px solid #10b981;"></span>
+          VR sans-fil
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(29,78,216,0.6);border:1px solid #3b82f6;"></span>
+          Filaire &gt; 30 min
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(109,40,217,0.6);border:1px solid #8b5cf6;"></span>
+          Filaire ≤ 30 min
+        </span>
+      </div>
+
       <!-- Vue Semaine -->
-      <div id="view-week" class="hidden overflow-x-auto">
+      <div id="view-week" class="hidden overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 220px)">
         <div id="week-grid" class="min-w-[640px]"></div>
       </div>
 
       <!-- Vue Jour -->
-      <div id="view-day" class="hidden overflow-x-auto">
+      <div id="view-day" class="hidden overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 220px)">
         <div id="day-grid" class="min-w-[640px]"></div>
       </div>
 
@@ -281,6 +297,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let currentDay = stripTime(new Date());
   let boxes = [];
   let modalRes = null; // réservation couramment affichée dans le modal
+  let periodesVacancesCache = []; // { date_debut, date_fin }[]
+  let joursFermetureCache = [];   // 'YYYY-MM-DD'[]
 
   // ── Utilitaires date ──────────────────────────────────────────────────────
   function stripTime(d) {
@@ -337,6 +355,59 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       const dayIdx = (currentDay.getDay() + 6) % 7;
       el.textContent = `${DAY_NAMES_FULL[dayIdx]} ${currentDay.getDate()} ${MONTH_NAMES[currentDay.getMonth()]} ${currentDay.getFullYear()}`;
     }
+  }
+
+  // ── Jours fermés ──────────────────────────────────────────────────────────
+  function isDateClosed(date) {
+    const dateStr = localDateStr(date);
+    if (joursFermetureCache.includes(dateStr)) return true;
+    const inVacances = periodesVacancesCache.some(p => dateStr >= p.date_debut && dateStr <= p.date_fin);
+    if (inVacances) return false; // ouvert tous les jours pendant vacances
+    // Hors vacances : ouvert mer(3)/ven(5)/sam(6)/dim(0) uniquement
+    const dow = date.getDay();
+    return ![0, 3, 5, 6].includes(dow);
+  }
+
+  async function loadCalendarConstraints() {
+    const today = localDateStr(new Date());
+    const [vacRes, ferRes] = await Promise.all([
+      supabase.from('periodes_vacances').select('date_debut, date_fin').gte('date_fin', today),
+      supabase.from('jours_fermeture').select('date').gte('date', today),
+    ]);
+    periodesVacancesCache = vacRes.data ?? [];
+    joursFermetureCache = (ferRes.data ?? []).map(r => r.date);
+  }
+
+  // ── Ligne heure courante ───────────────────────────────────────────────────
+  function updateNowLine() {
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const openMin = OPEN_HOUR * 60;
+    const totalH = TOTAL_ROWS * ROW_H;
+    const top = ((nowMin - openMin) / 30) * ROW_H;
+
+    ['week-now-line', 'day-now-line'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (top < 0 || top > totalH) {
+        el.style.display = 'none';
+      } else {
+        el.style.display = 'block';
+        el.style.top = top + 'px';
+      }
+    });
+  }
+
+  function scrollToNow() {
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const openMin = OPEN_HOUR * 60;
+    const top = ((nowMin - openMin) / 30) * ROW_H;
+    const containerId = currentView === 'week' ? 'view-week' : 'view-day';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const visibleH = container.clientHeight;
+    container.scrollTo({ top: Math.max(0, 40 + top - visibleH / 2), behavior: 'smooth' });
   }
 
   // ── Couleurs statut + durée ───────────────────────────────────────────────
@@ -437,12 +508,28 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     gridEl.appendChild(headerSpacer);
 
     const today = stripTime(new Date());
+
+    // Pré-calculer byDay pour les badges de compte
+    const byDay = {};
+    reservations.forEach(res => {
+      const debut = new Date(res.creneau_debut);
+      const d = Math.round((stripTime(debut) - currentWeekStart) / 86400000);
+      if (d < 0 || d > 6) return;
+      const startMin = debut.getHours() * 60 + debut.getMinutes();
+      if (!byDay[d]) byDay[d] = [];
+      byDay[d].push({ res, startMin, endMin: startMin + res.duree_minutes });
+    });
+
     for (let d = 0; d < 7; d++) {
       const day = addDays(currentWeekStart, d);
       const isToday = isSameDay(day, today);
+      const count = byDay[d]?.length ?? 0;
+      const badge = count > 0
+        ? `<span style="background:#1d4ed8;color:#fff;border-radius:9999px;font-size:10px;padding:1px 6px;margin-left:5px;">${count}</span>`
+        : '';
       const hCell = document.createElement('div');
       hCell.className = `bg-gray-800 border-b border-gray-700 h-10 flex items-center justify-center text-xs font-medium cursor-pointer transition-colors hover:bg-gray-700 ${d < 6 ? 'border-r' : ''}`;
-      hCell.innerHTML = `<span class="${isToday ? 'text-blue-400 font-bold' : 'text-gray-400'}">${DAY_NAMES[d]} ${day.getDate()}</span>`;
+      hCell.innerHTML = `<span class="${isToday ? 'text-blue-400 font-bold' : 'text-gray-400'}" style="display:flex;align-items:center;">${DAY_NAMES[d]} ${day.getDate()}${badge}</span>`;
       hCell.dataset.day = day.toISOString();
       hCell.addEventListener('click', () => {
         currentDay = stripTime(new Date(hCell.dataset.day));
@@ -463,6 +550,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const cell = document.createElement('div');
         cell.className = `relative ${d < 6 ? 'border-r' : ''} ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50 ${isHalfHour ? 'border-dashed' : ''}`;
         cell.style.height = ROW_H + 'px';
+        if (isSameDay(addDays(currentWeekStart, d), today)) {
+          cell.style.background = 'rgba(30,64,175,0.10)';
+        }
         gridEl.appendChild(cell);
       }
     }
@@ -472,25 +562,19 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const overlay = document.createElement('div');
     overlay.style.cssText = `position:absolute;top:40px;left:3rem;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));pointer-events:none;`;
 
-    const colEls = Array.from({ length: 7 }, () => {
+    const colEls = Array.from({ length: 7 }).map((_, d) => {
       const col = document.createElement('div');
       col.style.position = 'relative';
+      const colDay = addDays(currentWeekStart, d);
+      if (isDateClosed(colDay)) {
+        col.style.background = 'repeating-linear-gradient(-45deg, rgba(17,24,39,0.55) 0px, rgba(17,24,39,0.55) 4px, transparent 4px, transparent 10px)';
+      }
       overlay.appendChild(col);
       return col;
     });
 
     const openMin = OPEN_HOUR * 60;
     const totalH = TOTAL_ROWS * ROW_H;
-
-    const byDay = {};
-    reservations.forEach(res => {
-      const debut = new Date(res.creneau_debut);
-      const d = Math.round((stripTime(debut) - currentWeekStart) / 86400000);
-      if (d < 0 || d > 6) return;
-      const startMin = debut.getHours() * 60 + debut.getMinutes();
-      if (!byDay[d]) byDay[d] = [];
-      byDay[d].push({ res, startMin, endMin: startMin + res.duree_minutes });
-    });
 
     Object.entries(byDay).forEach(([d, evts]) => {
       layoutBlocs(evts);
@@ -505,7 +589,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const bloc = document.createElement('div');
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
         bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
-        bloc.innerHTML = `<span class="font-medium truncate block">${esc(res.client_nom)}</span><span class="opacity-70">👥${res.nb_personnes} · ${res.duree_minutes}min</span>`;
+        bloc.innerHTML = `
+          <span class="font-semibold truncate block">${esc(res.client_nom)}</span>
+          <span class="opacity-75 block">${formatTime(debut)}</span>
+          ${height >= 72 ? `<span class="opacity-60 block">👥${res.nb_personnes} · ${res.duree_minutes}min</span>` : ''}
+        `;
         bloc.addEventListener('click', () => openModal(res));
         colEls[Number(d)].appendChild(bloc);
         if (BUFFER_MIN > 0) {
@@ -517,10 +605,29 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       });
     });
 
+    // Ligne heure courante
+    const nowLineWeek = document.createElement('div');
+    nowLineWeek.id = 'week-now-line';
+    nowLineWeek.style.cssText = `position:absolute;left:3rem;right:0;height:2px;background:#ef4444;pointer-events:none;z-index:10;display:none;`;
+    nowLineWeek.innerHTML = '<span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;background:#ef4444;border-radius:50%;display:block;"></span>';
+    wrapper.appendChild(nowLineWeek);
+
     wrapper.appendChild(overlay);
     grid.appendChild(wrapper);
     showView('week');
     updateDateLabel();
+    updateNowLine();
+    const isWeekContainsToday = stripTime(new Date()) >= currentWeekStart && stripTime(new Date()) <= addDays(currentWeekStart, 6);
+    if (isWeekContainsToday) {
+      scrollToNow();
+      const todayIdx = (stripTime(new Date()).getDay() + 6) % 7; // 0=Lun … 6=Dim
+      const container = document.getElementById('view-week');
+      if (container) {
+        const colWidth = Math.max(90, (container.clientWidth - 48) / 7);
+        const colLeft = 48 + todayIdx * colWidth;
+        container.scrollLeft = Math.max(0, colLeft - container.clientWidth / 2 + colWidth / 2);
+      }
+    }
   }
 
   // ── Rendu Vue Jour ─────────────────────────────────────────────────────────
@@ -618,10 +725,19 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       });
     });
 
+    // Ligne heure courante
+    const nowLineDay = document.createElement('div');
+    nowLineDay.id = 'day-now-line';
+    nowLineDay.style.cssText = `position:absolute;left:3rem;right:0;height:2px;background:#ef4444;pointer-events:none;z-index:10;display:none;`;
+    nowLineDay.innerHTML = '<span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;background:#ef4444;border-radius:50%;display:block;"></span>';
+    wrapper.appendChild(nowLineDay);
+
     wrapper.appendChild(overlay);
     grid.appendChild(wrapper);
     showView('day');
     updateDateLabel();
+    updateNowLine();
+    if (isSameDay(currentDay, stripTime(new Date()))) scrollToNow();
   }
 
   // ── UI helpers ─────────────────────────────────────────────────────────────
@@ -931,6 +1047,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           document.getElementById('vacances-error').textContent = 'Erreur : ' + delVacError.message;
           document.getElementById('vacances-error').classList.remove('hidden');
         } else {
+          loadCalendarConstraints().then(() => currentView === 'week' ? renderWeek() : renderDay());
           loadPeriodesVacances();
         }
       });
@@ -971,6 +1088,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       document.getElementById('vacances-debut').value = '';
       document.getElementById('vacances-fin').value = '';
       document.getElementById('vacances-label').value = '';
+      loadCalendarConstraints().then(() => currentView === 'week' ? renderWeek() : renderDay());
       loadPeriodesVacances();
     }
   });
@@ -1071,13 +1189,15 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     } else {
       document.getElementById('fermeture-date').value = '';
       document.getElementById('fermeture-motif').value = '';
+      loadCalendarConstraints().then(() => currentView === 'week' ? renderWeek() : renderDay());
       loadJoursFermeture();
     }
   });
 
   // ── Démarrage ──────────────────────────────────────────────────────────────
-  await Promise.all([loadConfig(), loadBoxes()]);
+  await Promise.all([loadConfig(), loadBoxes(), loadCalendarConstraints()]);
   renderWeek();
+  setInterval(updateNowLine, 60_000);
   loadPeriodesVacances();
   loadJoursFermeture();
 </script>

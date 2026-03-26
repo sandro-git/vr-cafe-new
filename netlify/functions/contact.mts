@@ -1,12 +1,26 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 
+const ALLOWED_ORIGINS = [
+  "https://vr-cafe.fr",
+  "https://www.vr-cafe.fr",
+  "http://localhost:4321",
+];
+
 export default async (req: Request, context: Context) => {
   // Vérifier que c'est une requête POST
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { status: 405, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const origin = req.headers.get("origin");
+  if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+    return new Response(
+      JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
