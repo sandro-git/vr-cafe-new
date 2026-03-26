@@ -187,9 +187,17 @@ const {
   </div>
 </div>
 
-<script define:vars={{ mode, successRedirect }}>
+<script define:vars={{ mode, successRedirect }} is:inline>
+  window.__rvMode = mode;
+  window.__rvRedirect = successRedirect;
+</script>
+
+<script>
   // @ts-nocheck
   import { createClient } from '@supabase/supabase-js';
+
+  const mode = window.__rvMode;
+  const successRedirect = window.__rvRedirect;
 
   const supabase = createClient(
     import.meta.env.PUBLIC_SUPABASE_URL,
