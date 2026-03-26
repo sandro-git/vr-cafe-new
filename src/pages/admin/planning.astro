@@ -237,6 +237,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Box VR</label>
+            <select id="edit-box" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
             <textarea id="edit-notes" rows="2" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
           </div>
@@ -817,6 +821,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
     document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
+    populateBoxSelect(res.reservation_boxes?.[0]?.box_id ?? null);
     document.getElementById('modal-edit-error').classList.add('hidden');
 
     // Afficher vue détail
@@ -828,6 +833,26 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   function closeModal() {
     document.getElementById('res-modal').classList.add('hidden');
     modalRes = null;
+  }
+
+  function populateBoxSelect(selectedBoxId) {
+    const sel = document.getElementById('edit-box');
+    sel.innerHTML = '';
+    const filaire = boxes.filter(b => b.type !== 'sans_fil');
+    const sansFil = boxes.filter(b => b.type === 'sans_fil');
+    [['🔌 Filaire', filaire], ['📡 Sans fil', sansFil]].forEach(([label, group]) => {
+      if (!group.length) return;
+      const og = document.createElement('optgroup');
+      og.label = label;
+      group.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.nom;
+        if (b.id === selectedBoxId) opt.selected = true;
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
+    });
   }
 
   function populateHeures(selectedDate) {
@@ -935,6 +960,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       btn.textContent = 'Enregistrer';
       return;
     }
+    const selectedBoxId = document.getElementById('edit-box').value;
+    const currentBoxId = modalRes.reservation_boxes?.[0]?.box_id ?? null;
+
     let saveError = null;
     try {
       await adminDb('update_reservation', {
@@ -950,6 +978,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           creneau_fin_blocage: newFinBlocage.toISOString(),
         },
       });
+      if (selectedBoxId && selectedBoxId !== currentBoxId) {
+        await adminDb('reassign_reservation_box', {
+          reservation_id: modalRes.id,
+          box_id: selectedBoxId,
+        });
+      }
     } catch (e) {
       saveError = e;
     }

@@ -92,6 +92,22 @@ export default async (req: Request, _context: Context) => {
       return json({ ok: true });
     }
 
+    // ── Réassignation de box ─────────────────────────────────────────────────
+    case "reassign_reservation_box": {
+      const { reservation_id, box_id } = body as { reservation_id: string; box_id: string };
+      if (!reservation_id || !box_id) return json({ error: "Missing params" }, 400);
+      const { error: delErr } = await supabase
+        .from("reservation_boxes")
+        .delete()
+        .eq("reservation_id", reservation_id);
+      if (delErr) return json({ error: delErr.message }, 500);
+      const { error: insErr } = await supabase
+        .from("reservation_boxes")
+        .insert({ reservation_id, box_id });
+      if (insErr) return json({ error: insErr.message }, 500);
+      return json({ ok: true });
+    }
+
     default:
       return json({ error: "Unknown action" }, 400);
   }
