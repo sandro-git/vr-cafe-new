@@ -237,6 +237,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
+            <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
             <textarea id="edit-notes" rows="2" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
           </div>
@@ -297,6 +301,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let currentDay = stripTime(new Date());
   let boxes = [];
   let modalRes = null; // réservation couramment affichée dans le modal
+  let editSelectedVrType = null; // type VR sélectionné dans le formulaire d'édition
   let periodesVacancesCache = []; // { date_debut, date_fin }[]
   let joursFermetureCache = [];   // 'YYYY-MM-DD'[]
 
@@ -817,6 +822,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
     document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
+    setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     document.getElementById('modal-edit-error').classList.add('hidden');
 
     // Afficher vue détail
@@ -828,6 +834,35 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   function closeModal() {
     document.getElementById('res-modal').classList.add('hidden');
     modalRes = null;
+  }
+
+  function vrTypeBtnClass(active) {
+    return active
+      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center transition-all cursor-pointer'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-blue-400 cursor-pointer';
+  }
+
+  function setupEditVrType(currentType) {
+    editSelectedVrType = currentType;
+    const grid = document.getElementById('edit-vr-type-grid');
+    grid.innerHTML = '';
+    const types = [
+      { id: 'filaire', label: '🔌 VR Filaire' },
+      { id: 'sans_fil', label: '📡 VR Sans Fil' },
+    ];
+    types.forEach(t => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = vrTypeBtnClass(t.id === currentType);
+      btn.textContent = t.label;
+      btn.addEventListener('click', () => {
+        editSelectedVrType = t.id;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = vrTypeBtnClass(types[idx].id === t.id);
+        });
+      });
+      grid.appendChild(btn);
+    });
   }
 
   function populateHeures(selectedDate) {
@@ -935,6 +970,67 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       btn.textContent = 'Enregistrer';
       return;
     }
+    const currentVrType = modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
+    const nbPersonnes = parseInt(document.getElementById('edit-nb').value);
+
+    // Si le type VR a changé, vérifier la disponibilité avant de sauvegarder
+    if (editSelectedVrType !== currentVrType) {
+      const finBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
+      const { data: availableBoxes, error: rpcErr } = await supabase.rpc('get_boxes_disponibles', {
+        p_debut: newDebut.toISOString(),
+        p_fin_blocage: finBlocage.toISOString(),
+        p_vr_type: editSelectedVrType,
+      });
+      const enough = editSelectedVrType === 'sans_fil'
+        ? availableBoxes?.length > 0
+        : availableBoxes?.length >= nbPersonnes;
+      if (rpcErr || !availableBoxes || !enough) {
+        const errEl = document.getElementById('modal-edit-error');
+        errEl.textContent = 'Aucune box disponible pour ce type VR sur ce créneau.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Enregistrer';
+        return;
+      }
+      // Boxes à assigner
+      const toAssign = editSelectedVrType === 'sans_fil'
+        ? availableBoxes.slice(0, 1)
+        : availableBoxes.slice(0, nbPersonnes);
+      let saveError = null;
+      try {
+        await adminDb('update_reservation', {
+          id: modalRes.id,
+          fields: {
+            client_nom: document.getElementById('edit-nom').value.trim(),
+            client_email: document.getElementById('edit-email').value.trim(),
+            client_telephone: document.getElementById('edit-telephone').value.trim(),
+            nb_personnes: nbPersonnes,
+            notes: document.getElementById('edit-notes').value.trim() || null,
+            creneau_debut: newDebut.toISOString(),
+            creneau_fin: newFin.toISOString(),
+            creneau_fin_blocage: newFinBlocage.toISOString(),
+          },
+        });
+        await adminDb('reassign_reservation_box', {
+          reservation_id: modalRes.id,
+          box_ids: toAssign.map(b => b.box_id),
+        });
+      } catch (e) {
+        saveError = e;
+      }
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer';
+      if (saveError) {
+        const errEl = document.getElementById('modal-edit-error');
+        errEl.textContent = 'Erreur : ' + saveError.message;
+        errEl.classList.remove('hidden');
+      } else {
+        closeModal();
+        currentView === 'week' ? renderWeek() : renderDay();
+      }
+      return;
+    }
+
     let saveError = null;
     try {
       await adminDb('update_reservation', {
@@ -943,7 +1039,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           client_nom: document.getElementById('edit-nom').value.trim(),
           client_email: document.getElementById('edit-email').value.trim(),
           client_telephone: document.getElementById('edit-telephone').value.trim(),
-          nb_personnes: parseInt(document.getElementById('edit-nb').value),
+          nb_personnes: nbPersonnes,
           notes: document.getElementById('edit-notes').value.trim() || null,
           creneau_debut: newDebut.toISOString(),
           creneau_fin: newFin.toISOString(),
