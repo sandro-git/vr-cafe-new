@@ -1,11 +1,26 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 
+function checkAuth(req: Request): boolean {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const adminPassword = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
+  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
+  return !!adminPassword && sessionValue === adminPassword;
+}
+
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { status: 405, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!checkAuth(req)) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
