@@ -681,12 +681,29 @@ const {
         <span class="text-gray-400">Box${boxes.length > 1 ? 'es' : ''}</span>
         <span class="text-white">${esc(boxNames)}</span>
       </div>
+      ${(() => {
+        const montant = calculateMontant(res.duree_minutes, res.nb_personnes);
+        return montant !== null
+          ? `<div class="flex justify-between pt-3 border-t border-gray-700 mt-1">
+        <span class="text-gray-400 font-medium">Montant total</span>
+        <span class="text-green-400 font-bold">${montant} €</span>
+      </div>`
+          : '';
+      })()}
     `;
 
     showStep(4);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  function calculateMontant(dureeMinutes, nbPersonnes) {
+    if (dureeMinutes === 30) return 18 * nbPersonnes;
+    if (dureeMinutes === 60) {
+      const ppp = nbPersonnes <= 2 ? 29 : nbPersonnes <= 4 ? 27 : 25;
+      return ppp * nbPersonnes;
+    }
+    return null;
+  }
   function isValidEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
   }
