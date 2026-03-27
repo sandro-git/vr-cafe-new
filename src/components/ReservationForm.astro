@@ -449,7 +449,7 @@ const {
     const now = new Date();
     const slots = [];
 
-    for (let start = openTotal; start + dureeMin <= closeTotal; start += 30) {
+    for (let start = openTotal; start + dureeMin + bufferMin <= closeTotal; start += 30) {
       const debut = dateAtMinutes(selectedDate, start);
 
       // Ignorer les créneaux passés si c'est aujourd'hui
