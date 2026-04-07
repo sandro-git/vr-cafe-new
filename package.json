@@ -10,9 +10,11 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.85.0",
     "@astrojs/check": "^0.9.8",
     "@astrojs/netlify": "7.0.4",
     "@astrojs/react": "5.0.1",
+    "@netlify/functions": "^5.1.5",
     "@sanity/astro": "^3.3.1",
     "@sanity/client": "^7.20.0",
     "@sanity/image-url": "^2.0.3",
