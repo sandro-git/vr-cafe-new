@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 // ---- Base de connaissance ----
 function readKnowledge(): string {
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  return readFileSync(join(__dirname, "vr-cafe-knowledge.md"), "utf-8");
+  return readFileSync(join(__dirname, "../../content/vr-cafe-knowledge.md"), "utf-8");
 }
 
 // ---- Tools ----
