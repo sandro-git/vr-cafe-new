@@ -1,8 +1,14 @@
 import type { Context, Config } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
+import { getStore } from "@netlify/blobs";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+
+const SYSTEM_PROMPT =
+  "Tu es l'assistant du VR Café. Utilise le tool get_knowledge pour accéder aux informations (tarifs, horaires, FAQ) avant de répondre aux questions des clients. Ne jamais inventer d'informations. Réponds de manière courte et amicale, adapté à WhatsApp.";
+
+const MAX_HISTORY = 10;
 
 // ---- Base de connaissance ----
 function readKnowledge(): string {
@@ -24,38 +30,60 @@ function executeTool(name: string, _input: Record<string, string>): string {
   return JSON.stringify({ erreur: "Tool inconnu" });
 }
 
-// ---- Agent ----
-async function runAgent(question: string): Promise<string> {
+// ---- Mémoire de conversation (Netlify Blobs) ----
+async function loadHistory(phone: string): Promise<Anthropic.MessageParam[]> {
+  const store = getStore("conversation-history");
+  const data = await store.get(phone, { type: "json" });
+  return Array.isArray(data) ? data : [];
+}
+
+async function saveHistory(phone: string, history: Anthropic.MessageParam[]): Promise<void> {
+  const store = getStore("conversation-history");
+  const trimmed = history.slice(-MAX_HISTORY);
+  await store.setJSON(phone, trimmed);
+}
+
+// ---- Agent loop (pattern officiel Anthropic) ----
+async function runAgent(phone: string, question: string): Promise<string> {
   const client = new Anthropic({ apiKey: Netlify.env.get("ANTHROPIC_API_KEY") });
-  const messages: Anthropic.MessageParam[] = [{ role: "user", content: question }];
+
+  const history = await loadHistory(phone);
+  history.push({ role: "user", content: question });
+
+  const messages: Anthropic.MessageParam[] = [...history];
 
   while (true) {
     const response = await client.messages.create({
       model: "claude-sonnet-4-5-20250929",
       max_tokens: 1024,
-      system: "Tu es l'assistant du VR Café. Utilise le tool get_knowledge pour accéder aux informations (tarifs, horaires, FAQ) avant de répondre aux questions des clients. Ne jamais inventer d'informations. Réponds de manière courte et amicale, adapté à WhatsApp.",
+      system: SYSTEM_PROMPT,
       tools,
       messages,
     });
 
+    messages.push({ role: "assistant", content: response.content });
+
     if (response.stop_reason === "tool_use") {
-      messages.push({ role: "assistant", content: response.content });
-      const results: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of response.content) {
-        if (block.type === "tool_use") {
-          results.push({
-            type: "tool_result",
-            tool_use_id: block.id,
-            content: executeTool(block.name, block.input as Record<string, string>),
-          });
-        }
-      }
-      messages.push({ role: "user", content: results });
+      const toolResults: Anthropic.ToolResultBlockParam[] = response.content
+        .filter((block): block is Anthropic.ToolUseBlock => block.type === "tool_use")
+        .map((block) => ({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: executeTool(block.name, block.input as Record<string, string>),
+        }));
+
+      messages.push({ role: "user", content: toolResults });
     } else {
-      for (const block of response.content) {
-        if (block.type === "text") return block.text;
-      }
-      return "Désolé, je n'ai pas pu répondre.";
+      // stop_reason === "end_turn" ou autre : on extrait la réponse textuelle
+      const text = response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === "text")
+        .map((block) => block.text)
+        .join("");
+
+      // On sauvegarde l'historique (sans les tool_result intermédiaires)
+      await saveHistory(phone, messages);
+
+      return text || "Désolé, je n'ai pas pu répondre.";
     }
   }
 }
@@ -104,7 +132,7 @@ export default async (req: Request, _context: Context) => {
       const from = message.from;
       const text = message.text.body;
 
-      const reply = await runAgent(text);
+      const reply = await runAgent(from, text);
       await sendWhatsAppMessage(from, reply);
     }
 
