@@ -3,24 +3,22 @@ import Anthropic from "@anthropic-ai/sdk";
 
 // ---- Données VR Café ----
 const TARIFS = {
-  "30min": 12,
-  "1h": 20,
-  "2h": 35,
-  "anniversaire": 25,
+  "30min": "18€/personne",
+  "1h_1_2_personnes": "29€/personne",
+  "1h_3_4_personnes": "27€/personne",
+  "1h_5_personnes_et_plus": "25€/personne",
+  "anniversaire": "25€/personne",
 };
 
-const DISPONIBILITES: Record<string, string[]> = {
-  lundi: ["14h", "16h", "18h"],
-  mardi: ["14h", "16h", "18h"],
-  mercredi: ["10h", "12h", "14h", "16h", "18h"],
-  samedi: ["10h", "12h", "14h", "16h", "18h"],
-  dimanche: ["10h", "12h", "14h", "16h"],
+const DISPONIBILITES = {
+  vacances: "Ouvert tous les jours de 14h à 22h",
+  hors_vacances: "Ouvert mercredi, vendredi, samedi et dimanche de 14h à 22h",
 };
 
 const FAQ = {
-  age_minimum: "7 ans accompagné d'un adulte",
-  duree_session: "Les sessions durent 30min, 1h ou 2h",
-  reservation: "Par téléphone au 04 XX XX XX XX ou sur notre site",
+  age_minimum: "Pas d'âge minimum, mais les moins de 9 ans sont limités à 30 minutes",
+  accompagnement_adulte: "Aucun accompagnement adulte obligatoire",
+  reservation: "Par téléphone ou sur notre site web",
 };
 
 // ---- Tools ----
