@@ -1,58 +1,26 @@
 import type { Context, Config } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
-// ---- Données VR Café ----
-const TARIFS = {
-  "30min": "18€/personne",
-  "1h_1_2_personnes": "29€/personne",
-  "1h_3_4_personnes": "27€/personne",
-  "1h_5_personnes_et_plus": "25€/personne",
-  "anniversaire": "25€/personne",
-};
-
-const DISPONIBILITES = {
-  vacances: "Ouvert tous les jours de 14h à 22h",
-  hors_vacances: "Ouvert mercredi, vendredi, samedi et dimanche de 14h à 22h",
-};
-
-const FAQ = {
-  age_minimum: "Pas d'âge minimum, mais les moins de 9 ans sont limités à 30 minutes",
-  accompagnement_adulte: "Aucun accompagnement adulte obligatoire",
-  reservation: "Par téléphone ou sur notre site web",
-};
+// ---- Base de connaissance ----
+function readKnowledge(): string {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  return readFileSync(join(__dirname, "vr-cafe-knowledge.md"), "utf-8");
+}
 
 // ---- Tools ----
 const tools: Anthropic.Tool[] = [
   {
-    name: "get_tarifs",
-    description: "Retourne les tarifs du VR Café",
-    input_schema: { type: "object", properties: {}, required: [] },
-  },
-  {
-    name: "get_disponibilites",
-    description: "Retourne les créneaux disponibles pour un jour donné",
-    input_schema: {
-      type: "object",
-      properties: {
-        jour: { type: "string", description: "Jour de la semaine ex: samedi" },
-      },
-      required: ["jour"],
-    },
-  },
-  {
-    name: "get_faq",
-    description: "Retourne les réponses aux questions fréquentes",
+    name: "get_knowledge",
+    description: "Retourne toutes les informations du VR Café : tarifs, horaires et FAQ",
     input_schema: { type: "object", properties: {}, required: [] },
   },
 ];
 
-function executeTool(name: string, input: Record<string, string>): string {
-  if (name === "get_tarifs") return JSON.stringify(TARIFS);
-  if (name === "get_disponibilites") {
-    const jour = input.jour?.toLowerCase();
-    return JSON.stringify(DISPONIBILITES[jour] ?? { erreur: `Pas d'info pour ${jour}` });
-  }
-  if (name === "get_faq") return JSON.stringify(FAQ);
+function executeTool(name: string, _input: Record<string, string>): string {
+  if (name === "get_knowledge") return readKnowledge();
   return JSON.stringify({ erreur: "Tool inconnu" });
 }
 
@@ -65,7 +33,7 @@ async function runAgent(question: string): Promise<string> {
     const response = await client.messages.create({
       model: "claude-sonnet-4-5-20250929",
       max_tokens: 1024,
-      system: "Tu es l'assistant du VR Café. Utilise toujours les tools disponibles pour répondre. Ne jamais inventer d'informations. Réponds de manière courte et amicale, adapté à WhatsApp.",
+      system: "Tu es l'assistant du VR Café. Utilise le tool get_knowledge pour accéder aux informations (tarifs, horaires, FAQ) avant de répondre aux questions des clients. Ne jamais inventer d'informations. Réponds de manière courte et amicale, adapté à WhatsApp.",
       tools,
       messages,
     });
