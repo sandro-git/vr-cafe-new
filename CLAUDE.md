@@ -1,124 +1,161 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ce fichier fournit des instructions à Claude Code (claude.ai/code) pour travailler dans ce dépôt.
 
-## Project Overview
+## Vue d'ensemble du projet
 
-This is a VR Café website built with Astro 5, using Sanity CMS for content management. The site is deployed on Netlify with server-side rendering (SSR).
+Site web d'un VR Café construit avec Astro 6, utilisant Sanity CMS pour la gestion de contenu. Le site est déployé sur Netlify avec le rendu côté serveur (SSR).
 
-## Development Commands
+## Commandes de développement
 
-All commands use `bun` and should be run from the project root:
+Toutes les commandes utilisent `bun` et doivent être exécutées depuis la racine du projet :
 
-- **`bun install`** - Install dependencies
-- **`bun dev`** - Start development server at `localhost:4321`
-- **`bun run build`** - Build production site to `./dist/`
-- **`bun run preview`** - Preview production build locally
-- **`bun astro ...`** - Run Astro CLI commands (e.g., `bun astro check`)
+- **`bun install`** - Installer les dépendances
+- **`bun dev`** - Démarrer le serveur de développement sur `localhost:4321`
+- **`bun run build`** - Construire le site en production dans `./dist/`
+- **`bun run preview`** - Prévisualiser le build de production en local
+- **`bun astro ...`** - Exécuter les commandes Astro CLI (ex. `bun astro check`)
 
 ## Architecture
 
-### Framework & Integrations
+### Framework & Intégrations
 
-- **Astro 5** with SSR mode (`output: "server"`)
-- **Netlify adapter** for deployment
-- **Sanity CMS** integration:
-  - Project ID: `0oshw5tf`
-  - Dataset: `production`
-  - Studio accessible at `/studio` route
-  - Uses `@sanity/astro` integration with Vision tool
-- **React 19** - Required only for Sanity Studio (`/studio`), not used in frontend components
-- **Tailwind CSS v4** via Vite plugin
-- **Partytown** for third-party script optimization
+- **Astro 6** en mode SSR (`output: "server"`)
+- **Adaptateur Netlify** pour le déploiement
+- **Sanity CMS** :
+  - Project ID : `0oshw5tf`
+  - Dataset : `production`
+  - Studio accessible sur la route `/studio`
+  - Utilise l'intégration `@sanity/astro` avec l'outil Vision
+- **React 19** - Uniquement requis pour Sanity Studio (`/studio`), non utilisé dans les composants frontend
+- **Tailwind CSS v4** via le plugin Vite
+- **Google Analytics / GTM** chargés directement via `<script async>` dans `BaseHead.astro` (Partytown abandonné)
 
-### Project Structure
+### Structure du projet
 
 ```
 src/
 ├── sanity/
-│   ├── schemaTypes/     # Sanity content schemas
-│   │   ├── games.ts     # Games content type
-│   │   ├── tag.ts       # Tag content type
-│   │   ├── editeur.ts   # Publisher content type
-│   │   └── index.ts     # Schema exports
+│   ├── schemaTypes/     # Schémas de contenu Sanity
+│   │   ├── games.ts     # Type de contenu Jeux
+│   │   ├── tag.ts       # Type de contenu Tag
+│   │   ├── editeur.ts   # Type de contenu Éditeur
+│   │   └── index.ts     # Exports des schémas
 │   └── lib/
-│       ├── load-query.ts    # Sanity query helper
-│       └── url-for-image.ts # Image URL builder
-├── components/          # Astro/React components
+│       ├── load-query.ts    # Helper de requêtes Sanity
+│       └── url-for-image.ts # Constructeur d'URL d'images
+├── components/          # Composants Astro/React
 ├── layouts/
-│   ├── BaseLayout.astro     # Main layout with NavBar, Footer, WhatsApp
-│   ├── BaseHead.astro       # SEO and meta tags
-│   └── GamesLayout.astro    # Layout for game pages
-├── pages/               # File-based routing
+│   ├── BaseLayout.astro     # Layout principal avec NavBar, Footer, WhatsApp
+│   ├── BaseHead.astro       # Balises SEO et meta
+│   └── GamesLayout.astro    # Layout pour les pages de jeux
+├── pages/               # Routage basé sur les fichiers
 │   ├── index.astro
-│   ├── [...slug].astro  # Dynamic game detail pages
-│   ├── jeux.astro       # Games listing
+│   ├── [...slug].astro  # Pages de détail des jeux (dynamiques)
+│   ├── jeux.astro       # Liste des jeux
 │   ├── contact.astro
 │   ├── reservation.astro
-│   └── ...              # Other static pages
-├── assets/              # Static assets
-└── styles/              # Global styles
+│   └── ...              # Autres pages statiques
+├── assets/              # Ressources statiques
+└── styles/              # Styles globaux
 ```
 
-### Key Architectural Patterns
+### Patterns architecturaux clés
 
-**Sanity CMS Integration:**
-- Content is fetched using `loadQuery()` from `src/sanity/lib/load-query.ts`
-- Schema types are defined in `src/sanity/schemaTypes/` and exported via `index.ts`
-- Sanity client is configured to use CDN for performance
-- All queries use `sanityClient.fetch()` with `filterResponse: false`
+**Intégration Sanity CMS :**
+- Le contenu est récupéré avec `loadQuery()` depuis `src/sanity/lib/load-query.ts`
+- Les types de schémas sont définis dans `src/sanity/schemaTypes/` et exportés via `index.ts`
+- Le client Sanity est configuré pour utiliser le CDN pour les performances
+- Toutes les requêtes utilisent `sanityClient.fetch()` avec `filterResponse: false`
 
-**Content Types:**
-- **games**: VR game content with slug, image, YouTube links, tags, difficulty, duration, players, age rating
-- **tag**: Category/tag system for games
-- **editeur**: Game publishers/developers
+**Types de contenu :**
+- **games** : contenu des jeux VR avec slug, image, liens YouTube, tags, difficulté, durée, joueurs, âge minimum
+- **tag** : système de catégories/tags pour les jeux
+- **editeur** : éditeurs/développeurs de jeux
 
-**Image Handling:**
-- Use `SanityPicture.astro` for Sanity-sourced images
-- `CriticalImage.astro` for above-the-fold images
-- `LandingImage.astro` for hero sections
-- All Sanity images support hotspot positioning
+**Gestion des images :**
+- Utiliser `SanityPicture.astro` pour les images provenant de Sanity
+- `CriticalImage.astro` pour les images au-dessus de la ligne de flottaison
+- `LandingImage.astro` pour les sections hero
+- Toutes les images Sanity supportent le positionnement hotspot
 
-**Build Optimization:**
-- Custom Vite `manualChunks` configuration splits code into:
-  - `sanity-studio` - Sanity Studio (heavy)
-  - `sanity-vision` - Vision tool
-  - `video-player` - Video components
-  - `sanity-utils` - Sanity client utilities
+**Optimisation du build :**
+- Configuration Vite `manualChunks` personnalisée qui découpe le code en :
+  - `sanity-studio` - Sanity Studio (lourd)
+  - `sanity-vision` - Outil Vision
+  - `video-player` - Composants vidéo
+  - `sanity-utils` - Utilitaires client Sanity
 
-**Routing:**
-- Static pages in `src/pages/`
-- Dynamic game detail pages via `[...slug].astro` using Sanity slug field
-- French language site (`lang="fr"`)
+**Routage :**
+- Pages statiques dans `src/pages/`
+- Pages de détail des jeux dynamiques via `[...slug].astro` en utilisant le champ slug de Sanity
+- Site en français (`lang="fr"`)
 
-### Environment Variables
+### Système de réservation (branche vrbooking)
 
-Required in `.env`:
+La fonctionnalité de réservation ajoute un backend Supabase en complément de Sanity CMS :
+
+**Intégration Supabase (`src/lib/supabase.js`) :**
+- Client initialisé avec `PUBLIC_SUPABASE_URL` + `PUBLIC_SUPABASE_ANON_KEY`
+- Tables : `reservations`, `reservation_boxes`, `boxes`, `config`, `durees_session`, `periodes_vacances`, `jours_fermeture`, `push_subscriptions`
+- RPC : `get_boxes_disponibles` — retourne les boxes disponibles pour un créneau donné
+
+**Endpoints API (appelés via `fetch`, doivent exister en tant qu'endpoints Astro) :**
+- `POST /api/reservation-confirmation` — crée une nouvelle réservation
+- `POST /api/reservation-annulation` — annule une réservation
+- `POST /api/admin/db` — requêtes base de données admin (protégé par cookie de session)
+- `POST /api/push/subscribe` — enregistre un abonnement web push
+- `POST /api/push-notify` — envoie une notification push via VAPID
+
+**Section admin (`/admin/*`) :**
+- Auth via `src/middleware.ts` : vérifie le cookie `admin_session` contre la variable d'env `ADMIN_PASSWORD`
+- `AdminLayout.astro` enregistre le service worker et demande la permission pour les notifications push
+- Pages : `/admin/login`, `/admin/reservations`, `/admin/planning`, `/admin/reservation`
+
+**Composant partagé `ReservationForm` :**
+- Utilisé sur `/reservation` (mode=`"client"`) et `/admin/reservation` (mode=`"admin"`)
+- Formulaire multi-étapes : sélection de date → joueurs/durée → coordonnées → confirmation
+- `DatePicker.astro` est un composant calendrier personnalisé avec un input caché pour la valeur ISO de la date
+
+**Notifications push web (`src/lib/notify.ts`) :**
+- Utilise la bibliothèque `web-push` avec des clés VAPID
+- `notifyNewReservation()` diffuse à tous les abonnements stockés dans la table `push_subscriptions`
+- Supprime automatiquement les abonnements expirés (réponses 410/404)
+
+### Variables d'environnement
+
+Requises dans `.env` :
 ```
 PUBLIC_SANITY_PROJECT_ID=0oshw5tf
 PUBLIC_SANITY_DATASET=production
+PUBLIC_SUPABASE_URL=...
+PUBLIC_SUPABASE_ANON_KEY=...
+ADMIN_PASSWORD=...
+PUBLIC_VAPID_KEY=...
+PRIVATE_VAPID_KEY=...
+VAPID_EMAIL=...
 ```
 
-### Deployment
+### Déploiement
 
-- **Platform**: Netlify
-- **Build command**: `bun run build`
-- **Publish directory**: `dist`
-- **Special configuration**: `.well-known` directory is configured for Apple Pay and similar services (see `netlify.toml`)
+- **Plateforme** : Netlify
+- **Commande de build** : `bun run build`
+- **Répertoire de publication** : `dist`
+- **Configuration spéciale** : le répertoire `.well-known` est configuré pour Apple Pay et services similaires (voir `netlify.toml`)
 
-## Coding Patterns
+## Patterns de code
 
-**Astro Components:**
-- Use component frontmatter (between `---` fences) for data fetching
-- BaseLayout provides NavBar, Footer, and WhatsApp button
-- Smooth scrolling is configured with `scroll-padding-top: var(--navHeight)`
+**Composants Astro :**
+- Utiliser le frontmatter du composant (entre les balises `---`) pour la récupération de données
+- BaseLayout fournit NavBar, Footer et le bouton WhatsApp
+- Le défilement fluide est configuré avec `scroll-padding-top: var(--navHeight)`
 
-**Sanity Queries:**
-- Import `loadQuery` from `src/sanity/lib/load-query.ts`
-- Use TypeScript generics for type-safe responses: `loadQuery<YourType>({ query, params })`
-- Access results via `.data` property
+**Requêtes Sanity :**
+- Importer `loadQuery` depuis `src/sanity/lib/load-query.ts`
+- Utiliser les génériques TypeScript pour des réponses typées : `loadQuery<VotreType>({ query, params })`
+- Accéder aux résultats via la propriété `.data`
 
-**Layouts:**
-- BaseLayout wraps all pages with navigation, footer, and floating WhatsApp button
-- Fixed navigation height defined as CSS variable `--navHeight: 8rem`
-- Dark mode enabled by default (`class="dark"` on `<html>`)
+**Layouts :**
+- `BaseLayout` encapsule toutes les pages publiques ; `AdminLayout` encapsule les pages `/admin/*`
+- Hauteur de navigation fixe définie comme variable CSS `--navHeight: 8rem`
+- Mode sombre activé par défaut (`class="dark"` sur `<html>`)
