@@ -101,6 +101,12 @@ export default async (req: Request, context: Context) => {
   const heureFinFmt = fin.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
   const vrIcon = vr_type === "sans_fil" ? "📡" : "🔌";
   const vrLabel = vr_type === "sans_fil" ? "VR Sans Fil" : "VR Filaire";
+  const montant = duree_minutes === 30
+    ? 18 * nb_personnes
+    : duree_minutes === 60
+      ? (nb_personnes <= 2 ? 29 : nb_personnes <= 4 ? 27 : 25) * nb_personnes
+      : null;
+  const montantFmt = montant !== null ? `${montant} €` : null;
 
   const clientHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #e2e8f0; border-radius: 12px; overflow: hidden;">
@@ -133,6 +139,10 @@ export default async (req: Request, context: Context) => {
               <td style="padding: 8px 0; color: #64748b; font-size: 14px;">${vrIcon} Type VR</td>
               <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px; text-align: right;">${vrLabel}</td>
             </tr>
+            ${montantFmt ? `<tr>
+              <td style="padding: 8px 0; border-top: 1px solid #334155; color: #64748b; font-size: 14px;">💶 Montant total</td>
+              <td style="padding: 8px 0; border-top: 1px solid #334155; color: #4ade80; font-size: 16px; font-weight: bold; text-align: right;">${montantFmt}</td>
+            </tr>` : ""}
           </table>
         </div>
         <div style="background-color: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
@@ -163,6 +173,7 @@ export default async (req: Request, context: Context) => {
         <p style="margin: 4px 0;"><strong>Joueurs :</strong> ${nb_personnes}</p>
         <p style="margin: 4px 0;"><strong>Type VR :</strong> ${vrIcon} ${vrLabel}</p>
         <p style="margin: 4px 0;"><strong>Box :</strong> ${box_names}</p>
+        ${montantFmt ? `<p style="margin: 4px 0;"><strong>Montant :</strong> ${montantFmt}</p>` : ""}
         ${notes ? `<p style="margin: 4px 0;"><strong>Notes :</strong> ${notes}</p>` : ""}
       </div>
     </div>
