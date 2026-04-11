@@ -220,17 +220,20 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
               <select id="edit-heure" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
             </div>
           </div>
-          <div>
+          <div class="relative">
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Nom complet</label>
-            <input id="edit-nom" type="text" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="edit-nom" type="text" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <ul id="edit-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
-          <div>
+          <div class="relative">
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
-            <input id="edit-email" type="email" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="edit-email" type="email" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <ul id="edit-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
-          <div>
+          <div class="relative">
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Téléphone</label>
-            <input id="edit-telephone" type="tel" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="edit-telephone" type="tel" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <ul id="edit-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
@@ -879,6 +882,74 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       grid.appendChild(btn);
     });
   }
+
+  // ── Autocomplete clients (admin) ──────────────────────────────────────────
+  let acEditTimer = null;
+
+  async function fetchClientSuggestionsEdit(field, value) {
+    if (value.length < 2) return [];
+    const col = field === 'nom' ? 'client_nom' : field === 'email' ? 'client_email' : 'client_telephone';
+    const { data } = await supabase
+      .from('reservations')
+      .select('client_nom, client_email, client_telephone')
+      .ilike(col, `%${value}%`)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (!data) return [];
+    const seen = new Set();
+    return data.filter(r => {
+      const key = r.client_email || r.client_nom;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function fillEditClient(s) {
+    document.getElementById('edit-nom').value = s.client_nom ?? '';
+    document.getElementById('edit-email').value = s.client_email ?? '';
+    document.getElementById('edit-telephone').value = s.client_telephone ?? '';
+    ['edit-nom-suggestions', 'edit-email-suggestions', 'edit-tel-suggestions'].forEach(id => {
+      document.getElementById(id)?.classList.add('hidden');
+    });
+  }
+
+  function showEditSuggestions(ulId, suggestions) {
+    const ul = document.getElementById(ulId);
+    if (!ul) return;
+    ul.innerHTML = '';
+    if (!suggestions.length) { ul.classList.add('hidden'); return; }
+    suggestions.forEach(s => {
+      const li = document.createElement('li');
+      li.className = 'px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0';
+      li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-gray-500 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
+      li.addEventListener('mousedown', e => { e.preventDefault(); fillEditClient(s); });
+      ul.appendChild(li);
+    });
+    ul.classList.remove('hidden');
+  }
+
+  function setupEditAcField(inputId, ulId, field) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('input', e => {
+      clearTimeout(acEditTimer);
+      const val = e.target.value.trim();
+      if (val.length < 2) { document.getElementById(ulId)?.classList.add('hidden'); return; }
+      acEditTimer = setTimeout(async () => {
+        showEditSuggestions(ulId, await fetchClientSuggestionsEdit(field, val));
+      }, 250);
+    });
+    input.addEventListener('blur', () => setTimeout(() => document.getElementById(ulId)?.classList.add('hidden'), 150));
+    input.addEventListener('focus', async e => {
+      const val = e.target.value.trim();
+      if (val.length >= 2) showEditSuggestions(ulId, await fetchClientSuggestionsEdit(field, val));
+    });
+  }
+
+  setupEditAcField('edit-nom', 'edit-nom-suggestions', 'nom');
+  setupEditAcField('edit-email', 'edit-email-suggestions', 'email');
+  setupEditAcField('edit-telephone', 'edit-tel-suggestions', 'tel');
 
   function setupEditVrType(currentType) {
     editSelectedVrType = currentType;
