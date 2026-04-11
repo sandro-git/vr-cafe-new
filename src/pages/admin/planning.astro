@@ -237,6 +237,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Durée</label>
+            <div id="edit-duree-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
           </div>
@@ -302,6 +306,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let boxes = [];
   let modalRes = null; // réservation couramment affichée dans le modal
   let editSelectedVrType = null; // type VR sélectionné dans le formulaire d'édition
+  let editSelectedDuree = null; // durée sélectionnée dans le formulaire d'édition
+  let dureeOptions = []; // options chargées depuis durees_session
   let periodesVacancesCache = []; // { date_debut, date_fin }[]
   let joursFermetureCache = [];   // 'YYYY-MM-DD'[]
 
@@ -441,6 +447,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   async function loadBoxes() {
     const { data } = await supabase.from('boxes').select('id, nom, type').order('nom');
     boxes = data ?? [];
+  }
+
+  async function loadDurees() {
+    const { data } = await supabase.from('durees_session').select('id, label, duree_minutes').order('duree_minutes');
+    dureeOptions = data ?? [];
   }
 
   async function loadReservationsForRange(start, end) {
@@ -822,6 +833,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
     document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
+    setupEditDuree(res.duree_minutes);
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     document.getElementById('modal-edit-error').classList.add('hidden');
 
@@ -840,6 +852,32 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     return active
       ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center transition-all cursor-pointer'
       : 'py-3 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-blue-400 cursor-pointer';
+  }
+
+  function dureeBtnClass(active) {
+    return active
+      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center text-sm font-medium transition-all cursor-pointer'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white text-center text-sm transition-all hover:border-blue-400 cursor-pointer';
+  }
+
+  function setupEditDuree(currentMinutes) {
+    editSelectedDuree = currentMinutes;
+    const grid = document.getElementById('edit-duree-grid');
+    grid.innerHTML = '';
+    dureeOptions.forEach(d => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = dureeBtnClass(d.duree_minutes === currentMinutes);
+      btn.textContent = d.label;
+      btn.dataset.minutes = String(d.duree_minutes);
+      btn.addEventListener('click', () => {
+        editSelectedDuree = d.duree_minutes;
+        grid.querySelectorAll('button').forEach(b => {
+          b.className = dureeBtnClass(Number(b.dataset.minutes) === d.duree_minutes);
+        });
+      });
+      grid.appendChild(btn);
+    });
   }
 
   function setupEditVrType(currentType) {
@@ -949,7 +987,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const dateVal = document.getElementById('edit-date').value;
     const heureVal = document.getElementById('edit-heure').value;
     const newDebut = new Date(`${dateVal}T${heureVal}:00`);
-    const newFin = new Date(newDebut.getTime() + modalRes.duree_minutes * 60000);
+    const dureeMin = editSelectedDuree ?? modalRes.duree_minutes;
+    const newFin = new Date(newDebut.getTime() + dureeMin * 60000);
     const newFinBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
 
     const emailVal = document.getElementById('edit-email').value.trim();
@@ -1005,6 +1044,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             client_email: document.getElementById('edit-email').value.trim(),
             client_telephone: document.getElementById('edit-telephone').value.trim(),
             nb_personnes: nbPersonnes,
+            duree_minutes: dureeMin,
             notes: document.getElementById('edit-notes').value.trim() || null,
             creneau_debut: newDebut.toISOString(),
             creneau_fin: newFin.toISOString(),
@@ -1040,6 +1080,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           client_email: document.getElementById('edit-email').value.trim(),
           client_telephone: document.getElementById('edit-telephone').value.trim(),
           nb_personnes: nbPersonnes,
+          duree_minutes: dureeMin,
           notes: document.getElementById('edit-notes').value.trim() || null,
           creneau_debut: newDebut.toISOString(),
           creneau_fin: newFin.toISOString(),
@@ -1291,7 +1332,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   });
 
   // ── Démarrage ──────────────────────────────────────────────────────────────
-  await Promise.all([loadConfig(), loadBoxes(), loadCalendarConstraints()]);
+  await Promise.all([loadConfig(), loadBoxes(), loadDurees(), loadCalendarConstraints()]);
   renderWeek();
   setInterval(updateNowLine, 60_000);
   loadPeriodesVacances();
