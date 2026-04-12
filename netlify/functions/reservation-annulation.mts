@@ -1,6 +1,16 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 
+function escHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function checkAuth(req: Request): boolean {
   const cookieHeader = req.headers.get("cookie") ?? "";
   const adminPassword = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
@@ -91,19 +101,19 @@ export default async (req: Request, context: Context) => {
       <h2 style="color: #dc2626;">❌ Réservation annulée – #${ref}</h2>
       <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 16px; color: #1e293b;">Client</h3>
-        <p style="margin: 4px 0;"><strong>Nom :</strong> ${client_nom}</p>
-        <p style="margin: 4px 0;"><strong>Email :</strong> <a href="mailto:${client_email}">${client_email}</a></p>
-        <p style="margin: 4px 0;"><strong>Téléphone :</strong> ${client_telephone}</p>
+        <p style="margin: 4px 0;"><strong>Nom :</strong> ${escHtml(client_nom)}</p>
+        <p style="margin: 4px 0;"><strong>Email :</strong> <a href="mailto:${escHtml(client_email)}">${escHtml(client_email)}</a></p>
+        <p style="margin: 4px 0;"><strong>Téléphone :</strong> ${escHtml(client_telephone)}</p>
       </div>
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 16px; color: #1e293b;">Réservation annulée</h3>
-        <p style="margin: 4px 0;"><strong>Date :</strong> ${dateFmt}</p>
-        <p style="margin: 4px 0;"><strong>Heure :</strong> ${heureFmt} – ${heureFinFmt}</p>
-        <p style="margin: 4px 0;"><strong>Durée :</strong> ${duree_minutes} min</p>
-        <p style="margin: 4px 0;"><strong>Joueurs :</strong> ${nb_personnes}</p>
-        <p style="margin: 4px 0;"><strong>Type VR :</strong> ${vrIcon} ${vrLabel}</p>
-        <p style="margin: 4px 0;"><strong>Box :</strong> ${box_names}</p>
-        ${notes ? `<p style="margin: 4px 0;"><strong>Notes :</strong> ${notes}</p>` : ""}
+        <p style="margin: 4px 0;"><strong>Date :</strong> ${escHtml(dateFmt)}</p>
+        <p style="margin: 4px 0;"><strong>Heure :</strong> ${escHtml(heureFmt)} – ${escHtml(heureFinFmt)}</p>
+        <p style="margin: 4px 0;"><strong>Durée :</strong> ${Number(duree_minutes)} min</p>
+        <p style="margin: 4px 0;"><strong>Joueurs :</strong> ${Number(nb_personnes)}</p>
+        <p style="margin: 4px 0;"><strong>Type VR :</strong> ${vrIcon} ${escHtml(vrLabel)}</p>
+        <p style="margin: 4px 0;"><strong>Box :</strong> ${escHtml(box_names)}</p>
+        ${notes ? `<p style="margin: 4px 0;"><strong>Notes :</strong> ${escHtml(notes)}</p>` : ""}
       </div>
     </div>
   `;
