@@ -7,56 +7,30 @@ import Play from "../components/Play.astro";
 
 export const prerender = true;
 
-import type { SanityDocument } from "@sanity/client";
 import { loadQuery } from "../sanity/lib/load-query";
+import { GAME_PATHS_QUERY, GAME_BY_SLUG_QUERY } from "../sanity/lib/queries";
+import type { GAME_PATHS_QUERY_RESULT, GAME_BY_SLUG_QUERY_RESULT } from "../../sanity.types";
 
 export async function getStaticPaths() {
-  const { data: games } = await loadQuery<SanityDocument[]>({
-    query: `*[_type == "games"] {
-      slug
-    }`,
+  const { data: games } = await loadQuery<GAME_PATHS_QUERY_RESULT>({
+    query: GAME_PATHS_QUERY,
   });
 
-  return games.map(({ slug }) => {
-    return {
-      params: {
-        slug: slug.current,
-      },
-    };
-  });
+  return games.map(({ slug }) => ({
+    params: { slug: slug!.current },
+  }));
 }
+
 const { params } = Astro;
 
-interface Game {
-  name: string;
-  description: string;
-  youtubeLink: string;
-  slug: { current: string };
-  image: any;
-  tag: { name: string; title: string };
-  players: string;
-  duration: string;
-  difficulty: number;
-  age: string;
-  tags: { title: string }[];
-}
-
-const { data: game } = await loadQuery<Game>({
-  query: `*[_type == "games" && slug.current == $slug][0]{
-    name,
-    description,
-    youtubeLink,
-    slug,
-    image,
-    tag->{name, title},
-    players,
-    duration,
-    difficulty,
-    age,
-    tags[]->{title}
-  }`,
+const { data: game } = await loadQuery<GAME_BY_SLUG_QUERY_RESULT>({
+  query: GAME_BY_SLUG_QUERY,
   params,
 });
+
+if (!game) {
+  return Astro.redirect("/404");
+}
 ---
 
 <BaseLayout>

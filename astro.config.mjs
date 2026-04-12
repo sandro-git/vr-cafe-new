@@ -15,9 +15,8 @@ export default defineConfig({
     {
       projectId: '0oshw5tf',
       dataset: 'production',
-      useCdn: true, // See note on using the CDN
-      apiVersion: "2025-01-28", // insert the current date to access the latest version of the API
-      studioBasePath: '/studio'
+      useCdn: true,
+      apiVersion: "2025-01-28",
     }), react()],
 
   vite: {
@@ -25,14 +24,9 @@ export default defineConfig({
       tailwindcss()
     ],
     build: {
-      chunkSizeWarningLimit: 8000,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Tout Sanity dans un seul chunk pour éviter les dépendances circulaires
-            if (id.includes('@sanity/') || id.includes('sanity/lib') || id.includes('studio-component')) {
-              return 'sanity';
-            }
             if (id.includes('VideoPlayer') || id.includes('video-player')) {
               return 'video-player';
             }

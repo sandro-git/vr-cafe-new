@@ -7,20 +7,11 @@ import GameList from "../components/GameList.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 
-import { sanityClient } from "sanity:client";
+import { loadQuery } from "../sanity/lib/load-query";
+import { JEUX_VR_QUERY } from "../sanity/lib/queries";
+import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
 
-const jeux =
-  await sanityClient.fetch(`*[_type == "games" && tag->title == "jeuxVR"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name},
-  slug
-}`);
-// This fetches all games with the tag "jeuxVR" from Sanity
+const { data: jeux } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: JEUX_VR_QUERY });
 ---
 
 <BaseLayout>
