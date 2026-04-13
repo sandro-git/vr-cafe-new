@@ -11,9 +11,7 @@ const isProd = import.meta.env.PROD;
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="sitemap" href="/sitemap-index.xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://www.google.com" />
-  <link rel="preconnect" href="https://cdn.sanity.io" />
+  <link rel="preconnect" href="https://www.googletagmanager.com" />
   <link href="/src/assets/vrcafe.webp" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,7 +22,6 @@ const isProd = import.meta.env.PROD;
   />
   {isProd && GA_ID && (
     <>
-      <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
       <script define:vars={{ GA_ID }}>
         window.dataLayer = window.dataLayer || [];
