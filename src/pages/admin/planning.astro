@@ -313,6 +313,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let dureeOptions = []; // options chargées depuis durees_session
   let periodesVacancesCache = []; // { date_debut, date_fin }[]
   let joursFermetureCache = [];   // 'YYYY-MM-DD'[]
+  let isAutoRefreshing = false;
 
   // ── Utilitaires date ──────────────────────────────────────────────────────
   function stripTime(d) {
@@ -761,6 +762,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── UI helpers ─────────────────────────────────────────────────────────────
   function showLoading() {
+    if (isAutoRefreshing) return;
     document.getElementById('plan-loading').classList.remove('hidden');
     document.getElementById('plan-error').classList.add('hidden');
     document.getElementById('view-week').classList.add('hidden');
@@ -1406,6 +1408,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   await Promise.all([loadConfig(), loadBoxes(), loadDurees(), loadCalendarConstraints()]);
   renderWeek();
   setInterval(updateNowLine, 60_000);
+  setInterval(() => {
+    if (modalRes !== null) return;
+    isAutoRefreshing = true;
+    (currentView === 'week' ? renderWeek() : renderDay())
+      .finally(() => { isAutoRefreshing = false; });
+  }, 60_000);
   loadPeriodesVacances();
   loadJoursFermeture();
 </script>
