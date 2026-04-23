@@ -1,5 +1,6 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
+import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 
 const ALLOWED_ORIGINS = [
   "https://vr-cafe.fr",
@@ -217,6 +218,23 @@ export default async (req: Request, context: Context) => {
     console.error("Failed to send reservation emails:", error);
     // Ne pas bloquer la confirmation — l'email est secondaire
   }
+
+  // Sync Mailjet contacts (fire-and-forget)
+  (async () => {
+    try {
+      await syncClientToMailjet({
+        nom: client_nom,
+        email: client_email,
+        telephone: client_telephone,
+        vrType: vr_type,
+        creneauDebut: creneau_debut,
+        apiKey: apiKey!,
+        apiSecret: apiSecret!,
+      });
+    } catch (e) {
+      console.error("Mailjet contacts sync error:", e);
+    }
+  })();
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

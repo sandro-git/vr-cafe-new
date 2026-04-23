@@ -140,7 +140,7 @@ export default async (req: Request, context: Context) => {
     console.error("Failed to send cancellation email:", error);
   }
 
-  return new Response(JSON.stringify({ ok: true }), {
+return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

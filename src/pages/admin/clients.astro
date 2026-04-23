@@ -12,56 +12,63 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <h1 class="text-2xl font-bold text-white">Clients</h1>
           <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
         </div>
-        <a
-          href="/admin/reservations"
-          class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500"
-        >
-          ← Réservations
-        </a>
+        <div class="flex gap-2">
+          <a href="/admin/marketing" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+            📊 Marketing
+          </a>
+          <a href="/admin/reservations" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+            ← Réservations
+          </a>
+        </div>
       </div>
 
-      <!-- Recherche -->
-      <div class="relative mb-8">
-        <input
-          id="search-input"
-          type="text"
-          placeholder="Rechercher par nom, email ou téléphone..."
-          autocomplete="off"
-          class="w-full bg-gray-800 text-white border border-gray-600 rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
-        />
-        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">🔍</span>
+      <!-- Vue liste (chips + recherche + résultats) -->
+      <div id="view-list">
+
+        <!-- Chips de filtre -->
+        <div class="flex gap-2 mb-5 flex-wrap">
+          <button data-chip="tous"     class="chip-btn chip-active px-4 py-2 rounded-xl text-sm font-medium transition-colors border">Tous · <span id="count-tous">—</span></button>
+          <button data-chip="fideles"  class="chip-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors border">🏆 Fidèles · <span id="count-fideles">—</span></button>
+          <button data-chip="inactifs" class="chip-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors border">💤 Inactifs · <span id="count-inactifs">—</span></button>
+        </div>
+
+        <!-- Recherche -->
+        <div class="relative mb-6">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Rechercher par nom, email ou téléphone..."
+            autocomplete="off"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+          />
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">🔍</span>
+        </div>
+
+        <!-- Erreur -->
+        <div id="search-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+        <!-- Chargement initial -->
+        <div id="state-loading" class="py-16 text-center">
+          <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+          <p class="text-gray-400">Chargement des clients...</p>
+        </div>
+
+        <!-- Vide -->
+        <div id="state-empty" class="hidden py-16 text-center">
+          <p class="text-4xl mb-3">🔍</p>
+          <p class="text-white font-medium">Aucun client trouvé</p>
+          <p class="text-gray-400 text-sm mt-1">Essayez un autre terme ou filtre</p>
+        </div>
+
+        <!-- Liste clients -->
+        <div id="clients-list" class="hidden space-y-3"></div>
+
       </div>
 
-      <!-- Erreur -->
-      <div id="search-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
-
-      <!-- État initial -->
-      <div id="state-hint" class="py-16 text-center">
-        <p class="text-4xl mb-3">👤</p>
-        <p class="text-white font-medium">Recherchez un client</p>
-        <p class="text-gray-400 text-sm mt-1">Tapez au moins 2 caractères</p>
-      </div>
-
-      <!-- Chargement -->
-      <div id="state-loading" class="hidden py-16 text-center">
-        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-400">Recherche...</p>
-      </div>
-
-      <!-- Vide -->
-      <div id="state-empty" class="hidden py-16 text-center">
-        <p class="text-4xl mb-3">🔍</p>
-        <p class="text-white font-medium">Aucun client trouvé</p>
-        <p class="text-gray-400 text-sm mt-1">Essayez un autre terme</p>
-      </div>
-
-      <!-- Résultats : liste de clients -->
-      <div id="clients-list" class="hidden space-y-3"></div>
-
-      <!-- Fiche client (détail) -->
-      <div id="client-detail" class="hidden">
-        <button id="btn-back-search" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6">
-          ← Retour aux résultats
+      <!-- Vue détail client -->
+      <div id="view-detail" class="hidden">
+        <button id="btn-back" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6">
+          ← Retour aux clients
         </button>
         <div id="client-header" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 mb-6"></div>
         <h2 class="text-lg font-semibold text-white mb-4">Historique des réservations</h2>
@@ -72,6 +79,23 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   </main>
 </AdminLayout>
 
+<style>
+  .chip-btn {
+    background: rgb(55 65 81 / 0.4);
+    border-color: rgb(75 85 99);
+    color: rgb(156 163 175);
+  }
+  .chip-btn:hover {
+    border-color: rgb(107 114 128);
+    color: white;
+  }
+  .chip-active {
+    background: rgb(37 99 235 / 0.2);
+    border-color: rgb(37 99 235 / 0.6);
+    color: rgb(147 197 253);
+  }
+</style>
+
 <script>
   // @ts-nocheck
   import { createClient } from '@supabase/supabase-js';
@@ -81,53 +105,121 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   );
 
+  // ── État ──────────────────────────────────────────────────────────────────
+  let allClients = [];
+  let activeChip = 'tous';
+  let searchQuery = '';
   let searchTimer = null;
-  let lastResults = [];
 
-  // ── Recherche ─────────────────────────────────────────────────────────────
-  async function search(query) {
-    if (query.length < 2) { showState('hint'); return; }
-    showState('loading');
-
+  // ── Chargement initial de tous les clients ────────────────────────────────
+  async function loadAllClients() {
     const { data, error } = await supabase
       .from('reservations')
-      .select('client_nom, client_email, client_telephone')
-      .or(`client_nom.ilike.%${query}%,client_email.ilike.%${query}%,client_telephone.ilike.%${query}%`)
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .select('client_nom, client_email, client_telephone, statut, creneau_debut')
+      .order('creneau_debut', { ascending: false });
 
-    if (error) { showError('Erreur : ' + error.message); return; }
+    if (error) {
+      document.getElementById('state-loading').classList.add('hidden');
+      showError('Erreur de chargement : ' + error.message);
+      return;
+    }
 
-    // Dédoublonner par email (ou nom si pas d'email)
-    const seen = new Set();
-    const clients = (data ?? []).filter(r => {
-      const key = r.client_email?.toLowerCase() || r.client_nom?.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    lastResults = clients;
+    const clientMap = new Map();
 
-    if (!clients.length) { showState('empty'); return; }
-    renderClients(clients);
-    showState('results');
+    for (const r of (data ?? [])) {
+      const key = r.client_email?.toLowerCase().trim() || r.client_nom?.toLowerCase().trim();
+      if (!key) continue;
+
+      const isConfirmee = r.statut === 'confirmée';
+      const date = r.creneau_debut ? new Date(r.creneau_debut) : null;
+
+      if (!clientMap.has(key)) {
+        clientMap.set(key, {
+          nom: r.client_nom ?? '',
+          email: r.client_email ?? '',
+          telephone: r.client_telephone ?? '',
+          nbConfirmees: isConfirmee ? 1 : 0,
+          derniereResa: isConfirmee && date ? date : null,
+        });
+      } else {
+        const c = clientMap.get(key);
+        if (isConfirmee) {
+          c.nbConfirmees++;
+          if (date && (!c.derniereResa || date > c.derniereResa)) c.derniereResa = date;
+        }
+      }
+    }
+
+    allClients = [...clientMap.values()].map(c => ({
+      ...c,
+      isFidele: c.nbConfirmees >= 5,
+      isInactif: c.nbConfirmees > 0 && (!c.derniereResa || c.derniereResa < threeMonthsAgo),
+    })).sort((a, b) => (b.derniereResa ?? 0) - (a.derniereResa ?? 0));
+
+    // Compter pour les chips
+    document.getElementById('count-tous').textContent     = allClients.length;
+    document.getElementById('count-fideles').textContent  = allClients.filter(c => c.isFidele).length;
+    document.getElementById('count-inactifs').textContent = allClients.filter(c => c.isInactif).length;
+
+    document.getElementById('state-loading').classList.add('hidden');
+    applyFilters();
   }
 
-  // ── Rendu liste clients ────────────────────────────────────────────────────
+  // ── Filtrage ──────────────────────────────────────────────────────────────
+  function applyFilters() {
+    let filtered = allClients;
+
+    if (activeChip === 'fideles')  filtered = filtered.filter(c => c.isFidele);
+    if (activeChip === 'inactifs') filtered = filtered.filter(c => c.isInactif);
+
+    if (searchQuery.length >= 2) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.nom.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.telephone.includes(q)
+      );
+    }
+
+    if (!filtered.length) {
+      document.getElementById('clients-list').classList.add('hidden');
+      document.getElementById('state-empty').classList.remove('hidden');
+    } else {
+      document.getElementById('state-empty').classList.add('hidden');
+      renderClients(filtered);
+      document.getElementById('clients-list').classList.remove('hidden');
+    }
+  }
+
+  // ── Rendu liste ───────────────────────────────────────────────────────────
   function renderClients(clients) {
     const container = document.getElementById('clients-list');
     container.innerHTML = '';
     clients.forEach(c => {
+      const badges = [
+        c.isFidele  ? '<span class="px-2 py-0.5 rounded-lg bg-yellow-900/40 border border-yellow-700/50 text-yellow-400 text-xs font-medium">🏆 Fidèle</span>' : '',
+        c.isInactif ? '<span class="px-2 py-0.5 rounded-lg bg-orange-900/40 border border-orange-700/50 text-orange-400 text-xs font-medium">💤 Inactif</span>' : '',
+      ].filter(Boolean).join('');
+
+      const derniereResaFmt = c.derniereResa
+        ? c.derniereResa.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '—';
+
       const card = document.createElement('div');
       card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5 flex items-center justify-between hover:border-gray-500 transition-colors cursor-pointer';
       card.innerHTML = `
-        <div>
-          <p class="font-semibold text-white">${esc(c.client_nom)}</p>
-          <p class="text-gray-400 text-sm mt-0.5">${esc(c.client_email ?? '—')}</p>
-          <p class="text-gray-500 text-xs mt-0.5">${esc(c.client_telephone ?? '—')}</p>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-0.5">
+            <p class="font-semibold text-white truncate">${esc(c.nom)}</p>
+            ${badges}
+          </div>
+          <p class="text-gray-400 text-sm truncate">${esc(c.email || '—')}</p>
+          <p class="text-gray-500 text-xs mt-0.5">${esc(c.telephone || '—')} · ${c.nbConfirmees} rés. · Dernière : ${derniereResaFmt}</p>
         </div>
-        <span class="text-gray-500 text-lg">›</span>
+        <span class="text-gray-500 text-lg ml-3 shrink-0">›</span>
       `;
       card.addEventListener('click', () => openClient(c));
       container.appendChild(card);
@@ -136,50 +228,52 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Fiche client ──────────────────────────────────────────────────────────
   async function openClient(client) {
-    showState('detail');
+    document.getElementById('view-list').classList.add('hidden');
+    document.getElementById('view-detail').classList.remove('hidden');
 
-    // En-tête client
+    const badges = [
+      client.isFidele  ? '<span class="px-2 py-1 rounded-lg bg-yellow-900/40 border border-yellow-700/50 text-yellow-400 text-sm font-medium">🏆 Fidèle</span>' : '',
+      client.isInactif ? '<span class="px-2 py-1 rounded-lg bg-orange-900/40 border border-orange-700/50 text-orange-400 text-sm font-medium">💤 Inactif</span>' : '',
+    ].filter(Boolean).join('');
+
     document.getElementById('client-header').innerHTML = `
       <div class="flex items-start gap-4">
         <div class="w-12 h-12 rounded-full bg-blue-700/40 border border-blue-600 flex items-center justify-center text-xl shrink-0">
-          ${esc(client.client_nom?.charAt(0)?.toUpperCase() ?? '?')}
+          ${esc(client.nom?.charAt(0)?.toUpperCase() ?? '?')}
         </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">${esc(client.client_nom)}</h2>
-          ${client.client_email ? `<a href="mailto:${esc(client.client_email)}" class="text-blue-400 hover:text-blue-300 text-sm">${esc(client.client_email)}</a>` : ''}
-          ${client.client_telephone ? `<p class="text-gray-400 text-sm mt-0.5"><a href="tel:${esc(client.client_telephone)}" class="hover:text-white transition-colors">${esc(client.client_telephone)}</a></p>` : ''}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <h2 class="text-xl font-bold text-white">${esc(client.nom)}</h2>
+            ${badges}
+          </div>
+          ${client.email ? `<a href="mailto:${esc(client.email)}" class="text-blue-400 hover:text-blue-300 text-sm block">${esc(client.email)}</a>` : ''}
+          ${client.telephone ? `<a href="tel:${esc(client.telephone)}" class="text-gray-400 hover:text-white text-sm transition-colors">${esc(client.telephone)}</a>` : ''}
         </div>
       </div>
     `;
 
-    // Charger l'historique
     const resContainer = document.getElementById('client-reservations');
     resContainer.innerHTML = '<p class="text-gray-400 text-sm">Chargement...</p>';
 
-    const query = supabase
+    const q = supabase
       .from('reservations')
       .select('*, reservation_boxes(box_id, boxes(nom, type))')
       .order('creneau_debut', { ascending: false });
 
-    // Chercher par email en priorité, sinon par nom + tel
-    if (client.client_email) {
-      query.eq('client_email', client.client_email);
-    } else {
-      query.eq('client_nom', client.client_nom);
-      if (client.client_telephone) query.eq('client_telephone', client.client_telephone);
-    }
+    if (client.email) q.eq('client_email', client.email);
+    else { q.eq('client_nom', client.nom); if (client.telephone) q.eq('client_telephone', client.telephone); }
 
-    const { data, error } = await query;
+    const { data, error } = await q;
 
     if (error || !data?.length) {
       resContainer.innerHTML = '<p class="text-gray-400 text-sm">Aucune réservation trouvée.</p>';
       return;
     }
 
-    // Stats rapides
     const confirmed = data.filter(r => r.statut === 'confirmée');
     const totalMin = confirmed.reduce((s, r) => s + (r.duree_minutes || 0), 0);
-    const statsHtml = `
+
+    resContainer.innerHTML = `
       <div class="grid grid-cols-3 gap-3 mb-6">
         <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-3 text-center">
           <p class="text-2xl font-bold text-white">${data.length}</p>
@@ -196,8 +290,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       </div>
     `;
 
-    resContainer.innerHTML = statsHtml;
-
     data.forEach(res => {
       const debut = new Date(res.creneau_debut);
       const fin = new Date(res.creneau_fin);
@@ -208,49 +300,31 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const prefix = rb.boxes?.type === 'sans_fil' ? '📡 ' : '🔌 ';
         return prefix + (rb.boxes?.nom ?? `Box ${rb.box_id}`);
       }).join(', ') ?? '—';
-      const badges = {
-        'confirmée': 'bg-green-900/50 text-green-400 border-green-800',
-        'annulée': 'bg-red-900/50 text-red-400 border-red-800',
-        'no_show': 'bg-yellow-900/50 text-yellow-400 border-yellow-800',
-      };
-      const badge = badges[res.statut] ?? 'bg-gray-700 text-gray-400 border-gray-600';
-
+      const badgeCls = { 'confirmée': 'bg-green-900/50 text-green-400 border-green-800', 'annulée': 'bg-red-900/50 text-red-400 border-red-800', 'no_show': 'bg-yellow-900/50 text-yellow-400 border-yellow-800' };
+      const cls = badgeCls[res.statut] ?? 'bg-gray-700 text-gray-400 border-gray-600';
       const card = document.createElement('div');
       card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5';
       card.innerHTML = `
         <div class="flex items-start justify-between mb-2">
-          <div>
-            <p class="text-white font-medium capitalize">${esc(dateFmt)}</p>
-            <p class="text-gray-400 text-sm">${h1} → ${h2}</p>
-          </div>
-          <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
+          <div><p class="text-white font-medium capitalize">${esc(dateFmt)}</p><p class="text-gray-400 text-sm">${h1} → ${h2}</p></div>
+          <span class="px-2 py-1 rounded-lg border text-xs font-medium ${cls}">${res.statut}</span>
         </div>
         <div class="text-xs text-gray-500 mt-2 flex flex-wrap gap-x-4 gap-y-1">
           <span>${res.duree_minutes} min</span>
           <span>${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</span>
           <span>${esc(boxNames)}</span>
-          ${res.notes ? `<span class="text-gray-600 italic">"${esc(res.notes)}"</span>` : ''}
+          ${res.notes ? `<span class="italic">"${esc(res.notes)}"</span>` : ''}
         </div>
       `;
       resContainer.appendChild(card);
     });
   }
 
-  // ── UI ────────────────────────────────────────────────────────────────────
-  function showState(state) {
-    document.getElementById('state-hint').classList.toggle('hidden', state !== 'hint');
-    document.getElementById('state-loading').classList.toggle('hidden', state !== 'loading');
-    document.getElementById('state-empty').classList.toggle('hidden', state !== 'empty');
-    document.getElementById('clients-list').classList.toggle('hidden', state !== 'results');
-    document.getElementById('client-detail').classList.toggle('hidden', state !== 'detail');
-    document.getElementById('search-error').classList.add('hidden');
-  }
-
+  // ── Helpers UI ────────────────────────────────────────────────────────────
   function showError(msg) {
     const el = document.getElementById('search-error');
     el.textContent = msg;
     el.classList.remove('hidden');
-    document.getElementById('state-loading').classList.add('hidden');
   }
 
   function esc(str) {
@@ -258,20 +332,26 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   // ── Événements ────────────────────────────────────────────────────────────
-  document.getElementById('search-input').addEventListener('input', e => {
-    clearTimeout(searchTimer);
-    const val = e.target.value.trim();
-    if (val.length < 2) { showState('hint'); return; }
-    showState('loading');
-    searchTimer = setTimeout(() => search(val), 300);
+  document.querySelectorAll('.chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('chip-active'));
+      btn.classList.add('chip-active');
+      activeChip = btn.dataset.chip;
+      applyFilters();
+    });
   });
 
-  document.getElementById('btn-back-search').addEventListener('click', () => {
-    if (lastResults.length) {
-      renderClients(lastResults);
-      showState('results');
-    } else {
-      showState('hint');
-    }
+  document.getElementById('search-input').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchQuery = e.target.value.trim();
+    searchTimer = setTimeout(applyFilters, 250);
   });
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    document.getElementById('view-detail').classList.add('hidden');
+    document.getElementById('view-list').classList.remove('hidden');
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadAllClients();
 </script>
