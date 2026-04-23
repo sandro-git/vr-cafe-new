@@ -14,8 +14,8 @@ const sig = await crypto.subtle.sign("HMAC", key, enc.encode(String(window5m)));
 const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
 ---
 
-<section id="contact" class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-12 md:py-20">
-  <div class="py-8 lg:py-16 px-4 mx-auto max-w-screen-xl">
+<section id="contact" class="bg-linear-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-12 md:py-20">
+  <div class="py-8 lg:py-16 px-4 mx-auto max-w-(--breakpoint-xl)">
     <!-- Header -->
     <div class="text-center mb-12">
       <h2
@@ -46,7 +46,7 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
             class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group mb-4"
           >
             <div
-              class="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+              class="shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
             >
               <svg
                 class="w-6 h-6 text-blue-600 dark:text-blue-300"
@@ -80,7 +80,7 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
             class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group mb-4"
           >
             <div
-              class="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+              class="shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
             >
               <svg
                 class="w-6 h-6 text-green-600 dark:text-green-300"
@@ -116,7 +116,7 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
             class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
           >
             <div
-              class="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+              class="shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
             >
               <svg
                 class="w-6 h-6 text-purple-600 dark:text-purple-300"
@@ -176,7 +176,7 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
           name="contact"
           method="POST"
           action="/api/contact"
-          class="flex flex-col flex-grow space-y-6"
+          class="flex flex-col grow space-y-6"
         >
           <!-- Token CSRF -->
           <input type="hidden" name="_csrf" value={csrfToken} />
@@ -249,7 +249,7 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
           </div>
 
           <!-- Message Field -->
-          <div class="flex flex-col flex-grow">
+          <div class="flex flex-col grow">
             <label
               for="message"
               class="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-900 dark:text-white"
@@ -270,14 +270,14 @@ const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
             <textarea
               id="message"
               name="message"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all resize-none flex-grow min-h-[200px]"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all resize-none grow min-h-50"
               placeholder="Décrivez votre demande..."></textarea>
           </div>
 
           <!-- Submit Button -->
           <button
             type="submit"
-            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            class="w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <svg
               class="w-5 h-5"

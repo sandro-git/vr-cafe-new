@@ -12,7 +12,7 @@ const { image, alt, slug, title } = Astro.props;
     className="w-full transition-all hover:shadow-xl"
   />
   <!-- Dégradé sombre en bas pour améliorer la lisibilité -->
-  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+  <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
 
   <div class="absolute bottom-4 left-4 text-white z-10">
     <h3 class="text-xl font-semibold drop-shadow-lg">{title || alt}</h3>

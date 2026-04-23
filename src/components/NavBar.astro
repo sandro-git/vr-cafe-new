@@ -21,10 +21,10 @@ const isVRSansFil =
 ---
 
 <nav
-  class="fixed start-0 top-0 z-20 w-full"
+  class="fixed inset-s-0 top-0 z-20 w-full"
 >
   <div
-    class="mx-4 md:mx-auto flex max-w-screen-xl flex-wrap items-center justify-between px-6 py-4 md:px-8 bg-white dark:bg-gray-900 rounded-full shadow-lg my-4"
+    class="mx-4 md:mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between px-6 py-4 md:px-8 bg-white dark:bg-gray-900 rounded-full shadow-lg my-4"
   >
     <!-- Logo -->
     <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -133,7 +133,7 @@ const isVRSansFil =
           >
             VR
             <svg
-              class="dropdown-arrow w-4 h-4 ml-2 transform transition-transform md:rotate-0 md:group-hover:rotate-180"
+              class="dropdown-arrow w-4 h-4 ml-2 transition-transform md:rotate-0 md:group-hover:rotate-180"
               aria-hidden="true"
               fill="currentColor"
               viewBox="0 0 20 20"
@@ -198,7 +198,7 @@ const isVRSansFil =
           >
             VR sans fil
             <svg
-              class="dropdown-arrow w-4 h-4 ml-2 transform transition-transform md:rotate-0 md:group-hover:rotate-180"
+              class="dropdown-arrow w-4 h-4 ml-2 transition-transform md:rotate-0 md:group-hover:rotate-180"
               aria-hidden="true"
               fill="currentColor"
               viewBox="0 0 20 20"
@@ -393,7 +393,7 @@ const isVRSansFil =
     });
 
     // Gestion du clavier sur les boutons
-    button.addEventListener("keydown", (e) => {
+    (button as HTMLElement).addEventListener("keydown", (e: KeyboardEvent) => {
       const key = e.key;
 
       if (key === "Enter" || key === " ") {
@@ -423,7 +423,7 @@ const isVRSansFil =
     const menuItems = menu.querySelectorAll('a[role="menuitem"]');
 
     menuItems.forEach((item, index) => {
-      item.addEventListener("keydown", (e) => {
+      (item as HTMLElement).addEventListener("keydown", (e: KeyboardEvent) => {
         const key = e.key;
 
         if (key === "ArrowDown") {
