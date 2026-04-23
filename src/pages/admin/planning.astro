@@ -399,12 +399,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const openMin = OPEN_HOUR * 60;
     const totalH = TOTAL_ROWS * ROW_H;
-    const top = ((nowMin - openMin) / 30) * ROW_H;
+    const base = ((nowMin - openMin) / 30) * ROW_H;
+    const top = 40 + base; // +40px pour compenser le header (h-10)
 
     ['week-now-line', 'day-now-line'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
-      if (top < 0 || top > totalH) {
+      if (base < 0 || base > totalH) {
         el.style.display = 'none';
       } else {
         el.style.display = 'block';

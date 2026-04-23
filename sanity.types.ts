@@ -205,6 +205,16 @@ export type Geopoint = {
 export type AllSanitySchemaTypes = SanityImageAssetReference | TagReference | EditeurReference | Games | Editeur | Tag | SanityImageCrop | SanityImageHotspot | Slug | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageMetadata | SanityFileAsset | SanityAssetSourceData | SanityImageAsset | Geopoint;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
+// Variable: FAQS_QUERY
+// Query: *[_type == "faq"] | order(ordre asc) { question, reponse, categorie, ordre }
+export type FAQS_QUERY_RESULT = Array<never>;
+
+// Source: ../vr-cafe-new/src/sanity/lib/queries.ts
+// Variable: TARIFS_QUERY
+// Query: *[_type == "tarif"] | order(ordre asc) { _id, name, prix, description, isPromo, nbJoueurs, dureeMinutes }
+export type TARIFS_QUERY_RESULT = Array<never>;
+
+// Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: GAME_PATHS_QUERY
 // Query: *[_type == "games"] { slug }
 export type GAME_PATHS_QUERY_RESULT = Array<{
@@ -262,6 +272,8 @@ export type JEUX_VR_QUERY_RESULT = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
+    "*[_type == \"faq\"] | order(ordre asc) { question, reponse, categorie, ordre }": FAQS_QUERY_RESULT;
+    "*[_type == \"tarif\"] | order(ordre asc) { _id, name, prix, description, isPromo, nbJoueurs, dureeMinutes }": TARIFS_QUERY_RESULT;
     "*[_type == \"games\"] { slug }": GAME_PATHS_QUERY_RESULT;
     "*[_type == \"games\" && slug.current == $slug][0]{\n  name,\n  description,\n  youtubeLink,\n  slug,\n  image,\n  tag->{name, title},\n  players,\n  duration,\n  difficulty,\n  age,\n  tags[]->{title}\n}": GAME_BY_SLUG_QUERY_RESULT;
     "*[_type == \"games\" && tag->title == \"jeuxVR\"]{\n  name,\n  description,\n  image{\n    alt,\n    asset->{url}\n  },\n  tag->{name},\n  slug\n}": JEUX_VR_QUERY_RESULT;

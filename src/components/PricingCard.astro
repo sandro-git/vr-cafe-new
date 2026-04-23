@@ -1,27 +1,27 @@
 ---
 import PricingText from "./PricingText.astro";
 
-const { title, price, popular = false, type = "standard" } = Astro.props;
+const { title, price, popular = false, type = "standard", features } = Astro.props;
 
-const text30min = [
+const defaultFeatures30min = [
   "30 min de jeu",
   "+ de 20 escapes games",
-  " + de 10 jeux VR",
-  " + de 10 jeux Free Roaming",
+  "+ de 10 jeux VR",
+  "+ de 10 jeux Free Roaming",
   "Pour tous les goûts de jeu",
   "Pour tous les âges de 7 à 77 ans",
 ];
 
-const text1h = [
+const defaultFeatures1h = [
   "1h de jeu effectif",
   "+ de 20 escapes games",
-  " + de 10 jeux VR",
-  " + de 10 jeux Free Roaming",
+  "+ de 10 jeux VR",
+  "+ de 10 jeux Free Roaming",
   "Pour tous les goûts de jeu",
   "Pour tous les âges de 7 à 77 ans",
 ];
 
-const textBirthday = [
+const defaultFeaturesBirthday = [
   "25€ par personne",
   "1h de jeu VR par enfant",
   "Table mise à disposition",
@@ -35,6 +35,14 @@ const groupPrices = [
   { range: "3-4 personnes", price: "27€" },
   { range: "5+ personnes", price: "25€" },
 ];
+
+const resolvedFeatures: string[] =
+  features ??
+  (type === "birthday"
+    ? defaultFeaturesBirthday
+    : popular
+      ? defaultFeatures1h
+      : defaultFeatures30min);
 ---
 
 <div
@@ -85,7 +93,7 @@ const groupPrices = [
       </div>
     ) : (
       <div class="flex flex-col text-gray-900 dark:text-white mb-4">
-        {price === "25" && type === "standard" ? (
+        {popular && type === "standard" ? (
           <div class="mb-4">
             <div class="flex items-baseline justify-center mb-2">
               <span class="text-xl font-normal text-gray-500 dark:text-gray-400">
@@ -155,13 +163,7 @@ const groupPrices = [
     )
   }
   <ul role="list" class="space-y-5 my-7">
-    {
-      type === "birthday"
-        ? textBirthday.map((text: string) => <PricingText text={text} />)
-        : price === "25"
-          ? text1h.map((text: string) => <PricingText text={text} />)
-          : text30min.map((text: string) => <PricingText text={text} />)
-    }
+    {resolvedFeatures.map((text: string) => <PricingText text={text} />)}
   </ul>
   <button
     id="booking"

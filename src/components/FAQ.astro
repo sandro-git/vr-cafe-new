@@ -1,57 +1,79 @@
 ---
-// FAQ Component with accordion design
+import { sanityClient } from "sanity:client";
+
+type FaqItem = { question: string; answer: string };
+type SanityBlock = { children?: { text: string }[] };
+
+const FALLBACK_FAQS: FaqItem[] = [
+  {
+    question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
+    answer:
+      "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
+  },
+  {
+    question:
+      "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
+    answer:
+      "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter.",
+  },
+  {
+    question: "Y aura-t-il d'autres personnes dans notre partie ?",
+    answer:
+      "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
+  },
+  {
+    question: "Vos jeux sont-ils adaptés aux enfants ?",
+    answer:
+      "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place.",
+  },
+  {
+    question:
+      "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
+    answer:
+      'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.',
+  },
+  {
+    question: "Je suis en fauteuil roulant, est-ce accessible ?",
+    answer:
+      "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap.",
+  },
+  {
+    question: "Peut-on annuler ou reporter ?",
+    answer:
+      "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux.",
+  },
+  {
+    question: "Peut-on venir sans réserver ?",
+    answer:
+      "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités.",
+  },
+];
+
+const extractText = (blocks: SanityBlock[]) =>
+  blocks?.map((b) => b.children?.map((c) => c.text).join("")).join("\n") ?? "";
+
 const {
   title = "FAQ VR Café",
   subtitle = "Les réponses à vos questions les plus fréquentes",
-  faqs = [
-    {
-      question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
-      answer:
-        "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
-    },
-    {
-      question:
-        "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
-      answer:
-        "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter.",
-    },
-    {
-      question: "Y aura-t-il d'autres personnes dans notre partie ?",
-      answer:
-        "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
-    },
-    {
-      question: "Vos jeux sont-ils adaptés aux enfants ?",
-      answer:
-        "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place.",
-    },
-    {
-      question:
-        "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
-      answer:
-        'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.',
-    },
-    {
-      question: "Je suis en fauteuil roulant, est-ce accessible ?",
-      answer:
-        "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap.",
-    },
-    {
-      question: "Peut-on annuler ou reporter ?",
-      answer:
-        "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux.",
-    },
-    {
-      question: "Peut-on venir sans réserver ?",
-      answer:
-        "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités.",
-    },
-  ],
+  faqs: propFaqs,
   showCTA = true,
   ctaText = "Vous avez d'autres questions ?",
   ctaButtonText = "Contactez-nous",
   ctaLink = "/contact",
 } = Astro.props;
+
+let faqs: FaqItem[] = propFaqs ?? [];
+
+if (faqs.length === 0) {
+  const data = await sanityClient.fetch<{ question: string; reponse: SanityBlock[] }[]>(
+    `*[_type == "faq"] | order(ordre asc) { question, reponse }`
+  );
+  if (data?.length > 0) {
+    faqs = data.map((f) => ({ question: f.question, answer: extractText(f.reponse) }));
+  } else {
+    faqs = FALLBACK_FAQS;
+  }
+}
 ---
 
 <section class="bg-white dark:bg-gray-900 py-12 md:py-20">
