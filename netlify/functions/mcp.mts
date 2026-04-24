@@ -161,13 +161,16 @@ async function toolCheckAvailability(args: Record<string, unknown>) {
     .maybeSingle();
   if (fermeture) return text(`VR Café est fermé le ${date}.`);
 
-  // Get config
-  const { data: cfg } = await supabase.from("config").select("*").maybeSingle();
-  if (!cfg) return text("Impossible de récupérer la configuration.");
+  // Get config (with sensible fallbacks)
+  const { data: cfg, error: cfgError } = await supabase.from("config").select("*").maybeSingle();
+  if (cfgError) console.error("[MCP] config error:", cfgError);
 
-  const [openH, openM] = (cfg.heure_ouverture as string).split(":").map(Number);
-  const [closeH, closeM] = (cfg.heure_fermeture as string).split(":").map(Number);
-  const buffer = (cfg.buffer_minutes as number) ?? 15;
+  const heure_ouverture = (cfg?.heure_ouverture as string) ?? "10:00";
+  const heure_fermeture = (cfg?.heure_fermeture as string) ?? "22:00";
+  const buffer = (cfg?.buffer_minutes as number) ?? 15;
+
+  const [openH, openM] = heure_ouverture.split(":").map(Number);
+  const [closeH, closeM] = heure_fermeture.split(":").map(Number);
 
   // Generate 30-min slots and check availability
   const available: string[] = [];
@@ -213,8 +216,9 @@ async function toolCreateReservation(args: Record<string, unknown>) {
   const vr_type = args.vr_type as string;
   const nb_personnes = args.nb_personnes as number;
 
-  // Get buffer from config for fin_blocage
-  const { data: cfg } = await supabase.from("config").select("buffer_minutes").maybeSingle();
+  // Get buffer from config for fin_blocage (with fallback)
+  const { data: cfg, error: cfgError } = await supabase.from("config").select("buffer_minutes").maybeSingle();
+  if (cfgError) console.error("[MCP] config error:", cfgError);
   const buffer = (cfg?.buffer_minutes as number) ?? 15;
 
   const debut = new Date(creneau_debut);
