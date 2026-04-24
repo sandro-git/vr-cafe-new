@@ -1,0 +1,16 @@
+{
+  "serverInfo": {
+    "name": "VR Café Lyon",
+    "version": "1.0.0",
+    "description": "Book VR sessions, explore the game catalog, and check availability at VR Café Lyon."
+  },
+  "transport": {
+    "type": "http",
+    "endpoint": "https://www.vr-cafe.fr/api/mcp"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false
+  }
+}

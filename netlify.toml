@@ -27,6 +27,12 @@
     Content-Type = "application/linkset+json"
     Cache-Control = "public, max-age=3600"
 
+[[headers]]
+  for = "/.well-known/mcp/server-card.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
+
 # Redirection pour s'assurer que les fichiers .well-known sont accessibles
 [[redirects]]
   from = "/.well-known/*"
