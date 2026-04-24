@@ -24,7 +24,7 @@
 [[headers]]
   for = "/.well-known/api-catalog"
   [headers.values]
-    Content-Type = "application/json"
+    Content-Type = "application/linkset+json"
     Cache-Control = "public, max-age=3600"
 
 # Redirection pour s'assurer que les fichiers .well-known sont accessibles

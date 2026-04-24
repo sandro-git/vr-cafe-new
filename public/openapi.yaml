@@ -1,0 +1,103 @@
+openapi: "3.1.0"
+info:
+  title: VR Café API
+  description: API for booking VR sessions and contacting VR Café Lyon.
+  version: "1.0.0"
+  contact:
+    email: contact@vr-cafe.fr
+servers:
+  - url: https://www.vr-cafe.fr
+paths:
+  /api/reservation-confirmation:
+    post:
+      summary: Confirm a reservation
+      description: Sends a confirmation email to the client and syncs the contact to the mailing list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_nom
+                - client_email
+                - client_telephone
+                - nb_personnes
+                - duree_minutes
+                - vr_type
+                - creneau_debut
+                - creneau_fin
+                - box_names
+                - ref
+              properties:
+                client_nom:
+                  type: string
+                client_email:
+                  type: string
+                  format: email
+                client_telephone:
+                  type: string
+                nb_personnes:
+                  type: integer
+                duree_minutes:
+                  type: integer
+                vr_type:
+                  type: string
+                  enum: [filaire, sans_fil]
+                creneau_debut:
+                  type: string
+                  format: date-time
+                creneau_fin:
+                  type: string
+                  format: date-time
+                box_names:
+                  type: string
+                ref:
+                  type: string
+                notes:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Confirmation email sent
+        "400":
+          description: Invalid request body
+        "403":
+          description: Forbidden – request origin not allowed
+        "405":
+          description: Method not allowed
+  /api/contact:
+    post:
+      summary: Send a contact message
+      description: Submits the contact form. Requires a valid CSRF token.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - email
+                - subject
+                - message
+                - _csrf
+              properties:
+                email:
+                  type: string
+                  format: email
+                subject:
+                  type: string
+                message:
+                  type: string
+                _csrf:
+                  type: string
+                  description: HMAC-SHA256 CSRF token
+      responses:
+        "303":
+          description: Redirects to /contact/merci on success
+        "400":
+          description: Missing required fields
+        "403":
+          description: Invalid CSRF token or forbidden origin
+        "405":
+          description: Method not allowed

@@ -1,18 +1,32 @@
 {
-  "apis": [
+  "linkset": [
     {
-      "title": "Reservation API",
-      "description": "Book a VR session",
-      "links": {
-        "endpoint": "https://www.vr-cafe.fr/api/reservation-confirmation"
-      }
+      "anchor": "https://www.vr-cafe.fr/api/reservation-confirmation",
+      "service-desc": [
+        {
+          "href": "https://www.vr-cafe.fr/openapi.yaml",
+          "type": "application/openapi+yaml"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://www.vr-cafe.fr/reservation"
+        }
+      ]
     },
     {
-      "title": "Contact API",
-      "description": "Send a contact message",
-      "links": {
-        "endpoint": "https://www.vr-cafe.fr/api/contact"
-      }
+      "anchor": "https://www.vr-cafe.fr/api/contact",
+      "service-desc": [
+        {
+          "href": "https://www.vr-cafe.fr/openapi.yaml",
+          "type": "application/openapi+yaml"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://www.vr-cafe.fr/contact"
+        }
+      ]
     }
   ]
 }
