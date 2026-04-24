@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "list-games",
+      "type": "skill-md",
+      "description": "List VR games available at VR Café Lyon, with optional category filtering.",
+      "url": "https://www.vr-cafe.fr/.well-known/agent-skills/list-games/SKILL.md",
+      "digest": "sha256:4f106775eccea31799b8cc2a8379dfc83722c6097d60caf192d6b33661e535af"
+    },
+    {
+      "name": "check-availability",
+      "type": "skill-md",
+      "description": "Check available VR session time slots for a given date, player count, duration, and VR type.",
+      "url": "https://www.vr-cafe.fr/.well-known/agent-skills/check-availability/SKILL.md",
+      "digest": "sha256:6c4bb43fcee0ba45b363808644e3bed903d94cfa1b4967b1a26db56a660da808"
+    },
+    {
+      "name": "make-reservation",
+      "type": "skill-md",
+      "description": "Book a VR session at VR Café Lyon with full confirmation (email + admin notification).",
+      "url": "https://www.vr-cafe.fr/.well-known/agent-skills/make-reservation/SKILL.md",
+      "digest": "sha256:d5fc3031d6650fdf98a69174757ab7ea2ead18928ac972f9a725167f6af613c6"
+    },
+    {
+      "name": "get-pricing",
+      "type": "skill-md",
+      "description": "Get VR session pricing per person by duration and player count.",
+      "url": "https://www.vr-cafe.fr/.well-known/agent-skills/get-pricing/SKILL.md",
+      "digest": "sha256:1de70d59029dd1674913328c06142ad64a88cb56c9c8dc03e7abe2c1b60f90ac"
+    }
+  ]
+}

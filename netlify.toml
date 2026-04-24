@@ -33,6 +33,17 @@
     Content-Type = "application/json"
     Cache-Control = "public, max-age=3600"
 
+[[headers]]
+  for = "/.well-known/agent-skills/index.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/.well-known/agent-skills/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
 # Redirection pour s'assurer que les fichiers .well-known sont accessibles
 [[redirects]]
   from = "/.well-known/*"
