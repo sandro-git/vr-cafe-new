@@ -31,4 +31,66 @@ const isProd = import.meta.env.PROD;
       </script>
     </>
   )}
+
+  <!-- WebMCP: expose site tools to AI agents (https://webmachinelearning.github.io/webmcp/) -->
+  <script is:inline>
+    (async () => {
+      if (!navigator.modelContext) return;
+
+      const ctrl = new AbortController();
+      const opts = { signal: ctrl.signal };
+
+      async function mcpCall(name, args) {
+        const res = await fetch('/api/mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } }),
+        });
+        const data = await res.json();
+        return data.result?.content?.[0]?.text ?? JSON.stringify(data.result);
+      }
+
+      await navigator.modelContext.registerTool({
+        name: 'list_games',
+        description: 'List VR games available at VR Café Lyon. Filter by category: jeuxVR, escapeGame, freeroaming, escapeFreeroaming.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            tag: { type: 'string', enum: ['jeuxVR', 'escapeGame', 'freeroaming', 'escapeFreeroaming'] },
+          },
+        },
+        execute: (args) => mcpCall('list_games', args),
+      }, opts);
+
+      await navigator.modelContext.registerTool({
+        name: 'get_pricing',
+        description: 'Get VR session pricing at VR Café Lyon.',
+        inputSchema: { type: 'object', properties: {} },
+        execute: () => mcpCall('get_pricing', {}),
+      }, opts);
+
+      await navigator.modelContext.registerTool({
+        name: 'check_availability',
+        description: 'Check available time slots for a VR session at VR Café Lyon on a given date.',
+        inputSchema: {
+          type: 'object',
+          required: ['date', 'nb_personnes', 'duree_minutes', 'vr_type'],
+          properties: {
+            date: { type: 'string', description: 'Date (YYYY-MM-DD)' },
+            nb_personnes: { type: 'integer', minimum: 1, maximum: 6 },
+            duree_minutes: { type: 'integer', enum: [30, 60, 90] },
+            vr_type: { type: 'string', enum: ['filaire', 'sans_fil'] },
+          },
+        },
+        execute: (args) => mcpCall('check_availability', args),
+      }, opts);
+
+      await navigator.modelContext.registerTool({
+        name: 'open_reservation',
+        description: 'Navigate to the reservation page to book a VR session.',
+        inputSchema: { type: 'object', properties: {} },
+        execute: () => { window.location.href = '/reservation'; return 'Redirecting to reservation page.'; },
+      }, opts);
+    })();
+  </script>
 </head>
