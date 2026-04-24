@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 
 import sanity from '@sanity/astro';
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -11,13 +12,16 @@ import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://www.vr-cafe.fr',
   integrations: [sanity(
     {
       projectId: '0oshw5tf',
       dataset: 'production',
       useCdn: true,
       apiVersion: "2025-01-28",
-    }), react()],
+    }), react(), sitemap({
+    filter: (page) => !page.includes('/admin/') && !page.includes('/studio'),
+  })],
 
   vite: {
     plugins: [
