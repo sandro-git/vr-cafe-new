@@ -1,0 +1,18 @@
+{
+  "apis": [
+    {
+      "title": "Reservation API",
+      "description": "Book a VR session",
+      "links": {
+        "endpoint": "https://www.vr-cafe.fr/api/reservation-confirmation"
+      }
+    },
+    {
+      "title": "Contact API",
+      "description": "Send a contact message",
+      "links": {
+        "endpoint": "https://www.vr-cafe.fr/api/contact"
+      }
+    }
+  ]
+}

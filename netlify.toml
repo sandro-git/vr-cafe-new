@@ -7,6 +7,12 @@
   NODE_VERSION = "22"
   BUN_VERSION = "1.3.2"
 
+# Link headers RFC 8288 pour la découverte par les agents
+[[headers]]
+  for = "/"
+  [headers.values]
+    Link = '''</.well-known/api-catalog>; rel="api-catalog", </sitemap-index.xml>; rel="sitemap"'''
+
 # Configuration pour les fichiers .well-known
 # Important pour Apple Pay et autres services
 [[headers]]
@@ -14,6 +20,12 @@
   [headers.values]
     Content-Type = "application/octet-stream"
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/.well-known/api-catalog"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
 
 # Redirection pour s'assurer que les fichiers .well-known sont accessibles
 [[redirects]]
