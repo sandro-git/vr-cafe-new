@@ -5,19 +5,21 @@ import { Image } from "astro:assets";
 
 const currentPath = Astro.url.pathname;
 
-// Déterminer si on est dans le sous-menu VR
-const isVRSubmenu =
+// Actif sur "Expériences" si on est sur une page de jeux
+const isExperiencesSubmenu =
   currentPath.includes("/escapes") ||
   currentPath.includes("/jeux") ||
-  currentPath === "/vr" ||
-  currentPath === "/vr/";
-
-// Déterminer si on est dans le sous-menu VR sans fil
-const isVRSansFil =
   currentPath.includes("/freeroaming") ||
-  currentPath.includes("/escapesFreeroaming") ||
-  currentPath === "/vr-sans-fil" ||
-  currentPath === "/vr-sans-fil/";
+  currentPath.includes("/escapesFreeroaming");
+
+// Actif sur "Occasions" si on est sur une page commerciale
+const isOccasionsSubmenu =
+  currentPath === "/anniversaire" ||
+  currentPath === "/anniversaire/" ||
+  currentPath === "/team-building" ||
+  currentPath === "/team-building/" ||
+  currentPath === "/evg-evjf" ||
+  currentPath === "/evg-evjf/";
 ---
 
 <nav
@@ -112,45 +114,42 @@ const isVRSansFil =
             class={currentPath === "/"
               ? "block rounded bg-blue-700 px-4 py-3.5 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
               : "block rounded px-4 py-3.5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent md:dark:border-0"}
-            aria-current="page">Accueil</a
-          >
+            aria-current={currentPath === "/" ? "page" : undefined}
+          >Accueil</a>
         </li>
 
-        <!-- VR avec dropdown -->
+        <!-- Expériences avec dropdown -->
         <li class="relative group">
           <button
             type="button"
-            id="vr-button"
-            data-dropdown="vr-dropdown"
+            id="experiences-button"
+            data-dropdown="experiences-dropdown"
             aria-haspopup="true"
             aria-expanded="false"
-            aria-controls="vr-dropdown"
+            aria-controls="experiences-dropdown"
             class={`flex items-center w-full justify-between rounded px-4 py-3.5 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
-              isVRSubmenu
+              isExperiencesSubmenu
                 ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
                 : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent"
             }`}
           >
-            VR
+            Expériences
             <svg
               class="dropdown-arrow w-4 h-4 ml-2 transition-transform md:rotate-0 md:group-hover:rotate-180"
               aria-hidden="true"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"></path>
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
             </svg>
           </button>
 
-          <!-- Dropdown menu VR -->
+          <!-- Dropdown Expériences -->
           <ul
-            id="vr-dropdown"
+            id="experiences-dropdown"
             role="menu"
-            aria-labelledby="vr-button"
-            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
+            aria-labelledby="experiences-button"
+            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-56 z-50 md:top-full md:left-0"
           >
             <li role="none">
               <a
@@ -162,73 +161,33 @@ const isVRSansFil =
                     : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
                 }`}
               >
-                Escapes Games
+                🔐 Escape Games VR
+              </a>
+            </li>
+            <li role="none">
+              <a
+                href="/escapesFreeroaming"
+                role="menuitem"
+                class={`block px-4 py-3.5 ${
+                  currentPath === "/escapesFreeroaming" || currentPath === "/escapesFreeroaming/"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
+                }`}
+              >
+                🔐 Escape Games Sans Fil
               </a>
             </li>
             <li role="none">
               <a
                 href="/jeux"
                 role="menuitem"
-                class={`block px-4 py-3.5 rounded-b-lg ${
+                class={`block px-4 py-3.5 ${
                   currentPath === "/jeux" || currentPath === "/jeux/"
                     ? "text-blue-700 dark:text-blue-500"
                     : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
                 }`}
               >
-                Jeux VR
-              </a>
-            </li>
-          </ul>
-        </li>
-
-        <!-- VR sans fil avec dropdown -->
-        <li class="relative group">
-          <button
-            type="button"
-            id="vr-sans-fil-button"
-            data-dropdown="vr-sans-fil-dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-            aria-controls="vr-sans-fil-dropdown"
-            class={`flex items-center w-full justify-between rounded px-4 py-3.5 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
-              isVRSansFil
-                ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
-                : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent"
-            }`}
-          >
-            VR sans fil
-            <svg
-              class="dropdown-arrow w-4 h-4 ml-2 transition-transform md:rotate-0 md:group-hover:rotate-180"
-              aria-hidden="true"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </button>
-
-          <!-- Dropdown menu VR sans fil -->
-          <ul
-            id="vr-sans-fil-dropdown"
-            role="menu"
-            aria-labelledby="vr-sans-fil-button"
-            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-48 z-50 md:top-full md:left-0"
-          >
-            <li role="none">
-              <a
-                href="/escapesFreeroaming"
-                role="menuitem"
-                class={`block px-4 py-3.5 rounded-t-lg ${
-                  currentPath === "/escapesFreeroaming" ||
-                  currentPath === "/escapesFreeroaming/"
-                    ? "text-blue-700 dark:text-blue-500"
-                    : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
-                }`}
-              >
-                Escapes Sans Fil
+                🎮 Jeux VR
               </a>
             </li>
             <li role="none">
@@ -236,28 +195,113 @@ const isVRSansFil =
                 href="/freeroaming"
                 role="menuitem"
                 class={`block px-4 py-3.5 rounded-b-lg ${
-                  currentPath === "/freeroaming" ||
-                  currentPath === "/freeroaming/"
+                  currentPath === "/freeroaming" || currentPath === "/freeroaming/"
                     ? "text-blue-700 dark:text-blue-500"
                     : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
                 }`}
               >
-                Jeux Sans Fil
+                🎮 Jeux Sans Fil
               </a>
             </li>
           </ul>
         </li>
 
-        <!-- Cadeaux -->
+        <!-- Occasions avec dropdown -->
+        <li class="relative group">
+          <button
+            type="button"
+            id="occasions-button"
+            data-dropdown="occasions-dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="occasions-dropdown"
+            class={`flex items-center w-full justify-between rounded px-4 py-3.5 md:w-auto md:border-0 md:p-0 md:hover:bg-transparent md:dark:hover:bg-transparent ${
+              isOccasionsSubmenu
+                ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
+                : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent"
+            }`}
+          >
+            Occasions
+            <svg
+              class="dropdown-arrow w-4 h-4 ml-2 transition-transform md:rotate-0 md:group-hover:rotate-180"
+              aria-hidden="true"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Occasions -->
+          <ul
+            id="occasions-dropdown"
+            role="menu"
+            aria-labelledby="occasions-button"
+            class="hidden md:absolute left-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg md:min-w-56 z-50 md:top-full md:left-0"
+          >
+            <li role="none">
+              <a
+                href="/anniversaire"
+                role="menuitem"
+                class={`block px-4 py-3.5 rounded-t-lg ${
+                  currentPath === "/anniversaire" || currentPath === "/anniversaire/"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
+                }`}
+              >
+                🎂 Anniversaire
+              </a>
+            </li>
+            <li role="none">
+              <a
+                href="/team-building"
+                role="menuitem"
+                class={`block px-4 py-3.5 ${
+                  currentPath === "/team-building" || currentPath === "/team-building/"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
+                }`}
+              >
+                🏆 Team Building
+              </a>
+            </li>
+            <li role="none">
+              <a
+                href="/evg-evjf"
+                role="menuitem"
+                class={`block px-4 py-3.5 rounded-b-lg ${
+                  currentPath === "/evg-evjf" || currentPath === "/evg-evjf/"
+                    ? "text-blue-700 dark:text-blue-500"
+                    : "text-gray-900 hover:bg-gray-100 hover:text-blue-700 dark:text-white dark:hover:bg-gray-700 dark:hover:text-blue-500"
+                }`}
+              >
+                🥂 EVG / EVJF
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Tarifs -->
         <li>
           <a
-            href="/cadeaux"
-            class={currentPath === "/cadeaux" ||
-            currentPath.includes("/cadeaux/")
+            href="/tarifs"
+            class={currentPath === "/tarifs" || currentPath === "/tarifs/"
               ? "block rounded bg-blue-700 px-4 py-3.5 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
               : "block rounded px-4 py-3.5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent md:dark:border-0"}
           >
-            Cadeaux
+            Tarifs
+          </a>
+        </li>
+
+        <!-- Carte Cadeau -->
+        <li>
+          <a
+            href="/cadeaux"
+            class={currentPath === "/cadeaux" || currentPath.includes("/cadeaux/")
+              ? "block rounded bg-blue-700 px-4 py-3.5 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
+              : "block rounded px-4 py-3.5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent md:dark:border-0"}
+          >
+            Carte Cadeau
           </a>
         </li>
 
@@ -265,8 +309,7 @@ const isVRSansFil =
         <li>
           <a
             href="/contact"
-            class={currentPath === "/contact" ||
-            currentPath.includes("/contact/")
+            class={currentPath === "/contact" || currentPath.includes("/contact/")
               ? "block rounded bg-blue-700 px-4 py-3.5 text-white md:bg-transparent md:p-0 md:text-blue-700 md:dark:text-blue-500"
               : "block rounded px-4 py-3.5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 md:bg-transparent md:p-0 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 md:dark:hover:bg-transparent md:dark:border-0"}
           >

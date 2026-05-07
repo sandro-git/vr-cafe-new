@@ -5,21 +5,79 @@ export const prerender = true;
 
 //components
 import LandingImage from "../components/LandingImage.astro";
-import Title from "../components/Title.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Pricing from "../components/Pricing.astro";
 import Hero from "../components/Hero.astro";
 import Features from "../components/Features.astro";
 import FAQ from "../components/FAQ.astro";
 import Partners from "../components/Partners.astro";
 ---
 
-<BaseLayout>
+<BaseLayout
+  title="VR Café Canet-en-Roussillon — Salle de Réalité Virtuelle & Escape Game | Perpignan"
+  description="Vivez une expérience VR inoubliable à Canet-en-Roussillon. Escape game, jeux multijoueurs, anniversaires & team building. Réservez en ligne !"
+>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "EntertainmentBusiness",
+    "name": "VR Café",
+    "url": "https://www.vr-cafe.fr",
+    "logo": "https://www.vr-cafe.fr/apple-touch-icon.png",
+    "image": "https://www.vr-cafe.fr/og-image.jpg",
+    "description": "Salle de réalité virtuelle et escape game VR à Canet-en-Roussillon, à 10 minutes de Perpignan. Escape games, jeux multijoueurs, free roaming, anniversaires et team building.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "2 rue du Pilou",
+      "addressLocality": "Canet-en-Roussillon",
+      "postalCode": "66140",
+      "addressRegion": "Occitanie",
+      "addressCountry": "FR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 42.7025,
+      "longitude": 3.0211
+    },
+    "telephone": "+33671410695",
+    "priceRange": "€€",
+    "servesCuisine": null,
+    "currenciesAccepted": "EUR",
+    "paymentAccepted": "Cash, Credit Card",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "56",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "sameAs": [
+      "https://www.tripadvisor.fr/Attraction_Review-g580352-d27158850-Reviews-VR_Cafe-Canet_en_Roussillon_Pyrenees_Orientales_Occitanie.html",
+      "https://www.instagram.com/vrcafe66/"
+    ],
+    "hasMap": "https://maps.google.com/?q=VR+Café+Canet-en-Roussillon",
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+        "opens": "14:00",
+        "closes": "20:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Friday", "Saturday"],
+        "opens": "10:00",
+        "closes": "22:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Sunday"],
+        "opens": "10:00",
+        "closes": "20:00"
+      }
+    ]
+  })} />
   <LandingImage />
   <Hero />
   <Features />
-  <Title title="Tarifs" />
-  <Pricing />
   <Partners />
   <FAQ ctaLink="/contact" />
 </BaseLayout>

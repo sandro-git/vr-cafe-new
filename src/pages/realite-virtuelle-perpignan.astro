@@ -1,0 +1,153 @@
+---
+export const prerender = true;
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Salle de Réalité Virtuelle à Perpignan — VR Café Canet-en-Roussillon"
+  description="La meilleure salle VR près de Perpignan. Escape games, jeux multijoueurs et free roaming à Canet-en-Roussillon, à seulement 10 min de Perpignan."
+>
+  <!-- Hero -->
+  <section class="relative bg-gray-900 text-white py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+        Réalité Virtuelle à <span class="text-purple-400">Perpignan</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-300 mb-4">
+        La salle VR incontournable du Roussillon — à seulement <strong class="text-white">10 minutes de Perpignan</strong>
+      </p>
+      <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+        Escape games, jeux multijoueurs, free roaming… Vivez des expériences immersives que vous n'oublierez pas au VR Café de Canet-en-Roussillon.
+      </p>
+      <a
+        href="/reservation"
+        class="inline-block px-10 py-4 bg-linear-to-r from-purple-500 to-pink-500 text-white font-bold text-lg rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300"
+      >
+        Réserver ma session
+      </a>
+    </div>
+  </section>
+
+  <!-- Proximité Perpignan -->
+  <section class="bg-gray-800 py-16 px-4">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold text-white text-center mb-12">
+        VR Café : la salle VR la plus proche de Perpignan
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8 text-center">
+        <div class="bg-gray-700 rounded-xl p-6">
+          <div class="text-4xl font-extrabold text-purple-400 mb-2">10 min</div>
+          <p class="text-gray-300">depuis le centre de Perpignan</p>
+        </div>
+        <div class="bg-gray-700 rounded-xl p-6">
+          <div class="text-4xl font-extrabold text-pink-400 mb-2">250 m²</div>
+          <p class="text-gray-300">de salle immersive</p>
+        </div>
+        <div class="bg-gray-700 rounded-xl p-6">
+          <div class="text-4xl font-extrabold text-blue-400 mb-2">4,9/5</div>
+          <p class="text-gray-300">sur TripAdvisor (56 avis)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Expériences disponibles -->
+  <section class="bg-gray-900 py-16 px-4">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold text-white text-center mb-12">
+        Nos expériences VR près de Perpignan
+      </h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <a href="/escapes" class="group block bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors">
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">
+            Escape Games VR
+          </h3>
+          <p class="text-gray-400 mb-4">
+            Résolvez des énigmes en réalité virtuelle en équipe. Des scénarios épiques pour 1 à 6 joueurs — la formule idéale entre amis ou en famille.
+          </p>
+          <span class="text-purple-400 font-semibold">Découvrir les escapes →</span>
+        </a>
+        <a href="/freeroaming" class="group block bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors">
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-pink-400 transition-colors">
+            Free Roaming VR
+          </h3>
+          <p class="text-gray-400 mb-4">
+            Sautez dans la réalité virtuelle sans câbles. Le free roaming offre une liberté totale de mouvement pour une immersion absolue.
+          </p>
+          <span class="text-pink-400 font-semibold">Découvrir le free roaming →</span>
+        </a>
+        <a href="/jeux" class="group block bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors">
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">
+            Jeux VR Multijoueur
+          </h3>
+          <p class="text-gray-400 mb-4">
+            Affrontez-vous ou coopérez en réalité virtuelle. Des dizaines de jeux pour tous les niveaux, dès 7 ans.
+          </p>
+          <span class="text-blue-400 font-semibold">Voir les jeux →</span>
+        </a>
+        <a href="/cadeaux" class="group block bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors">
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors">
+            Cartes Cadeaux
+          </h3>
+          <p class="text-gray-400 mb-4">
+            Offrez une expérience inoubliable à vos proches. Valable 1 an sur toutes nos formules. Livraison par email immédiate.
+          </p>
+          <span class="text-green-400 font-semibold">Commander une carte cadeau →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tarifs -->
+  <section class="bg-gray-800 py-16 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-bold text-white mb-4">
+        Tarifs accessibles depuis Perpignan
+      </h2>
+      <p class="text-gray-400 mb-10">Les meilleures expériences VR au meilleur prix du département</p>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-gray-700 rounded-xl p-8">
+          <div class="text-3xl font-extrabold text-white mb-2">18 €<span class="text-lg font-normal text-gray-400">/pers.</span></div>
+          <div class="text-purple-400 font-semibold text-xl mb-3">Session 30 min</div>
+          <p class="text-gray-400">Idéal pour découvrir la VR ou pour une sortie rapide</p>
+        </div>
+        <div class="bg-gray-700 rounded-xl p-8 border-2 border-purple-500">
+          <div class="text-sm text-purple-400 font-bold uppercase mb-2">Populaire</div>
+          <div class="text-3xl font-extrabold text-white mb-2">25–29 €<span class="text-lg font-normal text-gray-400">/pers.</span></div>
+          <div class="text-purple-400 font-semibold text-xl mb-3">Session 60 min</div>
+          <p class="text-gray-400">La formule complète pour profiter de toutes les expériences</p>
+        </div>
+      </div>
+      <a
+        href="/reservation"
+        class="inline-block mt-10 px-10 py-4 bg-linear-to-r from-purple-500 to-pink-500 text-white font-bold text-lg rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300"
+      >
+        Réserver maintenant
+      </a>
+    </div>
+  </section>
+
+  <!-- Accès -->
+  <section class="bg-gray-900 py-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl font-bold text-white mb-6">Comment venir depuis Perpignan ?</h2>
+      <p class="text-gray-400 text-lg mb-4">
+        <strong class="text-white">VR Café — 2 rue du Pilou, 66140 Canet-en-Roussillon</strong>
+      </p>
+      <p class="text-gray-400 mb-4">
+        À seulement 10 minutes en voiture depuis Perpignan via la D617. Parking gratuit à proximité.
+      </p>
+      <p class="text-gray-400 mb-8">
+        En bus depuis Perpignan : ligne 1 (arrêt Canet-Village) ou ligne côtière en été.
+      </p>
+      <a
+        href="https://maps.google.com/?q=VR+Café+2+rue+du+Pilou+66140+Canet-en-Roussillon"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-block px-8 py-3 border-2 border-white text-white font-semibold rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300"
+      >
+        Voir sur Google Maps
+      </a>
+    </div>
+  </section>
+</BaseLayout>

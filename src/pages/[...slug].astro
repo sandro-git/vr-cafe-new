@@ -33,7 +33,10 @@ if (!game) {
 }
 ---
 
-<BaseLayout>
+<BaseLayout
+  title={`${game.name} — VR Café Canet-en-Roussillon`}
+  description={game.description ? game.description.slice(0, 155) + (game.description.length > 155 ? '…' : '') : `Découvrez ${game.name} en réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan. Réservez en ligne !`}
+>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
       <!-- Image à gauche -->

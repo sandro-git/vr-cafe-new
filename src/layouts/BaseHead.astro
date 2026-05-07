@@ -1,6 +1,20 @@
 ---
 import "../styles/global.css";
 
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+}
+
+const {
+  title = "VR Café Canet-en-Roussillon — Salle de Réalité Virtuelle & Escape Game | Perpignan",
+  description = "Vivez une expérience VR inoubliable à Canet-en-Roussillon. Escape game, jeux multijoueurs, anniversaires & team building. Réservez en ligne !",
+  canonical = Astro.url.href,
+  ogImage = "https://www.vr-cafe.fr/og-image.jpg",
+} = Astro.props;
+
 const GA_ID = import.meta.env.PUBLIC_GA_ID;
 const isProd = import.meta.env.PROD;
 ---
@@ -15,11 +29,24 @@ const isProd = import.meta.env.PROD;
   <link href="/src/assets/vrcafe.webp" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VR Café</title>
-  <meta
-    name="description"
-    content="Le plus grand choix d'escape games VR Pour toute la famille"
-  />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:site_name" content="VR Café" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
   {isProd && GA_ID && (
     <>
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>

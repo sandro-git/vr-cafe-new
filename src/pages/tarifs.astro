@@ -1,0 +1,125 @@
+---
+export const prerender = true;
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { sanityClient } from "sanity:client";
+
+type Tarif = {
+  _id: string;
+  name: string;
+  type: "session_30min" | "session_1h" | "anniversaire";
+  prix: number;
+  badge?: string;
+  features?: string[];
+  ordre: number;
+};
+
+const tarifs = await sanityClient.fetch<Tarif[]>(
+  `*[_type == "tarif" && type in ["session_30min", "session_1h"]] | order(ordre asc) { _id, name, type, prix, badge, features, ordre }`
+);
+
+const tarif30min = tarifs.find((t) => t.type === "session_30min");
+const tarifs1h = tarifs.filter((t) => t.type === "session_1h");
+---
+
+<BaseLayout
+  title="Tarifs VR Café Canet-en-Roussillon — Prix Sessions VR & Escape Game | Perpignan"
+  description="Découvrez nos tarifs pour les sessions VR, escape games et jeux multijoueurs à Canet-en-Roussillon. Dès 18€/personne. Réservation en ligne."
+  canonical="https://www.vr-cafe.fr/tarifs"
+>
+  <section class="pt-[calc(var(--navHeight)+2rem)] pb-16 px-4">
+    <div class="max-w-screen-xl mx-auto">
+      <h1 class="my-16 text-center text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
+        Nos Tarifs
+      </h1>
+      <p class="text-center text-lg text-gray-600 dark:text-gray-400 mb-16 max-w-2xl mx-auto">
+        Des formules adaptées à toutes les envies — solo, duo ou groupe. Réservez en ligne en quelques clics.
+      </p>
+
+      <!-- Session 30 min -->
+      {tarif30min && (
+        <div class="mb-16">
+          <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-8">Session 30 minutes</h2>
+          <div class="flex justify-center">
+            <div class="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <div class="text-center mb-6">
+                <span class="text-6xl font-extrabold text-gray-900 dark:text-white">{tarif30min.prix}</span>
+                <span class="text-3xl font-semibold text-gray-900 dark:text-white">€</span>
+                <span class="text-xl text-gray-500 dark:text-gray-400 ml-1">/personne</span>
+              </div>
+              {tarif30min.features && (
+                <ul class="space-y-3 text-gray-600 dark:text-gray-300 mb-8">
+                  {tarif30min.features.map((f) => (
+                    <li class="flex items-center gap-2"><span class="text-green-500">✓</span> {f}</li>
+                  ))}
+                </ul>
+              )}
+              <a href="/reservation" class="block text-center w-full py-3 px-5 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-colors">
+                Réserver
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <!-- Session 1 heure -->
+      {tarifs1h.length > 0 && (
+        <div class="mb-16">
+          <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-4">Session 1 Heure</h2>
+          <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Le prix varie selon le nombre de joueurs</p>
+          <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {tarifs1h.map((tarif) => {
+              const hasGroupBadge = tarif.badge && tarif.badge.length > 0;
+              return (
+                <div class={`rounded-2xl shadow-lg p-8 transition-all duration-300 relative ${
+                  hasGroupBadge
+                    ? "bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-500 md:scale-105 hover:scale-110"
+                    : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-105"
+                }`}>
+                  {hasGroupBadge && (
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span class="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow whitespace-nowrap">
+                        {tarif.badge}
+                      </span>
+                    </div>
+                  )}
+                  <h3 class="text-center text-lg font-bold text-gray-700 dark:text-gray-300 mb-4">{tarif.name}</h3>
+                  <div class="text-center mb-6">
+                    <span class="text-5xl font-extrabold text-blue-600 dark:text-blue-400">{tarif.prix}</span>
+                    <span class="text-2xl font-semibold text-blue-600 dark:text-blue-400">€</span>
+                    <span class="text-base text-gray-500 dark:text-gray-400 ml-1">/pers.</span>
+                  </div>
+                  {tarif.features && (
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-300 text-sm mb-6">
+                      {tarif.features.map((f) => (
+                        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> {f}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <a href="/reservation" class={`block text-center w-full py-3 px-5 font-bold rounded-lg transition-colors text-sm text-white ${
+                    hasGroupBadge
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      : "bg-blue-700 hover:bg-blue-800"
+                  }`}>
+                    Réserver
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div class="text-center">
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">
+          Pour les groupes de plus de 10 personnes ou les événements d'entreprise, <a href="/contact" class="text-blue-600 dark:text-blue-400 hover:underline">contactez-nous</a>.
+        </p>
+        <a
+          href="/reservation"
+          class="inline-block rounded-full bg-blue-700 px-8 py-4 text-white font-semibold text-lg hover:bg-blue-800 transition-colors"
+        >
+          Réserver maintenant
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

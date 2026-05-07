@@ -14,7 +14,10 @@ import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
 const { data: jeux } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: JEUX_VR_QUERY });
 ---
 
-<BaseLayout>
+<BaseLayout
+  title="Tous nos jeux VR à Perpignan | VR Café Canet-en-Roussillon"
+  description="Explorez notre catalogue de jeux VR : escape games, free roaming, multijoueur. Salle VR à Canet-en-Roussillon près de Perpignan."
+>
   <GamesLayout>
     <GameList experiences={jeux} />
   </GamesLayout>
