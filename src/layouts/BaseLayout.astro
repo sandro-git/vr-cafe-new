@@ -2,7 +2,7 @@
 import NavBar from "../components/NavBar.astro";
 import Footer from "../components/Footer.astro";
 import BaseHead from "./BaseHead.astro";
-import WhatsAppButton from "../components/WhatsAppButton.astro";
+import FloatingActions from "../components/FloatingActions.astro";
 
 interface Props {
   title?: string;
@@ -23,12 +23,7 @@ const { title, description, canonical, ogImage } = Astro.props;
     </main>
     <Footer />
 
-    <!-- Bouton WhatsApp flottant -->
-    <WhatsAppButton
-      phoneNumber="33671410695"
-      message="Bonjour ! J'aimerais avoir des informations sur le VR Café."
-      position="fixed"
-    />
+    <FloatingActions />
 
     <style>
       :root {

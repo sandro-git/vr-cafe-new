@@ -1,0 +1,64 @@
+---
+import { loadQuery } from "../sanity/lib/load-query";
+import { AVIS_QUERY } from "../sanity/lib/queries";
+import GoogleRatingBadge from "./GoogleRatingBadge.astro";
+
+type Avis = {
+  prenom: string;
+  note: number;
+  commentaire: string;
+  dateVisite: string;
+};
+
+const { data: avis } = await loadQuery<Avis[]>({ query: AVIS_QUERY });
+
+if (!avis || avis.length === 0) return;
+---
+
+<section class="bg-gray-50 dark:bg-gray-800 py-12 lg:py-20">
+  <div class="px-4 mx-auto max-w-(--breakpoint-xl)">
+    <h2 class="mb-6 text-3xl font-extrabold tracking-tight text-center text-gray-900 md:text-4xl dark:text-white">
+      Ce que disent nos clients
+    </h2>
+    <GoogleRatingBadge />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {avis.map((a) => (
+        <article class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6 flex flex-col gap-4">
+          <!-- Étoiles -->
+          <div class="flex gap-0.5" aria-label={`Note : ${a.note} sur 5`}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg
+                class={`w-5 h-5 ${i < a.note ? "text-yellow-400" : "text-gray-300"} fill-current`}
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+          </div>
+
+          <!-- Commentaire -->
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed grow">
+            "{a.commentaire}"
+          </p>
+
+          <!-- Auteur -->
+          <div class="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              {a.prenom.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white text-sm">{a.prenom}</p>
+              {a.dateVisite && (
+                <p class="text-xs text-gray-400">
+                  {new Date(a.dateVisite).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

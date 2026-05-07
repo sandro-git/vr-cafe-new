@@ -46,15 +46,6 @@ const isOccasionsSubmenu =
     <div
       class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse"
     >
-      <!-- Button de réservation -->
-      <button
-        id="MainButton"
-        class="rounded-full bg-blue-700 px-6 py-3 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900"
-        aria-label="Réserver une session VR au VR Café"
-      >
-        Réserver
-      </button>
-
       <!-- Mobile menu button -->
       <button
         data-collapse-toggle="navbar-sticky"
@@ -322,9 +313,6 @@ const isOccasionsSubmenu =
 </nav>
 
 <script>
-  const button = document.querySelector("#MainButton");
-  button?.addEventListener("click", () => (location.href = "/reservation"));
-
   // Toggle mobile menu
   const mobileMenuButton = document.querySelector(
     '[data-collapse-toggle="navbar-sticky"]'
