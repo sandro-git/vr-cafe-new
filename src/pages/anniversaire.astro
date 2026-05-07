@@ -33,7 +33,7 @@ const tarifAnniversaire = await sanityClient.fetch<Tarif | null>(
         Fêtez votre anniversaire ou celui de vos proches en réalité virtuelle au VR Café de Canet-en-Roussillon. Une expérience unique, pour tous les âges, à 10 minutes de Perpignan.
       </p>
       <a
-        href="/reservation"
+        href="/reservation-anniversaire"
         class="inline-block px-10 py-4 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold text-lg rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300"
       >
         Réserver mon anniversaire
@@ -94,7 +94,7 @@ const tarifAnniversaire = await sanityClient.fetch<Tarif | null>(
               "Tables et bancs mis à disposition pour le gâteau",
             ]).map((f) => <li>✓ {f}</li>)}
           </ul>
-          <a href="/reservation" class="block text-center py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-shadow">
+          <a href="/reservation-anniversaire" class="block text-center py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-shadow">
             Réserver
           </a>
         </div>
@@ -146,7 +146,7 @@ const tarifAnniversaire = await sanityClient.fetch<Tarif | null>(
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a
-          href="/reservation"
+          href="/reservation-anniversaire"
           class="px-8 py-4 bg-white text-purple-700 font-bold rounded-full hover:bg-gray-100 transition-colors"
         >
           Réserver en ligne

@@ -1,0 +1,770 @@
+---
+import DatePicker from "./DatePicker.astro";
+---
+
+<div class="min-h-screen py-12 px-4 sm:px-6">
+  <div class="max-w-xl mx-auto">
+
+    <!-- En-tête -->
+    <div class="text-center mb-10">
+      <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Réserver Votre Anniversaire</h1>
+      <p class="text-gray-400">VR Café · Canet-en-Roussillon</p>
+    </div>
+
+    <!-- Erreur globale -->
+    <div id="global-error" class="hidden mb-6 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+    <!-- ===== ÉTAPE 1 : Configuration ===== -->
+    <div id="step-1" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-xs font-bold shrink-0">1/3</span>
+        Configurez votre session
+      </h2>
+
+      <div class="space-y-6">
+
+        <!-- Date -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+          <DatePicker id="dp" />
+          <p id="date-error" class="hidden mt-2 text-sm text-red-400"></p>
+        </div>
+
+        <!-- Nombre de joueurs (5 à 12) -->
+        <div>
+          <p class="text-sm font-medium text-gray-300 mb-3">Nombre de joueurs *</p>
+          <div id="nb-personnes-grid" class="grid gap-2" style="grid-template-columns: repeat(4, 1fr);"></div>
+        </div>
+
+        <!-- Type VR (masqué si >6 joueurs) -->
+        <div id="vr-type-section">
+          <p class="text-sm font-medium text-gray-300 mb-3">Type VR *</p>
+          <div id="vr-type-grid" class="grid grid-cols-2 gap-3"></div>
+          <p id="vr-type-auto" class="hidden mt-3 px-4 py-3 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200">
+            🎉 Pour les groupes de plus de 6 personnes, nous réservons automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil) pour accueillir tout le monde.
+          </p>
+        </div>
+
+        <!-- Durée fixe : 1 heure (pas de choix) -->
+        <div class="px-4 py-3 bg-gray-800 rounded-xl text-sm text-gray-300 flex items-center gap-3">
+          <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Durée : <strong class="text-white ml-1">1 heure</strong>
+        </div>
+
+      </div>
+
+      <button
+        id="btn-search"
+        class="mt-8 w-full py-4 bg-blue-700 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled
+      >
+        Voir les créneaux disponibles →
+      </button>
+    </div>
+
+    <!-- ===== ÉTAPE 2 : Créneaux ===== -->
+    <div id="step-2" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-xs font-bold shrink-0">2/3</span>
+          Choisir un créneau
+        </h2>
+        <button id="btn-back-1" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
+      </div>
+
+      <div id="step2-summary" class="mb-3 px-4 py-2.5 bg-gray-800 rounded-lg text-sm text-gray-400"></div>
+
+      <div class="flex gap-4 text-xs text-gray-500 mb-4">
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded border-2 border-green-700 inline-block"></span> Disponible
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded border-2 border-yellow-700 inline-block"></span> Quelques places
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded border-2 border-orange-700 inline-block"></span> Presque complet
+        </span>
+      </div>
+
+      <div id="slots-loading" class="py-12 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-400">Recherche des créneaux disponibles...</p>
+      </div>
+
+      <div id="slots-grid" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
+
+      <div id="slots-empty" class="hidden py-10 text-center">
+        <p class="text-3xl mb-3">😕</p>
+        <p class="text-white font-medium mb-1">Aucun créneau disponible</p>
+        <p class="text-gray-400 text-sm">Essayez une autre date</p>
+      </div>
+    </div>
+
+    <!-- ===== ÉTAPE 3 : Formulaire contact ===== -->
+    <div id="step-3" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-xs font-bold shrink-0">3/3</span>
+          Vos informations
+        </h2>
+        <button id="btn-back-2" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
+      </div>
+
+      <div id="step3-summary" class="mb-6 p-4 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200 leading-relaxed"></div>
+
+      <form id="reservation-form" class="space-y-4" novalidate>
+        <div>
+          <label for="client-nom" class="block text-sm font-medium text-gray-300 mb-1.5">Nom complet *</label>
+          <input
+            type="text" id="client-nom" required placeholder="Jean Dupont"
+            autocomplete="name"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label for="client-email" class="block text-sm font-medium text-gray-300 mb-1.5">Adresse email *</label>
+          <input
+            type="email" id="client-email" required placeholder="jean@exemple.fr"
+            autocomplete="email"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label for="client-telephone" class="block text-sm font-medium text-gray-300 mb-1.5">Téléphone *</label>
+          <input
+            type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
+            autocomplete="tel"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label for="client-notes" class="block text-sm font-medium text-gray-300 mb-1.5">Notes (optionnel)</label>
+          <textarea
+            id="client-notes" rows="2" placeholder="Prénom de l'enfant, âge, préférences..."
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 resize-none"
+          ></textarea>
+        </div>
+
+        <div id="form-error" class="hidden p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+        <button
+          type="submit" id="btn-submit"
+          class="w-full py-4 bg-blue-700 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          Confirmer la réservation
+        </button>
+      </form>
+    </div>
+
+    <!-- ===== ÉTAPE 4 : Confirmation ===== -->
+    <div id="step-4" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-8 shadow-xl text-center">
+      <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-white mb-2">Réservation confirmée !</h2>
+      <p class="text-gray-400 mb-8">Nous vous attendons. À très bientôt !</p>
+
+      <div id="confirmation-card" class="bg-gray-800 rounded-xl p-5 text-left mb-8 space-y-3 text-sm"></div>
+
+      <a href="/" class="inline-block px-8 py-3 bg-blue-700 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors">
+        Retour à l'accueil
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // @ts-nocheck
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  // ── État ──────────────────────────────────────────────────────────────────
+  let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 60, nb_boxes: 6 };
+  let datesFermees = new Set();
+  let periodesVacances = [];
+  const JOURS_OUVERTURE_NORMAL = new Set([0, 3, 5, 6]);
+  let selectedDate = '';
+  let selectedNb = 0;
+  let selectedVrType = null; // 'filaire' | 'sans_fil' | 'both'
+  // Durée fixe 1h — on cherchera l'id dans Supabase, sinon fallback
+  let selectedDuree = { id: null, label: '1 heure', duree_minutes: 60 };
+  let selectedSlot = null;
+
+  // ── Initialisation ────────────────────────────────────────────────────────
+  async function init() {
+    setupNbPersonnes();
+    setupVrType();
+    setupButtons();
+
+    try {
+      await Promise.all([loadConfig(), loadDureeId(), loadJoursFermes(), loadPeriodesVacances()]);
+    } catch (err) {
+      console.error('Init error:', err);
+      showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
+      return;
+    }
+
+    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
+      id: 'dp',
+      datesFermees: [...datesFermees],
+      periodesVacances,
+      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+    }}));
+
+    document.addEventListener('datepicker:select', (e) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== 'dp') return;
+      selectedDate = detail.date;
+      document.getElementById('date-error').classList.add('hidden');
+      checkStep1Valid();
+    });
+  }
+
+  async function loadConfig() {
+    const { data, error } = await supabase.from('config').select('*');
+    if (error) throw error;
+    if (!data?.length) return;
+    const first = data[0];
+    if ('heure_ouverture' in first) {
+      appConfig.heure_ouverture = first.heure_ouverture ?? appConfig.heure_ouverture;
+      appConfig.heure_fermeture = first.heure_fermeture ?? appConfig.heure_fermeture;
+      // Buffer forcé à 60 min pour les anniversaires (indépendant de la config globale)
+      return;
+    }
+    data.forEach(row => {
+      const key = row.cle ?? row.key ?? row.nom ?? row.name;
+      const val = row.valeur ?? row.value ?? row.val;
+      if (key != null && val != null && key !== 'buffer_minutes') appConfig[key] = val;
+    });
+    appConfig.nb_boxes = parseInt(String(appConfig.nb_boxes)) || 6;
+  }
+
+  async function loadDureeId() {
+    const { data } = await supabase
+      .from('durees_session')
+      .select('id, label, duree_minutes')
+      .eq('duree_minutes', 60)
+      .eq('actif', true)
+      .limit(1)
+      .single();
+    if (data) selectedDuree = data;
+  }
+
+  async function loadJoursFermes() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('jours_fermeture')
+      .select('date')
+      .gte('date', today);
+    if (error) throw error;
+    datesFermees = new Set(data?.map(j => j.date) ?? []);
+  }
+
+  async function loadPeriodesVacances() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('periodes_vacances')
+      .select('date_debut, date_fin')
+      .gte('date_fin', today)
+      .order('date_debut');
+    if (error) throw error;
+    periodesVacances = data ?? [];
+  }
+
+  // ── Setup UI ──────────────────────────────────────────────────────────────
+  function setupNbPersonnes() {
+    const grid = document.getElementById('nb-personnes-grid');
+    for (let i = 5; i <= 12; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = String(i);
+      btn.className = nbBtnClass(false);
+      btn.addEventListener('click', () => {
+        selectedNb = i;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = nbBtnClass(idx + 5 === i);
+        });
+        handleNbChange(i);
+        checkStep1Valid();
+      });
+      grid.appendChild(btn);
+    }
+  }
+
+  function handleNbChange(nb) {
+    const section = document.getElementById('vr-type-section');
+    const vrGrid = document.getElementById('vr-type-grid');
+    const autoMsg = document.getElementById('vr-type-auto');
+
+    if (nb > 6) {
+      // Masquer les boutons, montrer le message, verrouiller sur 'both'
+      vrGrid.classList.add('hidden');
+      autoMsg.classList.remove('hidden');
+      selectedVrType = 'both';
+    } else {
+      // Afficher les boutons, masquer le message, réinitialiser le choix
+      vrGrid.classList.remove('hidden');
+      autoMsg.classList.add('hidden');
+      // Conserver la sélection précédente si elle est toujours valide
+      if (selectedVrType === 'both') {
+        selectedVrType = null;
+        vrGrid.querySelectorAll('button').forEach(b => { b.className = vrTypeBtnClass(false); });
+      }
+    }
+  }
+
+  function setupVrType() {
+    const grid = document.getElementById('vr-type-grid');
+    const types = [
+      { id: 'filaire', label: '🔌 VR Filaire', desc: '6 boxes individuelles' },
+      { id: 'sans_fil', label: '📡 VR Sans Fil', desc: 'Espace libre jusqu\'à 6 joueurs' },
+    ];
+    types.forEach(t => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = vrTypeBtnClass(false);
+      btn.innerHTML = `<span class="font-semibold">${t.label}</span><span class="block text-xs mt-1 opacity-70">${t.desc}</span>`;
+      btn.addEventListener('click', () => {
+        selectedVrType = t.id;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = vrTypeBtnClass(types[idx].id === t.id);
+        });
+        checkStep1Valid();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function setupButtons() {
+    document.getElementById('btn-search').addEventListener('click', handleSearch);
+    document.getElementById('btn-back-1').addEventListener('click', () => showStep(1));
+    document.getElementById('btn-back-2').addEventListener('click', () => showStep(2));
+    document.getElementById('reservation-form').addEventListener('submit', handleSubmit);
+  }
+
+  function checkStep1Valid() {
+    const vrOk = selectedVrType !== null; // 'filaire' | 'sans_fil' | 'both'
+    (document.getElementById('btn-search') as HTMLButtonElement).disabled =
+      !(selectedDate && selectedNb > 0 && vrOk);
+  }
+
+  // ── Étape 2 : Recherche de créneaux ──────────────────────────────────────
+  async function handleSearch() {
+    showStep(2);
+
+    const dateFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+    const vrLabel = selectedVrType === 'both'
+      ? '🔌 Filaire + 📡 Sans Fil'
+      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+    document.getElementById('step2-summary').innerHTML =
+      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; 1 heure &nbsp;·&nbsp; ${vrLabel}`;
+
+    document.getElementById('slots-loading').classList.remove('hidden');
+    document.getElementById('slots-grid').classList.add('hidden');
+    document.getElementById('slots-empty').classList.add('hidden');
+
+    try {
+      const slots = generateSlots();
+
+      if (slots.length === 0) {
+        document.getElementById('slots-loading').classList.add('hidden');
+        document.getElementById('slots-empty').classList.remove('hidden');
+        return;
+      }
+
+      const results = await Promise.all(slots.map(checkSlotAvailability));
+      const available = results.filter(Boolean);
+
+      document.getElementById('slots-loading').classList.add('hidden');
+
+      if (available.length === 0) {
+        document.getElementById('slots-empty').classList.remove('hidden');
+      } else {
+        renderSlots(available);
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('slots-loading').classList.add('hidden');
+      showError('global-error', 'Erreur lors de la recherche des créneaux. Veuillez réessayer.');
+    }
+  }
+
+  function generateSlots() {
+    const dureeMin = selectedDuree.duree_minutes;
+    const bufferMin = Number(appConfig.buffer_minutes);
+    const [oh, om] = (appConfig.heure_ouverture || '10:00').split(':').map(Number);
+    const [ch, cm] = (appConfig.heure_fermeture || '20:00').split(':').map(Number);
+    const openTotal = oh * 60 + om;
+    const closeTotal = ch * 60 + cm;
+    const todayStr = localDateStr(new Date());
+    const now = new Date();
+    const slots = [];
+
+    for (let start = openTotal; start + dureeMin + bufferMin <= closeTotal; start += 30) {
+      const debut = dateAtMinutes(selectedDate, start);
+      if (selectedDate === todayStr && debut <= now) continue;
+      slots.push({
+        debut,
+        fin: dateAtMinutes(selectedDate, start + dureeMin),
+        finBlocage: dateAtMinutes(selectedDate, start + dureeMin + bufferMin),
+      });
+    }
+    return slots;
+  }
+
+  async function checkSlotAvailability(slot) {
+    if (selectedVrType === 'both') {
+      // Les deux espaces doivent être libres simultanément
+      const [filaireRes, sansFillRes] = await Promise.all([
+        supabase.rpc('get_boxes_disponibles', {
+          p_debut: slot.debut.toISOString(),
+          p_fin_blocage: slot.finBlocage.toISOString(),
+          p_vr_type: 'filaire',
+        }),
+        supabase.rpc('get_boxes_disponibles', {
+          p_debut: slot.debut.toISOString(),
+          p_fin_blocage: slot.finBlocage.toISOString(),
+          p_vr_type: 'sans_fil',
+        }),
+      ]);
+      if (filaireRes.error || sansFillRes.error) return null;
+      const filaireBoxes = filaireRes.data ?? [];
+      const sansFillBoxes = sansFillRes.data ?? [];
+      // Besoin des 6 boxes filaires + la box sans-fil
+      if (filaireBoxes.length < 6 || sansFillBoxes.length === 0) return null;
+      return { ...slot, boxes: filaireBoxes, boxesSansFil: sansFillBoxes.slice(0, 1) };
+    }
+
+    const { data, error } = await supabase.rpc('get_boxes_disponibles', {
+      p_debut: slot.debut.toISOString(),
+      p_fin_blocage: slot.finBlocage.toISOString(),
+      p_vr_type: selectedVrType,
+    });
+    const isAvailable = selectedVrType === 'sans_fil' ? data?.length > 0 : data?.length >= selectedNb;
+    if (error || !data || !isAvailable) return null;
+    return { ...slot, boxes: data };
+  }
+
+  function renderSlots(slots) {
+    const grid = document.getElementById('slots-grid');
+    grid.innerHTML = '';
+    grid.classList.remove('hidden');
+    const total = appConfig.nb_boxes;
+
+    slots.forEach(slot => {
+      const time = slot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      let ratio, caption;
+      if (selectedVrType === 'both') {
+        ratio = 1;
+        caption = 'Disponible';
+      } else if (selectedVrType === 'sans_fil') {
+        ratio = slot.boxes.length > 0 ? 1 : 0;
+        caption = 'Disponible';
+      } else {
+        ratio = slot.boxes.length / total;
+        caption = `${slot.boxes.length} / ${total} box${slot.boxes.length > 1 ? 'es' : ''}`;
+      }
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = slotBtnClass(false, ratio);
+      btn.innerHTML = `
+        <span class="block text-base font-semibold">${time}</span>
+        <span class="block text-xs mt-0.5 opacity-75">${caption}</span>
+      `;
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('button').forEach((b) => {
+          const s = slots.find(sl => sl === (b as any)._slot);
+          let r = 1;
+          if (s && selectedVrType !== 'both' && selectedVrType !== 'sans_fil') {
+            r = s.boxes.length / total;
+          }
+          b.className = slotBtnClass(false, r);
+        });
+        btn.className = slotBtnClass(true, ratio);
+        selectedSlot = slot;
+        setTimeout(() => showStep3Summary(), 200);
+      });
+      (btn as any)._slot = slot;
+      grid.appendChild(btn);
+    });
+  }
+
+  function showStep3Summary() {
+    const { debut, fin } = selectedSlot;
+    const dateFmt = debut.toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const vrLabel3 = selectedVrType === 'both'
+      ? '🔌 VR Filaire + 📡 VR Sans Fil'
+      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+
+    document.getElementById('step3-summary').innerHTML =
+      `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
+      `⏰ ${h1} → ${h2} (1 heure)<br>` +
+      `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${vrLabel3}`;
+
+    showStep(3);
+  }
+
+  // ── Étape 3 : Soumission ──────────────────────────────────────────────────
+  async function handleSubmit(e) {
+    e.preventDefault();
+    hideError('form-error');
+
+    const nom = (document.getElementById('client-nom') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('client-email') as HTMLInputElement).value.trim();
+    const tel = (document.getElementById('client-telephone') as HTMLInputElement).value.trim();
+    const notes = (document.getElementById('client-notes') as HTMLTextAreaElement).value.trim();
+
+    if (!nom || !email || !tel) {
+      showError('form-error', 'Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      showError('form-error', 'Adresse email invalide.');
+      return;
+    }
+    if (!isValidPhone(tel)) {
+      showError('form-error', 'Numéro de téléphone invalide (format français attendu).');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Réservation en cours...';
+
+    try {
+      // Vérification finale de disponibilité (anti-race condition)
+      let finalBoxes = [], finalBoxesSansFil = [];
+
+      if (selectedVrType === 'both') {
+        const [fr, sfr] = await Promise.all([
+          supabase.rpc('get_boxes_disponibles', {
+            p_debut: selectedSlot.debut.toISOString(),
+            p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+            p_vr_type: 'filaire',
+          }),
+          supabase.rpc('get_boxes_disponibles', {
+            p_debut: selectedSlot.debut.toISOString(),
+            p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+            p_vr_type: 'sans_fil',
+          }),
+        ]);
+        if (fr.error || sfr.error || (fr.data?.length ?? 0) < 6 || !(sfr.data?.length > 0)) {
+          showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
+          btn.disabled = false;
+          btn.textContent = 'Confirmer la réservation';
+          return;
+        }
+        finalBoxes = fr.data;
+        finalBoxesSansFil = sfr.data.slice(0, 1);
+      } else {
+        const { data: boxes, error: checkErr } = await supabase.rpc('get_boxes_disponibles', {
+          p_debut: selectedSlot.debut.toISOString(),
+          p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+          p_vr_type: selectedVrType,
+        });
+        const enoughBoxes = selectedVrType === 'sans_fil' ? boxes?.length > 0 : boxes?.length >= selectedNb;
+        if (checkErr || !boxes || !enoughBoxes) {
+          showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
+          btn.disabled = false;
+          btn.textContent = 'Confirmer la réservation';
+          return;
+        }
+        finalBoxes = selectedVrType === 'sans_fil' ? boxes.slice(0, 1) : boxes.slice(0, selectedNb);
+      }
+
+      // Créer la réservation
+      const { data: res, error: resErr } = await supabase
+        .from('reservations')
+        .insert({
+          client_nom: nom,
+          client_email: email,
+          client_telephone: tel,
+          nb_personnes: selectedNb,
+          duree_minutes: selectedDuree.duree_minutes,
+          creneau_debut: selectedSlot.debut.toISOString(),
+          creneau_fin: selectedSlot.fin.toISOString(),
+          creneau_fin_blocage: selectedSlot.finBlocage.toISOString(),
+          statut: 'confirmée',
+          notes: notes || null,
+        })
+        .select()
+        .single();
+
+      if (resErr) throw resErr;
+
+      // Attribuer les boxes (filaire + sans-fil si 'both')
+      const allBoxes = selectedVrType === 'both'
+        ? [...finalBoxes, ...finalBoxesSansFil]
+        : finalBoxes;
+
+      const { error: boxErr } = await supabase
+        .from('reservation_boxes')
+        .insert(allBoxes.map(b => ({ reservation_id: res.id, box_id: b.box_id })));
+
+      if (boxErr) throw boxErr;
+
+      const vrTypeEmail = selectedVrType === 'both' ? 'filaire + sans_fil' : selectedVrType;
+      const boxNamesEmail = allBoxes.map(b => b.box_nom).join(', ');
+
+      fetch('/api/reservation-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_nom: res.client_nom,
+          client_email: res.client_email,
+          client_telephone: res.client_telephone,
+          nb_personnes: res.nb_personnes,
+          duree_minutes: res.duree_minutes,
+          vr_type: vrTypeEmail,
+          creneau_debut: res.creneau_debut,
+          creneau_fin: res.creneau_fin,
+          box_names: boxNamesEmail,
+          ref: res.id.split('-')[0].toUpperCase(),
+          notes: res.notes ?? null,
+        }),
+      }).catch(err => console.error('Email notification failed:', err));
+
+      const h1 = selectedSlot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      fetch('/api/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '🎂 Réservation anniversaire',
+          body: `${nom} — ${selectedNb} pers. — ${h1}`,
+          url: '/admin/reservations',
+        }),
+      }).catch(() => {});
+
+      showConfirmation(res, allBoxes);
+    } catch (err) {
+      console.error(err);
+      showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
+      btn.disabled = false;
+      btn.textContent = 'Confirmer la réservation';
+    }
+  }
+
+  function showConfirmation(res, boxes) {
+    const { debut, fin } = selectedSlot;
+    const dateFmt = debut.toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const boxNames = boxes.map(b => b.box_nom).join(', ');
+    const ref = res.id.split('-')[0].toUpperCase();
+    const vrLabel = selectedVrType === 'both'
+      ? '🔌 VR Filaire + 📡 VR Sans Fil'
+      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+
+    document.getElementById('confirmation-card').innerHTML = `
+      <div class="flex justify-between items-center pb-3 border-b border-gray-700">
+        <span class="text-gray-400">Référence</span>
+        <span class="text-white font-mono font-bold">#${ref}</span>
+      </div>
+      <div class="flex justify-between pt-3">
+        <span class="text-gray-400">Nom</span>
+        <span class="text-white">${esc(res.client_nom)}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Date</span>
+        <span class="text-white">${dateFmt}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Horaire</span>
+        <span class="text-white">${h1} → ${h2}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Joueurs</span>
+        <span class="text-white">${selectedNb}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Espaces</span>
+        <span class="text-white">${vrLabel}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Box${boxes.length > 1 ? 'es' : ''}</span>
+        <span class="text-white">${esc(boxNames)}</span>
+      </div>
+    `;
+
+    showStep(4);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidPhone(v) {
+    return /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/.test(v.trim());
+  }
+  function showStep(n) {
+    [1, 2, 3, 4].forEach(i => {
+      document.getElementById(`step-${i}`).classList.toggle('hidden', i !== n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function hideError(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  function dateAtMinutes(dateStr, totalMin) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setHours(Math.floor(totalMin / 60), totalMin % 60, 0, 0);
+    return d;
+  }
+  function esc(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function nbBtnClass(active) {
+    return active
+      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white font-bold text-lg transition-all'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-lg transition-all hover:border-blue-400';
+  }
+  function vrTypeBtnClass(active) {
+    return active
+      ? 'py-4 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center transition-all'
+      : 'py-4 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-blue-400';
+  }
+  function slotBtnClass(active, ratio = 1) {
+    if (active) {
+      return 'py-3 px-2 text-center rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white transition-all';
+    }
+    const color = ratio > 0.5
+      ? 'border-green-700 hover:border-green-500'
+      : ratio > 0.25
+        ? 'border-yellow-700 hover:border-yellow-500'
+        : 'border-orange-700 hover:border-orange-500';
+    return `py-3 px-2 text-center rounded-xl border-2 ${color} text-white transition-all hover:bg-white/5`;
+  }
+
+  // ── Démarrage ─────────────────────────────────────────────────────────────
+  init();
+</script>

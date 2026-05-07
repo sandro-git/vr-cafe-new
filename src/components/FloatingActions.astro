@@ -7,17 +7,17 @@ const {
 const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 ---
 
-<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-white dark:bg-gray-900 rounded-full shadow-lg px-3 py-2 w-[90vw] max-w-lg md:w-auto">
   <!-- Bouton Réserver -->
   <a
     href="/reservation"
-    class="inline-flex items-center gap-2 rounded-full bg-blue-700 hover:bg-blue-800 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"
+    class="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-blue-700 hover:bg-blue-800 px-6 h-12 text-base font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"
     aria-label="Réserver une session VR au VR Café"
   >
     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
-    Réserver
+    RÉSERVER
   </a>
 
   <!-- Bouton WhatsApp -->
@@ -26,7 +26,7 @@ const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(mess
     target="_blank"
     rel="noopener noreferrer"
     id="whatsapp-button"
-    class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800"
+    class="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800"
     aria-label="Contacter via WhatsApp"
   >
     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
