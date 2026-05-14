@@ -17,6 +17,15 @@ const { title, description, canonical, ogImage } = Astro.props;
 <html lang="fr" class="smooth scroll-smooth pt-16 dark">
   <BaseHead title={title} description={description} canonical={canonical} ogImage={ogImage} />
   <body class="dark:bg-gray-800">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-NJ2HQDKS"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"></iframe></noscript
+    >
+    <!-- End Google Tag Manager (noscript) -->
     <NavBar />
     <main>
       <slot />
@@ -33,13 +42,5 @@ const { title, description, canonical, ogImage } = Astro.props;
         scroll-padding-top: var(--navHeight);
       }
     </style>
-  </body><!-- Google Tag Manager (noscript) -->
-  <noscript
-    ><iframe
-      src="https://www.googletagmanager.com/ns.html?id=GTM-NJ2HQDKS"
-      height="0"
-      width="0"
-      style="display:none;visibility:hidden"></iframe></noscript
-  >
-  <!-- End Google Tag Manager (noscript) -->
+  </body>
 </html>

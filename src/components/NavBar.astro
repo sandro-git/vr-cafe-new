@@ -339,7 +339,7 @@ const isOccasionsSubmenu =
 
   // Fonction pour fermer tous les dropdowns
   function closeAllDropdowns() {
-    document.querySelectorAll("[data-dropdown]").forEach((btn) => {
+    dropdownButtons.forEach((btn) => {
       const dropdownId = btn.getAttribute("data-dropdown");
       const dropdown = dropdownId ? document.getElementById(dropdownId) : null;
       const arrow = btn.querySelector(".dropdown-arrow");

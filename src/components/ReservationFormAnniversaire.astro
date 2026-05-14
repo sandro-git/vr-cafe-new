@@ -368,9 +368,7 @@ import DatePicker from "./DatePicker.astro";
     const dateFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long',
     });
-    const vrLabel = selectedVrType === 'both'
-      ? '🔌 Filaire + 📡 Sans Fil'
-      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+    const vrLabel = getVrLabel(selectedVrType);
     document.getElementById('step2-summary').innerHTML =
       `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; 1 heure &nbsp;·&nbsp; ${vrLabel}`;
 
@@ -512,9 +510,7 @@ import DatePicker from "./DatePicker.astro";
     });
     const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const vrLabel3 = selectedVrType === 'both'
-      ? '🔌 VR Filaire + 📡 VR Sans Fil'
-      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+    const vrLabel3 = getVrLabel(selectedVrType);
 
     document.getElementById('step3-summary').innerHTML =
       `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
@@ -673,9 +669,7 @@ import DatePicker from "./DatePicker.astro";
     const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const boxNames = boxes.map(b => b.box_nom).join(', ');
     const ref = res.id.split('-')[0].toUpperCase();
-    const vrLabel = selectedVrType === 'both'
-      ? '🔌 VR Filaire + 📡 VR Sans Fil'
-      : selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
+    const vrLabel = getVrLabel(selectedVrType);
 
     document.getElementById('confirmation-card').innerHTML = `
       <div class="flex justify-between items-center pb-3 border-b border-gray-700">
@@ -712,6 +706,11 @@ import DatePicker from "./DatePicker.astro";
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  function getVrLabel(type) {
+    if (type === 'both') return '🔌 VR Filaire + 📡 VR Sans Fil';
+    if (type === 'sans_fil') return '📡 VR Sans Fil';
+    return '🔌 VR Filaire';
+  }
   function isValidEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
   }

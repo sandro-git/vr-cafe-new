@@ -25,9 +25,13 @@ export const GAME_BY_SLUG_QUERY = defineQuery(`*[_type == "games" && slug.curren
 }`);
 
 export const AVIS_QUERY = defineQuery(
-  `*[_type == "avis" && afficher == true] | order(dateVisite desc) {
+  `*[_type == "avis" && afficher == true] | order(dateVisite desc) [0...12] {
     prenom, note, commentaire, dateVisite
   }`
+);
+
+export const TARIF_ANNIVERSAIRE_QUERY = defineQuery(
+  `*[_type == "tarif" && type == "anniversaire"][0] { _id, name, prix, features }`
 );
 
 export const CONFIG_QUERY = defineQuery(

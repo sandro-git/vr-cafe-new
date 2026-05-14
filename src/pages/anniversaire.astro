@@ -1,7 +1,8 @@
 ---
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { sanityClient } from "sanity:client";
+import { loadQuery } from "../sanity/lib/load-query";
+import { TARIF_ANNIVERSAIRE_QUERY } from "../sanity/lib/queries";
 
 type Tarif = {
   _id: string;
@@ -10,9 +11,7 @@ type Tarif = {
   features?: string[];
 };
 
-const tarifAnniversaire = await sanityClient.fetch<Tarif | null>(
-  `*[_type == "tarif" && type == "anniversaire"][0] { _id, name, prix, features }`
-);
+const { data: tarifAnniversaire } = await loadQuery<Tarif | null>({ query: TARIF_ANNIVERSAIRE_QUERY });
 ---
 
 <BaseLayout
