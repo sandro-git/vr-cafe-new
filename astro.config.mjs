@@ -17,7 +17,7 @@ export default defineConfig({
     {
       projectId: '0oshw5tf',
       dataset: 'production',
-      useCdn: true,
+      useCdn: import.meta.env.PROD,
       apiVersion: "2025-01-28",
     }), react(), sitemap({
     filter: (page) => !page.includes('/admin/') && !page.includes('/studio'),
