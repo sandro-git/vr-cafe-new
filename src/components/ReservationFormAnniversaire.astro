@@ -601,6 +601,7 @@ import DatePicker from "./DatePicker.astro";
           creneau_fin: selectedSlot.fin.toISOString(),
           creneau_fin_blocage: selectedSlot.finBlocage.toISOString(),
           statut: 'confirmée',
+          type_reservation: 'anniversaire',
           notes: notes || null,
         })
         .select()

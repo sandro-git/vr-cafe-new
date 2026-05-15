@@ -75,6 +75,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(109,40,217,0.6);border:1px solid #8b5cf6;"></span>
           Filaire ≤ 30 min
         </span>
+        <span class="flex items-center gap-1.5">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(219,39,119,0.6);border:1px solid #f472b6;"></span>
+          🎂 Anniversaire
+        </span>
       </div>
 
       <!-- Vue Semaine -->
@@ -432,6 +436,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   function statusClass(res) {
+    if (res.type_reservation === 'anniversaire') return 'bg-pink-700/60 border-pink-400 text-pink-100';
     if (isSansFil(res)) return 'bg-emerald-700/60 border-emerald-500 text-emerald-100';
     return res.duree_minutes <= 30
       ? 'bg-violet-700/60 border-violet-500 text-violet-100'
@@ -464,7 +469,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       .from('reservations')
       .select(`
         id, creneau_debut, creneau_fin, duree_minutes,
-        client_nom, client_email, client_telephone, nb_personnes, statut, notes,
+        client_nom, client_email, client_telephone, nb_personnes, statut, notes, type_reservation,
         reservation_boxes ( box_id, boxes ( nom, type ) )
       `)
       .gte('creneau_debut', start.toISOString())
@@ -611,15 +616,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
         bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
         bloc.innerHTML = `
-          <span class="font-semibold truncate block">${esc(res.client_nom)}</span>
+          <span class="font-semibold truncate block">${res.type_reservation === 'anniversaire' ? '🎂 ' : ''}${esc(res.client_nom)}</span>
           <span class="opacity-75 block">${formatTime(debut)}</span>
           ${height >= 72 ? `<span class="opacity-60 block">👥${res.nb_personnes} · ${res.duree_minutes}min</span>` : ''}
         `;
         bloc.addEventListener('click', () => openModal(res));
         colEls[Number(d)].appendChild(bloc);
-        if (BUFFER_MIN > 0) {
+        const bufMin = res.type_reservation === 'anniversaire' ? 60 : BUFFER_MIN;
+        if (bufMin > 0) {
           const buf = document.createElement('div');
-          buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:${left};width:${width};height:${(BUFFER_MIN / 30) * ROW_H - 2}px;pointer-events:none;`;
+          buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:${left};width:${width};height:${(bufMin / 30) * ROW_H - 2}px;pointer-events:none;`;
           buf.className = 'rounded-sm border border-dashed border-gray-500/50 bg-gray-700/20';
           colEls[Number(d)].appendChild(buf);
         }
@@ -729,16 +735,17 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         bloc.style.cssText = `position:absolute;top:${top}px;left:4px;right:4px;height:${height}px;pointer-events:auto;overflow:hidden;`;
         bloc.className = `rounded border px-2 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
         bloc.innerHTML = `
-          <div class="font-semibold truncate">${esc(res.client_nom)}</div>
+          <div class="font-semibold truncate">${res.type_reservation === 'anniversaire' ? '🎂 ' : ''}${esc(res.client_nom)}</div>
           <div class="opacity-80 mt-0.5">👥 ${res.nb_personnes} · ${res.duree_minutes} min</div>
           <div class="opacity-70">${formatTime(debut)}</div>
         `;
         bloc.addEventListener('click', () => openModal(res));
         if (colEls[colIdx]) {
           colEls[colIdx].appendChild(bloc);
-          if (BUFFER_MIN > 0) {
+          const bufMin = res.type_reservation === 'anniversaire' ? 60 : BUFFER_MIN;
+          if (bufMin > 0) {
             const buf = document.createElement('div');
-            buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:4px;right:4px;height:${(BUFFER_MIN / 30) * ROW_H - 2}px;pointer-events:none;`;
+            buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:4px;right:4px;height:${(bufMin / 30) * ROW_H - 2}px;pointer-events:none;`;
             buf.className = 'rounded-sm border border-dashed border-gray-500/50 bg-gray-700/20';
             colEls[colIdx].appendChild(buf);
           }

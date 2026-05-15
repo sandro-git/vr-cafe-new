@@ -128,7 +128,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const { data, error } = await supabase
       .from('reservations')
       .select(`
-        *,
+        *, type_reservation,
         reservation_boxes (
           box_id,
           boxes ( nom, type )
@@ -179,7 +179,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       const { h1, h2, boxNames, badge } = resDisplay(res);
 
       const tr = document.createElement('tr');
-      tr.className = 'text-gray-300 hover:bg-gray-700/30 transition-colors';
+      tr.className = `text-gray-300 transition-colors ${res.type_reservation === 'anniversaire' ? 'bg-pink-950/30 hover:bg-pink-950/50' : 'hover:bg-gray-700/30'}`;
       tr.dataset.id = res.id;
       tr.innerHTML = `
         <td class="px-5 py-4">
@@ -187,7 +187,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <span class="text-gray-500"> → ${h2}</span>
         </td>
         <td class="px-5 py-4">
-          <p class="font-medium text-white">${esc(res.client_nom)}</p>
+          <p class="font-medium text-white">
+            ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-pink-900/60 text-pink-300 border border-pink-700">🎂 Anniv.</span>' : ''}${esc(res.client_nom)}
+          </p>
           ${res.notes ? `<p class="text-gray-500 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
         </td>
         <td class="px-5 py-4">
@@ -224,7 +226,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       const { h1, h2, boxNames, badge } = resDisplay(res);
 
       const card = document.createElement('div');
-      card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5';
+      card.className = `rounded-2xl p-5 border ${res.type_reservation === 'anniversaire' ? 'bg-pink-950/40 border-pink-800/60' : 'bg-gray-700/40 border-gray-600'}`;
       card.dataset.id = res.id;
       card.innerHTML = `
         <div class="flex items-start justify-between mb-3">
@@ -234,6 +236,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           </div>
           <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
         </div>
+        ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-semibold bg-pink-900/60 text-pink-300 border border-pink-700">🎂 Anniversaire</span>' : ''}
         <p class="font-medium text-white mb-1">${esc(res.client_nom)}</p>
         <p class="text-gray-400 text-sm">${esc(res.client_email)}</p>
         <p class="text-gray-400 text-sm">${esc(res.client_telephone)}</p>
