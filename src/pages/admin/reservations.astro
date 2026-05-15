@@ -305,13 +305,21 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     /** @type {HTMLButtonElement} */ (btn).disabled = true;
     btn.textContent = '...';
 
-    const res = await fetch('/api/admin/db', {
+    const httpRes = await fetch('/api/admin/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update_reservation', id, fields: { statut: newStatut } }),
     });
-    const result = await res.json();
-    const error = res.ok ? null : result;
+    let result;
+    try {
+      result = await httpRes.json();
+    } catch {
+      btn.disabled = false;
+      btn.textContent = newStatut === 'annulée' ? 'Annuler' : 'No-show';
+      showError('Erreur serveur — impossible de contacter l\'API');
+      return;
+    }
+    const error = httpRes.ok ? null : result;
 
     if (error) {
       btn.disabled = false;
