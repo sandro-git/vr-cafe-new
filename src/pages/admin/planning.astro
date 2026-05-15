@@ -271,6 +271,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
+            <div id="edit-vr-type-auto" class="hidden mt-3 px-4 py-3 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200">
+              🎉 Pour les groupes de plus de 6 personnes, nous réservons automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
+            </div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
@@ -1015,6 +1018,24 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-lg transition-all hover:border-blue-400';
   }
 
+  function updateEditVrTypeForNb(nb, isAnniv) {
+    const grid = document.getElementById('edit-vr-type-grid');
+    const autoMsg = document.getElementById('edit-vr-type-auto');
+    if (isAnniv && nb > 6) {
+      grid.classList.add('hidden');
+      autoMsg.classList.remove('hidden');
+      editSelectedVrType = 'both';
+    } else {
+      grid.classList.remove('hidden');
+      autoMsg.classList.add('hidden');
+      if (editSelectedVrType === 'both') {
+        const fallback = modalRes?.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
+        editSelectedVrType = fallback;
+        setupEditVrType(fallback);
+      }
+    }
+  }
+
   function setupEditNbPersonnes(currentNb, isAnniv) {
     const min = isAnniv ? 5 : 1;
     const max = isAnniv ? 12 : 6;
@@ -1032,9 +1053,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         grid.querySelectorAll('button').forEach((b, idx) => {
           b.className = nbEditBtnClass(idx + min === i);
         });
+        updateEditVrTypeForNb(i, isAnniv);
       });
       grid.appendChild(btn);
     }
+    updateEditVrTypeForNb(editSelectedNb, isAnniv);
   }
 
   function populateHeures(selectedDate) {
@@ -1173,6 +1196,53 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const bufMin = typeResa === 'anniversaire' ? 60 : BUFFER_MIN;
 
     const newFinBlocage = new Date(newFin.getTime() + bufMin * 60000);
+
+    // Cas anniversaire >6 : les deux espaces VR simultanément
+    if (editSelectedVrType === 'both') {
+      const [fr, sfr] = await Promise.all([
+        supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'filaire' }),
+        supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'sans_fil' }),
+      ]);
+      if (fr.error || sfr.error || (fr.data?.length ?? 0) < 6 || !(sfr.data?.length > 0)) {
+        const errEl = document.getElementById('modal-edit-error');
+        errEl.textContent = 'Les deux espaces VR ne sont pas disponibles sur ce créneau.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Enregistrer';
+        return;
+      }
+      const allBoxIds = [...fr.data.map(b => b.box_id), sfr.data[0].box_id];
+      let saveError = null;
+      try {
+        await adminDb('update_reservation', {
+          id: modalRes.id,
+          fields: {
+            client_nom: document.getElementById('edit-nom').value.trim(),
+            client_email: document.getElementById('edit-email').value.trim(),
+            client_telephone: document.getElementById('edit-telephone').value.trim(),
+            nb_personnes: nbPersonnes,
+            duree_minutes: dureeMin,
+            notes: document.getElementById('edit-notes').value.trim() || null,
+            creneau_debut: newDebut.toISOString(),
+            creneau_fin: newFin.toISOString(),
+            creneau_fin_blocage: newFinBlocage.toISOString(),
+            type_reservation: typeResa,
+          },
+        });
+        await adminDb('reassign_reservation_box', { reservation_id: modalRes.id, box_ids: allBoxIds });
+      } catch (e) { saveError = e; }
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer';
+      if (saveError) {
+        const errEl = document.getElementById('modal-edit-error');
+        errEl.textContent = 'Erreur : ' + saveError.message;
+        errEl.classList.remove('hidden');
+      } else {
+        closeModal();
+        currentView === 'week' ? renderWeek() : renderDay();
+      }
+      return;
+    }
 
     // Si le type VR a changé, vérifier la disponibilité avant de sauvegarder
     if (editSelectedVrType !== currentVrType) {
