@@ -123,31 +123,34 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       <div id="step3-summary" class="mb-6 p-4 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200 leading-relaxed"></div>
 
       <form id="reservation-form" class="space-y-4" novalidate>
-        <div>
+        <div class="relative">
           <label for="client-nom" class="block text-sm font-medium text-gray-300 mb-1.5">Nom complet *</label>
           <input
             type="text" id="client-nom" required placeholder="Jean Dupont"
-            autocomplete="name"
+            autocomplete={mode === 'admin' ? 'off' : 'name'}
             class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
           />
+          {mode === 'admin' && <ul id="client-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
-        <div>
+        <div class="relative">
           <label for="client-email" class="block text-sm font-medium text-gray-300 mb-1.5">Adresse email *</label>
           <input
             type="email" id="client-email" required placeholder="jean@exemple.fr"
-            autocomplete="email"
+            autocomplete={mode === 'admin' ? 'off' : 'email'}
             class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
           />
+          {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
-        <div>
+        <div class="relative">
           <label for="client-telephone" class="block text-sm font-medium text-gray-300 mb-1.5">Téléphone *</label>
           <input
             type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
-            autocomplete="tel"
+            autocomplete={mode === 'admin' ? 'off' : 'tel'}
             class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
           />
+          {mode === 'admin' && <ul id="client-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
         <div>
@@ -190,8 +193,9 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   </div>
 </div>
 
-<script define:vars={{ successRedirect }} is:inline>
+<script define:vars={{ successRedirect, mode }} is:inline>
   window.__anniversaireSuccessRedirect = successRedirect;
+  window.__anniversaireMode = mode;
 </script>
 <script>
   // @ts-nocheck
@@ -778,6 +782,74 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         ? 'border-yellow-700 hover:border-yellow-500'
         : 'border-orange-700 hover:border-orange-500';
     return `py-3 px-2 text-center rounded-xl border-2 ${color} text-white transition-all hover:bg-white/5`;
+  }
+
+  // ── Autocomplete admin ────────────────────────────────────────────────────
+  const mode = window.__anniversaireMode ?? 'client';
+  if (mode === 'admin') {
+    let acTimer = null;
+
+    async function fetchClientSuggestions(field, value) {
+      if (value.length < 2) return [];
+      const col = field === 'nom' ? 'client_nom' : field === 'email' ? 'client_email' : 'client_telephone';
+      const { data } = await supabase
+        .from('reservations')
+        .select('client_nom, client_email, client_telephone')
+        .ilike(col, `%${value}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!data) return [];
+      const seen = new Set();
+      return data.filter(r => {
+        const key = r.client_email || r.client_nom;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function showSuggestions(ulId, suggestions, onSelect) {
+      const ul = document.getElementById(ulId);
+      if (!ul) return;
+      ul.innerHTML = '';
+      if (!suggestions.length) { ul.classList.add('hidden'); return; }
+      suggestions.forEach(s => {
+        const li = document.createElement('li');
+        li.className = 'px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0';
+        li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom ?? '')}</span><span class="text-gray-500 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
+        li.addEventListener('mousedown', e => { e.preventDefault(); onSelect(s); ul.classList.add('hidden'); });
+        ul.appendChild(li);
+      });
+      ul.classList.remove('hidden');
+    }
+
+    function fillClient(s) {
+      (document.getElementById('client-nom') as HTMLInputElement).value = s.client_nom ?? '';
+      (document.getElementById('client-email') as HTMLInputElement).value = s.client_email ?? '';
+      (document.getElementById('client-telephone') as HTMLInputElement).value = s.client_telephone ?? '';
+    }
+
+    function setupAcField(inputId, ulId, field) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.addEventListener('input', e => {
+        clearTimeout(acTimer);
+        const val = (e.target as HTMLInputElement).value.trim();
+        if (val.length < 2) { document.getElementById(ulId)?.classList.add('hidden'); return; }
+        acTimer = setTimeout(async () => {
+          showSuggestions(ulId, await fetchClientSuggestions(field, val), fillClient);
+        }, 250);
+      });
+      input.addEventListener('blur', () => setTimeout(() => document.getElementById(ulId)?.classList.add('hidden'), 150));
+      input.addEventListener('focus', async e => {
+        const val = (e.target as HTMLInputElement).value.trim();
+        if (val.length >= 2) showSuggestions(ulId, await fetchClientSuggestions(field, val), fillClient);
+      });
+    }
+
+    setupAcField('client-nom', 'client-nom-suggestions', 'nom');
+    setupAcField('client-email', 'client-email-suggestions', 'email');
+    setupAcField('client-telephone', 'client-tel-suggestions', 'tel');
   }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
