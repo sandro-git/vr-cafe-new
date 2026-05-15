@@ -253,7 +253,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
-            <input id="edit-nb" type="number" min="1" max="12" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <!-- Durée : standard = sélection, anniversaire = fixe 1h -->
@@ -1035,6 +1035,17 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     document.getElementById('edit-duree-section').classList.toggle('hidden', isAnniv);
     document.getElementById('edit-duree-fixed').classList.toggle('hidden', !isAnniv);
+
+    const nbInput = document.getElementById('edit-nb');
+    if (isAnniv) {
+      nbInput.min = '5';
+      nbInput.max = '12';
+      if (parseInt(nbInput.value) < 5) nbInput.value = '5';
+    } else {
+      nbInput.min = '1';
+      nbInput.max = '6';
+      if (parseInt(nbInput.value) > 6) nbInput.value = '6';
+    }
 
     if (isAnniv) {
       editSelectedDuree = 60;
