@@ -253,7 +253,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
-            <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div id="edit-nb-grid" class="grid grid-cols-6 gap-2"></div>
           </div>
 
           <!-- Durée : standard = sélection, anniversaire = fixe 1h -->
@@ -335,6 +335,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let modalRes = null; // réservation couramment affichée dans le modal
   let editSelectedVrType = null; // type VR sélectionné dans le formulaire d'édition
   let editSelectedDuree = null; // durée sélectionnée dans le formulaire d'édition
+  let editSelectedNb = 1; // nb joueurs sélectionné via les boutons
   let editTypeResa = 'standard'; // type de réservation sélectionné via les onglets
   let dureeOptions = []; // options chargées depuis durees_session
   let periodesVacancesCache = []; // { date_debut, date_fin }[]
@@ -869,6 +870,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
+    editSelectedNb = res.nb_personnes ?? 1;
     const isAnniv = res.type_reservation === 'anniversaire';
     switchEditTab(isAnniv ? 'anniversaire' : 'standard');
     if (!isAnniv) setupEditDuree(res.duree_minutes);
@@ -1008,6 +1010,34 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     });
   }
 
+  function nbEditBtnClass(active) {
+    return active
+      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white font-bold text-lg transition-all'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-lg transition-all hover:border-blue-400';
+  }
+
+  function setupEditNbPersonnes(currentNb, isAnniv) {
+    const min = isAnniv ? 5 : 1;
+    const max = isAnniv ? 12 : 6;
+    editSelectedNb = Math.min(Math.max(currentNb ?? min, min), max);
+    const grid = document.getElementById('edit-nb-grid');
+    grid.className = isAnniv ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-6 gap-2';
+    grid.innerHTML = '';
+    for (let i = min; i <= max; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = String(i);
+      btn.className = nbEditBtnClass(i === editSelectedNb);
+      btn.addEventListener('click', () => {
+        editSelectedNb = i;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = nbEditBtnClass(idx + min === i);
+        });
+      });
+      grid.appendChild(btn);
+    }
+  }
+
   function populateHeures(selectedDate) {
     const sel = document.getElementById('edit-heure');
     sel.innerHTML = '';
@@ -1036,16 +1066,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-duree-section').classList.toggle('hidden', isAnniv);
     document.getElementById('edit-duree-fixed').classList.toggle('hidden', !isAnniv);
 
-    const nbInput = document.getElementById('edit-nb');
-    if (isAnniv) {
-      nbInput.min = '5';
-      nbInput.max = '12';
-      if (parseInt(nbInput.value) < 5) nbInput.value = '5';
-    } else {
-      nbInput.min = '1';
-      nbInput.max = '6';
-      if (parseInt(nbInput.value) > 6) nbInput.value = '6';
-    }
+    if (modalRes) setupEditNbPersonnes(editSelectedNb, isAnniv);
 
     if (isAnniv) {
       editSelectedDuree = 60;
@@ -1148,7 +1169,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       return;
     }
     const currentVrType = modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
-    const nbPersonnes = parseInt(document.getElementById('edit-nb').value);
+    const nbPersonnes = editSelectedNb;
     const typeResa = editTypeResa;
     const bufMin = typeResa === 'anniversaire' ? 60 : BUFFER_MIN;
 
