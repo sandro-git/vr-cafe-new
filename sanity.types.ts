@@ -22,6 +22,160 @@ export type SanityImageAssetReference = {
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
+export type Config = {
+  _id: string;
+  _type: "config";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  nomSite?: string;
+  slogan?: string;
+  email?: string;
+  telephone?: string;
+  adresse?: string;
+  horaires?: Array<{
+    jour?: string;
+    heureOuverture?: string;
+    heureFermeture?: string;
+    ferme?: boolean;
+    _key: string;
+  }>;
+  reseauxSociaux?: {
+    instagram?: string;
+    facebook?: string;
+    tiktok?: string;
+  };
+  noteGoogle?: number;
+  nombreAvis?: number;
+  lienGoogleMaps?: string;
+  logo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
+export type GamesReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "games";
+};
+
+export type Avis = {
+  _id: string;
+  _type: "avis";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  prenom?: string;
+  note?: number;
+  commentaire?: string;
+  dateVisite?: string;
+  jeuReference?: GamesReference;
+  afficher?: boolean;
+};
+
+export type Page = {
+  _id: string;
+  _type: "page";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  slug?: Slug;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+  };
+  content?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+};
+
+export type Slug = {
+  _type: "slug";
+  current?: string;
+  source?: string;
+};
+
+export type Faq = {
+  _id: string;
+  _type: "faq";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  question?: string;
+  reponse?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  categorie?: "reservation" | "pratique" | "technique" | "groupes";
+  ordre?: number;
+};
+
+export type Tarif = {
+  _id: string;
+  _type: "tarif";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  type?: "session_30min" | "session_1h" | "anniversaire";
+  prix?: number;
+  badge?: string;
+  features?: Array<string>;
+  ordre?: number;
+};
+
 export type TagReference = {
   _ref: string;
   _type: "reference";
@@ -60,9 +214,11 @@ export type Games = {
   duration?: string;
   difficulty?: number;
   age?: string;
-  tags?: Array<{
-    _key: string;
-  } & TagReference>;
+  tags?: Array<
+    {
+      _key: string;
+    } & TagReference
+  >;
 };
 
 export type Editeur = {
@@ -81,28 +237,6 @@ export type Tag = {
   _updatedAt: string;
   _rev: string;
   title?: string;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
-};
-
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -202,17 +336,70 @@ export type Geopoint = {
   alt?: number;
 };
 
-export type AllSanitySchemaTypes = SanityImageAssetReference | TagReference | EditeurReference | Games | Editeur | Tag | SanityImageCrop | SanityImageHotspot | Slug | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageMetadata | SanityFileAsset | SanityAssetSourceData | SanityImageAsset | Geopoint;
+export type AllSanitySchemaTypes =
+  | SanityImageAssetReference
+  | Config
+  | SanityImageCrop
+  | SanityImageHotspot
+  | GamesReference
+  | Avis
+  | Page
+  | Slug
+  | Faq
+  | Tarif
+  | TagReference
+  | EditeurReference
+  | Games
+  | Editeur
+  | Tag
+  | SanityImagePaletteSwatch
+  | SanityImagePalette
+  | SanityImageDimensions
+  | SanityImageMetadata
+  | SanityFileAsset
+  | SanityAssetSourceData
+  | SanityImageAsset
+  | Geopoint;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: FAQS_QUERY
 // Query: *[_type == "faq"] | order(ordre asc) { question, reponse, categorie, ordre }
-export type FAQS_QUERY_RESULT = Array<never>;
+export type FAQS_QUERY_RESULT = Array<{
+  question: string | null;
+  reponse: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }> | null;
+  categorie: "groupes" | "pratique" | "reservation" | "technique" | null;
+  ordre: number | null;
+}>;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: TARIFS_QUERY
 // Query: *[_type == "tarif"] | order(ordre asc) { _id, name, prix, description, isPromo, nbJoueurs, dureeMinutes }
-export type TARIFS_QUERY_RESULT = Array<never>;
+export type TARIFS_QUERY_RESULT = Array<{
+  _id: string;
+  name: string | null;
+  prix: number | null;
+  description: null;
+  isPromo: null;
+  nbJoueurs: null;
+  dureeMinutes: null;
+}>;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: GAME_PATHS_QUERY
@@ -251,6 +438,25 @@ export type GAME_BY_SLUG_QUERY_RESULT = {
 } | null;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
+// Variable: AVIS_QUERY
+// Query: *[_type == "avis" && afficher == true] | order(dateVisite desc) {    prenom, note, commentaire, dateVisite  }
+export type AVIS_QUERY_RESULT = Array<{
+  prenom: string | null;
+  note: number | null;
+  commentaire: string | null;
+  dateVisite: string | null;
+}>;
+
+// Source: ../vr-cafe-new/src/sanity/lib/queries.ts
+// Variable: CONFIG_QUERY
+// Query: *[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }
+export type CONFIG_QUERY_RESULT = {
+  noteGoogle: number | null;
+  nombreAvis: number | null;
+  lienGoogleMaps: string | null;
+} | null;
+
+// Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: JEUX_VR_QUERY
 // Query: *[_type == "games" && tag->title == "jeuxVR"]{  name,  description,  image{    alt,    asset->{url}  },  tag->{name},  slug}
 export type JEUX_VR_QUERY_RESULT = Array<{
@@ -272,11 +478,12 @@ export type JEUX_VR_QUERY_RESULT = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    "*[_type == \"faq\"] | order(ordre asc) { question, reponse, categorie, ordre }": FAQS_QUERY_RESULT;
-    "*[_type == \"tarif\"] | order(ordre asc) { _id, name, prix, description, isPromo, nbJoueurs, dureeMinutes }": TARIFS_QUERY_RESULT;
-    "*[_type == \"games\"] { slug }": GAME_PATHS_QUERY_RESULT;
-    "*[_type == \"games\" && slug.current == $slug][0]{\n  name,\n  description,\n  youtubeLink,\n  slug,\n  image,\n  tag->{name, title},\n  players,\n  duration,\n  difficulty,\n  age,\n  tags[]->{title}\n}": GAME_BY_SLUG_QUERY_RESULT;
-    "*[_type == \"games\" && tag->title == \"jeuxVR\"]{\n  name,\n  description,\n  image{\n    alt,\n    asset->{url}\n  },\n  tag->{name},\n  slug\n}": JEUX_VR_QUERY_RESULT;
+    '*[_type == "faq"] | order(ordre asc) { question, reponse, categorie, ordre }': FAQS_QUERY_RESULT;
+    '*[_type == "tarif"] | order(ordre asc) { _id, name, prix, description, isPromo, nbJoueurs, dureeMinutes }': TARIFS_QUERY_RESULT;
+    '*[_type == "games"] { slug }': GAME_PATHS_QUERY_RESULT;
+    '*[_type == "games" && slug.current == $slug][0]{\n  name,\n  description,\n  youtubeLink,\n  slug,\n  image,\n  tag->{name, title},\n  players,\n  duration,\n  difficulty,\n  age,\n  tags[]->{title}\n}': GAME_BY_SLUG_QUERY_RESULT;
+    '*[_type == "avis" && afficher == true] | order(dateVisite desc) {\n    prenom, note, commentaire, dateVisite\n  }': AVIS_QUERY_RESULT;
+    '*[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }': CONFIG_QUERY_RESULT;
+    '*[_type == "games" && tag->title == "jeuxVR"]{\n  name,\n  description,\n  image{\n    alt,\n    asset->{url}\n  },\n  tag->{name},\n  slug\n}': JEUX_VR_QUERY_RESULT;
   }
 }
-
