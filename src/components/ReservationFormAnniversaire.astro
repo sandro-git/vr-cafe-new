@@ -1,5 +1,11 @@
 ---
 import DatePicker from "./DatePicker.astro";
+
+interface Props {
+  mode?: 'client' | 'admin';
+}
+const { mode = 'client' } = Astro.props;
+const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 ---
 
 <div class="min-h-screen py-12 px-4 sm:px-6">
@@ -7,7 +13,9 @@ import DatePicker from "./DatePicker.astro";
 
     <!-- En-tête -->
     <div class="text-center mb-10">
-      <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Réserver Votre Anniversaire</h1>
+      <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">
+        {mode === 'admin' ? 'Nouvelle réservation · Anniversaire' : 'Réserver Votre Anniversaire'}
+      </h1>
       <p class="text-gray-400">VR Café · Canet-en-Roussillon</p>
     </div>
 
@@ -182,6 +190,9 @@ import DatePicker from "./DatePicker.astro";
   </div>
 </div>
 
+<script define:vars={{ successRedirect }} is:inline>
+  window.__anniversaireSuccessRedirect = successRedirect;
+</script>
 <script>
   // @ts-nocheck
   import { createClient } from '@supabase/supabase-js';
@@ -652,6 +663,10 @@ import DatePicker from "./DatePicker.astro";
         }),
       }).catch(() => {});
 
+      if (window.__anniversaireSuccessRedirect) {
+        window.location.href = window.__anniversaireSuccessRedirect;
+        return;
+      }
       showConfirmation(res, allBoxes);
     } catch (err) {
       console.error(err);
