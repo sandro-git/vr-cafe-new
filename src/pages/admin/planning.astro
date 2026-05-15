@@ -867,7 +867,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-nom').value = res.client_nom ?? '';
     document.getElementById('edit-email').value = res.client_email ?? '';
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
-    document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     editSelectedNb = res.nb_personnes ?? 1;
