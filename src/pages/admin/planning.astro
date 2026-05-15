@@ -252,6 +252,19 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Type de réservation</label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer bg-gray-700/60 hover:bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-900/30">
+                <input type="radio" name="edit-type-resa" value="standard" id="edit-type-resa-standard" class="accent-blue-500">
+                <span class="text-white text-sm">🎮 Standard</span>
+              </label>
+              <label class="flex items-center gap-2.5 cursor-pointer bg-gray-700/60 hover:bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 transition-colors has-[:checked]:border-pink-500 has-[:checked]:bg-pink-900/30">
+                <input type="radio" name="edit-type-resa" value="anniversaire" id="edit-type-resa-anniversaire" class="accent-pink-500">
+                <span class="text-white text-sm">🎂 Anniversaire</span>
+              </label>
+            </div>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
             <textarea id="edit-notes" rows="2" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
           </div>
@@ -848,6 +861,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-notes').value = res.notes ?? '';
     setupEditDuree(res.duree_minutes);
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
+    const isAnniv = res.type_reservation === 'anniversaire';
+    document.getElementById('edit-type-resa-standard').checked = !isAnniv;
+    document.getElementById('edit-type-resa-anniversaire').checked = isAnniv;
     document.getElementById('modal-edit-error').classList.add('hidden');
 
     // Afficher vue détail
@@ -1092,6 +1108,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
     const currentVrType = modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
     const nbPersonnes = parseInt(document.getElementById('edit-nb').value);
+    const typeResa = document.querySelector('input[name="edit-type-resa"]:checked')?.value ?? modalRes.type_reservation ?? 'standard';
 
     // Si le type VR a changé, vérifier la disponibilité avant de sauvegarder
     if (editSelectedVrType !== currentVrType) {
@@ -1130,6 +1147,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             creneau_debut: newDebut.toISOString(),
             creneau_fin: newFin.toISOString(),
             creneau_fin_blocage: newFinBlocage.toISOString(),
+            type_reservation: typeResa,
           },
         });
         await adminDb('reassign_reservation_box', {
@@ -1166,6 +1184,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           creneau_debut: newDebut.toISOString(),
           creneau_fin: newFin.toISOString(),
           creneau_fin_blocage: newFinBlocage.toISOString(),
+          type_reservation: typeResa,
         },
       });
     } catch (e) {
