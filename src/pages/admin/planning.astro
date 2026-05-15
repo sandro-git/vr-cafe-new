@@ -1199,19 +1199,38 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     // Cas anniversaire >6 : les deux espaces VR simultanément
     if (editSelectedVrType === 'both') {
-      const [fr, sfr] = await Promise.all([
-        supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'filaire' }),
-        supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'sans_fil' }),
-      ]);
-      if (fr.error || sfr.error || (fr.data?.length ?? 0) < 6 || !(sfr.data?.length > 0)) {
-        const errEl = document.getElementById('modal-edit-error');
-        errEl.textContent = 'Les deux espaces VR ne sont pas disponibles sur ce créneau.';
-        errEl.classList.remove('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Enregistrer';
-        return;
+      // Pour une modification, on ne vérifie que les types pas encore assignés à cette réservation
+      const assignedTypes = new Set(modalRes.reservation_boxes?.map(rb => rb.boxes?.type).filter(Boolean) ?? []);
+      const needFilaire = !assignedTypes.has('filaire');
+      const needSansFil = !assignedTypes.has('sans_fil');
+
+      let filaireBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'filaire').map(rb => ({ box_id: rb.box_id })) ?? [];
+      let sansFillBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'sans_fil').map(rb => ({ box_id: rb.box_id })) ?? [];
+
+      if (needFilaire) {
+        const { data, error } = await supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'filaire' });
+        if (error || (data?.length ?? 0) < 6) {
+          const errEl = document.getElementById('modal-edit-error');
+          errEl.textContent = 'L\'espace VR Filaire n\'est pas disponible sur ce créneau.';
+          errEl.classList.remove('hidden');
+          btn.disabled = false; btn.textContent = 'Enregistrer';
+          return;
+        }
+        filaireBoxes = data;
       }
-      const allBoxIds = [...fr.data.map(b => b.box_id), sfr.data[0].box_id];
+      if (needSansFil) {
+        const { data, error } = await supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'sans_fil' });
+        if (error || !(data?.length > 0)) {
+          const errEl = document.getElementById('modal-edit-error');
+          errEl.textContent = 'L\'espace VR Sans Fil n\'est pas disponible sur ce créneau.';
+          errEl.classList.remove('hidden');
+          btn.disabled = false; btn.textContent = 'Enregistrer';
+          return;
+        }
+        sansFillBoxes = data.slice(0, 1);
+      }
+
+      const allBoxIds = [...filaireBoxes.map(b => b.box_id), ...sansFillBoxes.map(b => b.box_id)];
       let saveError = null;
       try {
         await adminDb('update_reservation', {
