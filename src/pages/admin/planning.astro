@@ -209,10 +209,22 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
       <!-- Vue édition -->
       <div id="modal-edit" class="hidden p-6">
-        <div class="flex items-center gap-3 mb-5">
+
+        <!-- Onglets Standard / Anniversaire -->
+        <div class="flex gap-1.5 bg-gray-900/80 rounded-2xl p-1 border border-gray-700 mb-5">
+          <button type="button" id="edit-tab-standard" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors bg-blue-700 text-white">
+            🎮 Standard
+          </button>
+          <button type="button" id="edit-tab-anniversaire" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-gray-400 hover:text-white">
+            🎂 Anniversaire
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 mb-4">
           <button id="modal-btn-back" type="button" class="text-gray-400 hover:text-white transition-colors text-sm">← Retour</button>
           <h3 class="text-lg font-bold text-white">Modifier</h3>
         </div>
+
         <form id="modal-edit-form" class="space-y-4">
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -241,28 +253,24 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
-            <input id="edit-nb" type="number" min="1" max="6" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="edit-nb" type="number" min="1" max="12" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
-          <div>
+
+          <!-- Durée : standard = sélection, anniversaire = fixe 1h -->
+          <div id="edit-duree-section">
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Durée</label>
             <div id="edit-duree-grid" class="grid grid-cols-2 gap-3"></div>
           </div>
+          <div id="edit-duree-fixed" class="hidden px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm text-gray-300 flex items-center gap-3">
+            <svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-gray-500">(fixe pour les anniversaires)</span>
+          </div>
+
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Type de réservation</label>
-            <div class="grid grid-cols-2 gap-3">
-              <label class="flex items-center gap-2.5 cursor-pointer bg-gray-700/60 hover:bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-900/30">
-                <input type="radio" name="edit-type-resa" value="standard" id="edit-type-resa-standard" class="accent-blue-500">
-                <span class="text-white text-sm">🎮 Standard</span>
-              </label>
-              <label class="flex items-center gap-2.5 cursor-pointer bg-gray-700/60 hover:bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 transition-colors has-[:checked]:border-pink-500 has-[:checked]:bg-pink-900/30">
-                <input type="radio" name="edit-type-resa" value="anniversaire" id="edit-type-resa-anniversaire" class="accent-pink-500">
-                <span class="text-white text-sm">🎂 Anniversaire</span>
-              </label>
-            </div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
@@ -327,6 +335,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   let modalRes = null; // réservation couramment affichée dans le modal
   let editSelectedVrType = null; // type VR sélectionné dans le formulaire d'édition
   let editSelectedDuree = null; // durée sélectionnée dans le formulaire d'édition
+  let editTypeResa = 'standard'; // type de réservation sélectionné via les onglets
   let dureeOptions = []; // options chargées depuis durees_session
   let periodesVacancesCache = []; // { date_debut, date_fin }[]
   let joursFermetureCache = [];   // 'YYYY-MM-DD'[]
@@ -859,11 +868,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
     document.getElementById('edit-nb').value = String(res.nb_personnes ?? '');
     document.getElementById('edit-notes').value = res.notes ?? '';
-    setupEditDuree(res.duree_minutes);
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     const isAnniv = res.type_reservation === 'anniversaire';
-    document.getElementById('edit-type-resa-standard').checked = !isAnniv;
-    document.getElementById('edit-type-resa-anniversaire').checked = isAnniv;
+    switchEditTab(isAnniv ? 'anniversaire' : 'standard');
+    if (!isAnniv) setupEditDuree(res.duree_minutes);
     document.getElementById('modal-edit-error').classList.add('hidden');
 
     // Afficher vue détail
@@ -1015,6 +1023,29 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
   }
 
+  // ── Onglets Standard / Anniversaire dans l'édition ───────────────────────
+  function switchEditTab(type) {
+    editTypeResa = type;
+    const isAnniv = type === 'anniversaire';
+
+    document.getElementById('edit-tab-standard').className =
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${!isAnniv ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`;
+    document.getElementById('edit-tab-anniversaire').className =
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isAnniv ? 'bg-pink-700 text-white' : 'text-gray-400 hover:text-white'}`;
+
+    document.getElementById('edit-duree-section').classList.toggle('hidden', isAnniv);
+    document.getElementById('edit-duree-fixed').classList.toggle('hidden', !isAnniv);
+
+    if (isAnniv) {
+      editSelectedDuree = 60;
+    } else if (modalRes) {
+      setupEditDuree(editSelectedDuree ?? modalRes.duree_minutes);
+    }
+  }
+
+  document.getElementById('edit-tab-standard').addEventListener('click', () => switchEditTab('standard'));
+  document.getElementById('edit-tab-anniversaire').addEventListener('click', () => switchEditTab('anniversaire'));
+
   // Fermeture modal
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('res-modal-backdrop').addEventListener('click', closeModal);
@@ -1086,7 +1117,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const newDebut = new Date(`${dateVal}T${heureVal}:00`);
     const dureeMin = editSelectedDuree ?? modalRes.duree_minutes;
     const newFin = new Date(newDebut.getTime() + dureeMin * 60000);
-    const newFinBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
 
     const emailVal = document.getElementById('edit-email').value.trim();
     const telVal = document.getElementById('edit-telephone').value.trim();
@@ -1108,11 +1138,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
     const currentVrType = modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
     const nbPersonnes = parseInt(document.getElementById('edit-nb').value);
-    const typeResa = document.querySelector('input[name="edit-type-resa"]:checked')?.value ?? modalRes.type_reservation ?? 'standard';
+    const typeResa = editTypeResa;
+    const bufMin = typeResa === 'anniversaire' ? 60 : BUFFER_MIN;
+
+    const newFinBlocage = new Date(newFin.getTime() + bufMin * 60000);
 
     // Si le type VR a changé, vérifier la disponibilité avant de sauvegarder
     if (editSelectedVrType !== currentVrType) {
-      const finBlocage = new Date(newFin.getTime() + BUFFER_MIN * 60000);
+      const finBlocage = new Date(newFin.getTime() + bufMin * 60000);
       const { data: availableBoxes, error: rpcErr } = await supabase.rpc('get_boxes_disponibles', {
         p_debut: newDebut.toISOString(),
         p_fin_blocage: finBlocage.toISOString(),
