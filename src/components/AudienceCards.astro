@@ -1,0 +1,287 @@
+---
+const cards = [
+  {
+    slug: 'family',
+    href: '/reservation',
+    quickTag: 'Dès 7 ans',
+    num: '01 — Familles',
+    titleHtml: 'De 7 à 77 ans,<br/>tout le monde joue.',
+    desc: 'Casques ajustables aux petites têtes, jeux non-violents adaptés aux enfants, et notre équipe forme tout le monde en 5 minutes.',
+    facts: [
+      { v: '7 ans', l: 'âge minimum' },
+      { v: '30 min', l: 'pour les < 9 ans' },
+    ],
+    cta: "Découvrir l'offre famille",
+    iconPath: 'M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z',
+  },
+  {
+    slug: 'friends',
+    href: '/contact',
+    quickTag: 'Anniv · EVG · EVJF',
+    num: '02 — Amis & fêtes',
+    titleHtml: 'Anniversaires, EVG / EVJF, <span class="grad-text">soirées</span>.',
+    desc: "Privatisation de l'arène free-roaming, gâteau d'anniversaire fourni, bar à cocktails sans alcool & espace privatisable pour le debrief.",
+    facts: [
+      { v: '25 €', l: 'forfait anniv.' },
+      { v: '8 max', l: 'par session privée' },
+    ],
+    cta: 'Organiser une fête',
+    iconPath: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+  },
+  {
+    slug: 'corp',
+    href: '/contact',
+    quickTag: 'Devis en 24 h',
+    num: '03 — Entreprises',
+    titleHtml: 'Team building<br/><span class="grad-text">qui marque vraiment</span>.',
+    desc: 'Sessions coop sur escape game (résolution de problèmes, leadership), debrief animé, formules séminaire avec restauration.',
+    facts: [
+      { v: '2h – 4h', l: 'formules pro' },
+      { v: 'Devis', l: 'en 24 h' },
+    ],
+    cta: 'Demander un devis',
+    iconPath: 'M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 13h18',
+  },
+];
+---
+
+<style>
+  .aud-section {
+    padding: 96px 0;
+    background: var(--bg);
+  }
+  .aud-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .aud-header {
+    margin-bottom: 48px;
+  }
+  .aud-header h2 {
+    font-size: clamp(32px, 3.8vw, 52px);
+    font-weight: 700;
+    margin-top: 12px;
+    color: var(--text);
+  }
+
+  /* Grid */
+  .aud-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  /* Card */
+  .aud-card {
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .aud-card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+
+  /* Visual area */
+  .aud-visual {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+  .aud-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 2px, transparent 2px 14px);
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+  }
+  .aud-card.family .aud-visual {
+    background:
+      radial-gradient(circle at 70% 30%, rgba(255,255,255,.18) 0%, transparent 50%),
+      linear-gradient(135deg, #ff8a4e 0%, #e84c7a 60%, #b85fe8 100%);
+  }
+  .aud-card.friends .aud-visual {
+    background:
+      radial-gradient(circle at 30% 60%, rgba(255,255,255,.15) 0%, transparent 55%),
+      linear-gradient(135deg, #b85fe8 0%, #6a3be0 50%, #4ed2ff 100%);
+  }
+  .aud-card.corp .aud-visual {
+    background:
+      radial-gradient(circle at 60% 40%, rgba(78,210,255,.25) 0%, transparent 55%),
+      linear-gradient(135deg, #1e2a4a 0%, #0f1126 60%, #0a0a12 100%);
+  }
+
+  /* Icon badge */
+  .aud-icon {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    z-index: 2;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(0,0,0,.35);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .aud-icon svg { width: 26px; height: 26px; color: white; }
+
+  /* Quick tag */
+  .aud-qtag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.18);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Content */
+  .aud-content {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .aud-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .aud-content h3 {
+    font-size: 24px;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .aud-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.55;
+    flex: 1;
+    margin: 0;
+  }
+
+  /* Facts */
+  .aud-facts {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 18px;
+  }
+  .aud-fact-v {
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .aud-fact-l {
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-top: 2px;
+  }
+
+  /* CTA link */
+  .aud-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 18px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .aud-cta svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .aud-card:hover .aud-cta svg { transform: translateX(4px); }
+
+  /* Mobile */
+  @media (max-width: 767px) {
+    .aud-section { padding: 56px 0; }
+    .aud-inner { padding: 0; }
+    .aud-header { padding: 0 20px; }
+    .aud-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 0 20px;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .aud-grid { grid-template-columns: 1fr 1fr; }
+    .aud-card.corp { grid-column: 1 / -1; }
+  }
+</style>
+
+<section class="aud-section">
+  <div class="aud-inner">
+
+    <div class="aud-header">
+      <span class="kicker">Pour qui</span>
+      <h2>Un espace pensé<br/>pour chaque occasion.</h2>
+    </div>
+
+    <div class="aud-grid">
+      {cards.map((card) => (
+        <a href={card.href} class={`aud-card ${card.slug}`}>
+
+          <!-- Visual -->
+          <div class="aud-visual">
+            <div class="aud-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d={card.iconPath} />
+              </svg>
+            </div>
+            <span class="aud-qtag">{card.quickTag}</span>
+          </div>
+
+          <!-- Content -->
+          <div class="aud-content">
+            <div class="aud-num">{card.num}</div>
+            <h3 set:html={card.titleHtml} />
+            <p class="aud-desc">{card.desc}</p>
+
+            <div class="aud-facts">
+              {card.facts.map((f) => (
+                <div>
+                  <div class="aud-fact-v">{f.v}</div>
+                  <div class="aud-fact-l">{f.l}</div>
+                </div>
+              ))}
+            </div>
+
+            <span class="aud-cta">
+              {card.cta}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </span>
+          </div>
+
+        </a>
+      ))}
+    </div>
+
+  </div>
+</section>
