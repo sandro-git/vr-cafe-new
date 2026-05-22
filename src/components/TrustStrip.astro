@@ -1,0 +1,80 @@
+---
+import { Image } from 'astro:assets';
+import Ubisoft  from '../assets/ubisoft-white.webp';
+import Wanadev  from '../assets/wanadev_studio.webp';
+import Arvi     from '../assets/arvi_vr_white.webp';
+import Ldlc     from '../assets/LDLC-VR-Studio.webp';
+import VexPlay  from '../assets/VexPlayLight.webp';
+
+const partenaires = [
+  { src: Ubisoft, alt: 'Ubisoft', href: 'https://www.ubisoft.com/en-gb/entertainment/parks-experiences/escape-games' },
+  { src: Wanadev, alt: 'Wanadev Studio', href: 'https://www.wanadevstudio.com/home' },
+  { src: Arvi,    alt: 'ARVI VR',  href: 'https://vr.arvilab.com/' },
+  { src: Ldlc,    alt: 'LDLC VR Studio', href: 'https://www.ldlc-vrstudio.com/' },
+  { src: VexPlay, alt: 'VexPlay',  href: '#' },
+];
+---
+
+<style>
+  .ts-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .ts-card {
+    padding: 24px 32px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .ts-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ts-logos {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .ts-logo {
+    display: flex;
+    align-items: center;
+    opacity: 0.65;
+    filter: grayscale(1);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+  }
+  .ts-logo:hover {
+    opacity: 1;
+    filter: none;
+  }
+  @media (max-width: 560px) {
+    .ts-card { padding: 18px 20px; gap: 20px; }
+    .ts-logos { gap: 20px; }
+  }
+</style>
+
+<section aria-label="Éditeurs partenaires" style="padding: 0; background: var(--bg);">
+  <div class="ts-wrap">
+    <div class="ts-card">
+      <span class="ts-label">Éditeurs partenaires</span>
+      <div class="ts-logos">
+        {partenaires.map(({ src, alt, href }) => (
+          <a href={href} class="ts-logo" target="_blank" rel="noopener noreferrer" aria-label={alt} title={alt}>
+            <Image src={src} alt={alt} height={24} style="height:24px;width:auto;" loading="lazy" />
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,289 @@
+---
+import { sanityClient } from 'sanity:client';
+import { urlForImage } from '../sanity/lib/url-for-image';
+
+// Récupère une image représentative par catégorie
+type SanityGame = { name: string; slug: { current: string }; image: { asset: { _ref: string } } | null };
+
+let escapeImg   = '';
+let roamingImg  = '';
+let arcadeImg   = '';
+
+try {
+  const [escapes, roaming, arcade] = await Promise.all([
+    sanityClient.fetch<SanityGame[]>(
+      `*[_type == "games" && "escapeGame" in tags[]->title] | order(_createdAt asc) [0] { name, slug, image }`
+    ),
+    sanityClient.fetch<SanityGame[]>(
+      `*[_type == "games" && ("freeroaming" in tags[]->title || "escapeFreeroaming" in tags[]->title)] | order(_createdAt asc) [0] { name, slug, image }`
+    ),
+    sanityClient.fetch<SanityGame[]>(
+      `*[_type == "games" && "jeuxVR" in tags[]->title] | order(_createdAt asc) [0] { name, slug, image }`
+    ),
+  ]);
+
+  if (escapes?.[0]?.image)  escapeImg  = urlForImage(escapes[0].image as any).width(800).height(600).url();
+  if (roaming?.[0]?.image)  roamingImg = urlForImage(roaming[0].image as any).width(800).height(600).url();
+  if (arcade?.[0]?.image)   arcadeImg  = urlForImage(arcade[0].image as any).width(800).height(600).url();
+} catch (_) {
+  // Sanity indisponible — on utilise les gradients placeholders
+}
+
+// Cartes d'expériences (contenu éditorial fixe, images dynamiques)
+const experiences = [
+  {
+    featured: true,
+    href: '/escapes',
+    tags: [{ label: 'Le plus joué', hot: true }, { label: '2 — 6 joueurs', hot: false }],
+    title: 'Escape Games VR',
+    desc: 'Énigmes en coop dans des univers que la VR seule peut offrir : sous-marin, vaisseau spatial, prison alien.',
+    meta: [{ icon: '⏱', text: '60 min' }, { icon: '👥', text: "jusqu'à 6" }, { icon: '🎯', text: 'dès 9 ans' }],
+    img: escapeImg,
+    gradBg: 'linear-gradient(135deg, #2b1b3f 0%, #161b3a 60%, #0e2547 100%)',
+  },
+  {
+    featured: false,
+    href: '/freeroaming',
+    tags: [{ label: 'Sans fil · 60 m²', hot: false }],
+    title: 'Free Roaming',
+    desc: "Plus de manettes, plus de câbles. Marchez, courez, visez — l'arène devient le jeu.",
+    meta: [{ icon: '⏱', text: '45 min' }, { icon: '👥', text: "jusqu'à 8" }],
+    img: roamingImg,
+    gradBg: 'linear-gradient(135deg, #1c1a36 0%, #0f1126 100%)',
+  },
+  {
+    featured: false,
+    href: '/jeux',
+    tags: [{ label: '20+ titres', hot: false }],
+    title: 'Jeux multi & arcade',
+    desc: 'Beat Saber, Eleven Table Tennis, Walkabout Mini Golf… la sélection grand public.',
+    meta: [{ icon: '⏱', text: '30 min — 1h' }, { icon: '👥', text: '1 — 4' }],
+    img: arcadeImg,
+    gradBg: 'linear-gradient(135deg, #1c1a36 0%, #0f1126 100%)',
+  },
+];
+---
+
+<style>
+  .exp-section {
+    padding: 96px 0;
+    position: relative;
+    background: var(--bg);
+  }
+  .exp-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .exp-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .exp-sub {
+    color: var(--text-dim);
+    font-size: 17px;
+    line-height: 1.5;
+    max-width: 460px;
+  }
+
+  /* Grid desktop */
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* Carrousel mobile */
+  @media (max-width: 767px) {
+    .exp-section { padding: 56px 0; }
+    .exp-inner { padding: 0; }
+    .exp-header { padding: 0 20px; gap: 20px; }
+    .exp-grid {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 4px 20px 16px;
+      scrollbar-width: none;
+    }
+    .exp-grid::-webkit-scrollbar { display: none; }
+  }
+
+  /* Carte */
+  .exp-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 28px;
+    text-decoration: none;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .exp-card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+
+  @media (max-width: 767px) {
+    .exp-card { flex-shrink: 0; width: 280px; min-height: 320px; scroll-snap-align: start; }
+    .exp-card.feat { width: 300px; }
+  }
+
+  /* Fond image ou gradient */
+  .exp-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+  }
+  /* Overlay gradient sur l'image */
+  .exp-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,18,.15) 0%, rgba(10,10,18,.75) 60%, rgba(10,10,18,.95) 100%);
+  }
+  /* Pattern hachures pour placeholder sans image */
+  .exp-bg.no-img::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 2px, transparent 2px 14px);
+  }
+
+  /* Flèche */
+  .exp-arrow {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 2;
+    transition: transform 0.25s ease, background 0.25s ease;
+  }
+  .exp-card:hover .exp-arrow {
+    background: var(--brand-grad);
+    border-color: transparent;
+    transform: rotate(-45deg);
+  }
+
+  /* Contenu */
+  .exp-content { position: relative; z-index: 1; }
+  .exp-tags { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .exp-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  .exp-tag.hot { background: var(--brand-grad); border-color: transparent; }
+  .exp-card h3 {
+    font-size: 28px;
+    color: white;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .exp-card.feat h3 { font-size: 36px; }
+  .exp-desc {
+    color: rgba(255,255,255,.7);
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 380px;
+    margin: 0;
+  }
+  .exp-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+    color: rgba(255,255,255,.5);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    flex-wrap: wrap;
+  }
+</style>
+
+<section class="exp-section">
+  <div class="exp-inner">
+
+    <!-- En-tête -->
+    <div class="exp-header">
+      <div>
+        <span class="kicker">Expériences</span>
+        <h2 style="font-size:clamp(32px,3.8vw,52px);font-weight:700;margin-top:12px;color:var(--text);">
+          Quatre univers, une seule envie :<br/>revenir demain.
+        </h2>
+      </div>
+      <p class="exp-sub">
+        Du puzzle d'escape game cérébral aux affrontements free roaming à 8 joueurs.
+        Tous les profils, des débutants aux gamers.
+      </p>
+    </div>
+
+    <!-- Grille -->
+    <div class="exp-grid">
+      {experiences.map((exp) => (
+        <a href={exp.href} class={`exp-card${exp.featured ? ' feat' : ''}`}>
+
+          <!-- Fond (image Sanity ou gradient placeholder) -->
+          <div
+            class={`exp-bg${exp.img ? '' : ' no-img'}`}
+            style={exp.img
+              ? `background-image: url('${exp.img}'); background: ${exp.gradBg};`
+              : `background: ${exp.gradBg};`}
+          >
+            {exp.img && (
+              <img
+                src={exp.img}
+                alt={exp.title}
+                loading="lazy"
+                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+              />
+            )}
+          </div>
+
+          <!-- Flèche -->
+          <div class="exp-arrow" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </div>
+
+          <!-- Contenu -->
+          <div class="exp-content">
+            <div class="exp-tags">
+              {exp.tags.map((tag) => (
+                <span class={`exp-tag${tag.hot ? ' hot' : ''}`}>{tag.label}</span>
+              ))}
+            </div>
+            <h3>{exp.title}</h3>
+            <p class="exp-desc">{exp.desc}</p>
+            <div class="exp-meta">
+              {exp.meta.map((m) => (
+                <span>{m.icon} {m.text}</span>
+              ))}
+            </div>
+          </div>
+
+        </a>
+      ))}
+    </div><!-- /exp-grid -->
+
+  </div>
+</section>
