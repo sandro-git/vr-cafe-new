@@ -1,0 +1,321 @@
+---
+import { sanityClient } from 'sanity:client';
+
+type Tarif = {
+  _id: string;
+  name: string;
+  prix: number;
+  description?: string;
+  isPromo: boolean;
+  dureeMinutes: number;
+};
+
+const FALLBACK: Tarif[] = [
+  { _id: '1', name: 'Découverte', prix: 18, isPromo: false, dureeMinutes: 30 },
+  { _id: '2', name: 'Session', prix: 25, isPromo: true, dureeMinutes: 60 },
+  { _id: '3', name: 'Anniversaire', prix: 25, isPromo: false, dureeMinutes: 60 },
+];
+
+let tarifs: Tarif[] = FALLBACK;
+try {
+  const data = await sanityClient.fetch<Tarif[]>(
+    `*[_type == "tarif"] | order(ordre asc) { _id, name, prix, description, isPromo, dureeMinutes }`
+  );
+  if (data?.length > 0) tarifs = data;
+} catch (_) {}
+
+// Enrichissement éditorial par type
+const CARDS = [
+  {
+    id: '30min',
+    match: (t: Tarif) => t.dureeMinutes <= 30,
+    featured: false,
+    ribbon: null,
+    unit: '/pers',
+    sub: null,
+    desc: "La session pour tester sans s’engager. Parfait pour les enfants &lt; 9 ans.",
+    features: ['30 minutes de jeu', '3 jeux au choix', 'Briefing inclus'],
+    cta: 'Réserver',
+    ctaHref: '/reservation',
+  },
+  {
+    id: '1h',
+    match: (t: Tarif) => t.dureeMinutes > 30 && !t.name.toLowerCase().includes('anniv'),
+    featured: true,
+    ribbon: 'Le plus choisi',
+    unit: '/pers · dès 5 joueurs',
+    sub: 'Tarif dégressif : 29 € à 2, 27 € à 4, 25 € à 5+.',
+    desc: "L'expérience complète. Photos souvenir offertes, accès à tous les jeux et escapes.",
+    features: ['1 heure de jeu', 'Tous les jeux + escape', 'Photos souvenir offertes'],
+    cta: 'Réserver',
+    ctaHref: '/reservation',
+  },
+  {
+    id: 'anniv',
+    match: (t: Tarif) => t.name.toLowerCase().includes('anniv'),
+    featured: false,
+    ribbon: null,
+    unit: '/pers',
+    sub: 'Forfait clé en main, dès 4 joueurs.',
+    desc: 'Gâteau + boissons fournis. Espace privatisé pour le goûter après la session.',
+    features: ["1h VR + 30 min goûter", "Espace privatisé", "Carte d'invitation fournie"],
+    cta: 'En savoir plus',
+    ctaHref: '/contact',
+  },
+];
+
+const enriched = CARDS.map((card) => {
+  const tarif = tarifs.find(card.match) ?? tarifs[CARDS.indexOf(card)] ?? tarifs[0];
+  return { ...card, tarif };
+});
+---
+
+<style>
+  .pricing-section {
+    padding: 96px 0;
+    background: var(--bg);
+  }
+  .pricing-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .pricing-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .pricing-header h2 {
+    font-size: clamp(32px, 3.8vw, 52px);
+    font-weight: 700;
+    margin-top: 12px;
+    color: var(--text);
+  }
+  .pricing-sub {
+    color: var(--text-dim);
+    font-size: 17px;
+    line-height: 1.5;
+    max-width: 420px;
+  }
+
+  /* Grid */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* Card */
+  .price-card {
+    padding: 32px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .price-card:hover { transform: translateY(-4px); }
+
+  .price-card.featured {
+    border-color: rgba(184, 95, 232, 0.4);
+    background: linear-gradient(180deg, rgba(184, 95, 232, 0.08) 0%, var(--surface) 40%);
+    box-shadow: var(--shadow-glow);
+  }
+  .price-card.featured:hover {
+    box-shadow: var(--shadow-glow), 0 20px 60px -15px rgba(184, 95, 232, 0.4);
+  }
+
+  /* Ribbon */
+  .price-ribbon {
+    position: absolute;
+    top: -12px;
+    right: 24px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--brand-grad);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Name */
+  .price-name {
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Price */
+  .price-amount {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .price-num {
+    font-family: 'Sora', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+  }
+  .price-currency {
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .price-unit {
+    font-size: 13px;
+    color: var(--text-mute);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .price-degressif {
+    font-size: 12px;
+    color: var(--text-mute);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  /* Desc */
+  .price-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 24px;
+    flex: 1;
+  }
+
+  /* Features */
+  .price-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .price-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .price-features li svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--brand-violet);
+  }
+
+  /* CTA */
+  .price-cta {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--r-md);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .price-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+  .price-cta.primary {
+    background: var(--brand-grad);
+    color: white;
+  }
+  .price-cta.secondary {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+
+  /* Mobile */
+  @media (max-width: 767px) {
+    .pricing-section { padding: 56px 0; }
+    .pricing-inner { padding: 0 20px; }
+    .pricing-header { gap: 20px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .price-card.featured { order: -1; }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .price-card.featured { grid-column: 1 / -1; max-width: 420px; margin: 0 auto; width: 100%; }
+  }
+</style>
+
+<section class="pricing-section">
+  <div class="pricing-inner">
+
+    <div class="pricing-header">
+      <div>
+        <span class="kicker">Tarifs</span>
+        <h2>Trois formules,<br/>zéro mauvaise surprise.</h2>
+      </div>
+      <p class="pricing-sub">
+        Prix par personne, tout inclus : casques, accompagnement, accès au bar.
+        Dégressif au-delà de 3 joueurs.
+      </p>
+    </div>
+
+    <div class="pricing-grid">
+      {enriched.map(({ tarif, featured, ribbon, unit, sub, desc, features, cta, ctaHref }) => (
+        <div class={`price-card${featured ? ' featured' : ''}`}>
+
+          {ribbon && <span class="price-ribbon">{ribbon}</span>}
+
+          <div class="price-name">{tarif.name}</div>
+
+          <div class="price-amount">
+            <span class="price-num">{tarif.prix}</span>
+            <span class="price-currency">€</span>
+          </div>
+          <div class="price-unit">{unit}</div>
+
+          {sub && <div class="price-degressif">{sub}</div>}
+
+          <p class="price-desc" set:html={desc} />
+
+          <ul class="price-features">
+            {features.map((f) => (
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M5 12l5 5L20 7"/>
+                </svg>
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <a href={ctaHref} class={`price-cta ${featured ? 'primary' : 'secondary'}`}>
+            {cta}
+          </a>
+
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>
