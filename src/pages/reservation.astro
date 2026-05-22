@@ -1,11 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ReservationForm from "../components/ReservationForm.astro";
+
+const params      = Astro.url.searchParams;
+const initDate    = params.get('date')    ?? '';
+const initJoueurs = parseInt(params.get('joueurs') ?? '0', 10) || 0;
+const initDuree   = parseInt(params.get('duree')   ?? '0', 10) || 0;
 ---
 
 <BaseLayout
   title="Réserver une Session VR — VR Café Canet-en-Roussillon"
   description="Réservez votre session VR en ligne au VR Café de Canet-en-Roussillon. Choisissez votre créneau, votre formule et vivez une expérience unique !"
 >
-  <ReservationForm mode="client" />
+  <ReservationForm
+    mode="client"
+    initialDate={initDate}
+    initialJoueurs={initJoueurs}
+    initialDuree={initDuree}
+  />
 </BaseLayout>

@@ -2,13 +2,104 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Amélioration de l'accessibilité - Focus visible */
+/* =====================================================================
+   Tokens design — VR Café
+   ===================================================================== */
+
+:root {
+  --bg:           #0a0a12;
+  --bg-elev:      #11111d;
+  --surface:      #161624;
+  --surface-2:    #1d1d2e;
+
+  --line:         #25253a;
+  --line-strong:  #34344f;
+
+  --text:         #ecedf5;
+  --text-dim:     #a4a6bd;
+  --text-mute:    #6c6f8a;
+
+  --brand-violet: #b85fe8;
+  --brand-cyan:   #4ed2ff;
+  --brand-deep:   #6a3be0;
+  --brand-grad:   linear-gradient(135deg, #b85fe8 0%, #6a3be0 45%, #4ed2ff 100%);
+  --brand-grad-soft: linear-gradient(135deg, rgba(184,95,232,.18), rgba(78,210,255,.18));
+
+  --gold:         #ffc83d;
+  --green:        #25D366;
+  --green-open:   #2ee07c;
+
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  22px;
+  --r-xl:  32px;
+
+  --shadow-lg:   0 30px 80px -20px rgba(0,0,0,.6), 0 12px 24px -8px rgba(0,0,0,.4);
+  --shadow-glow: 0 0 0 1px rgba(184,95,232,.25), 0 30px 80px -20px rgba(184,95,232,.35);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:           #f6f5f1;
+    --bg-elev:      #efeee8;
+    --surface:      #ffffff;
+    --surface-2:    #f3f2ec;
+    --line:         #e3e1d8;
+    --line-strong:  #c9c7bc;
+    --text:         #131320;
+    --text-dim:     #4a4c63;
+    --text-mute:    #84869c;
+    --shadow-lg:   0 30px 80px -20px rgba(0,0,0,.18), 0 12px 24px -8px rgba(0,0,0,.10);
+    --shadow-glow: 0 0 0 1px rgba(106,59,224,.18), 0 30px 80px -20px rgba(106,59,224,.25);
+  }
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Sora', sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+/* =====================================================================
+   Accessibilité
+   ===================================================================== */
 *:focus-visible {
-  outline: 2px solid rgb(59, 130, 246);
+  outline: 2px solid var(--brand-cyan);
   outline-offset: 2px;
 }
 
-/* Assurer que le focus est visible même sur fond sombre */
-.dark *:focus-visible {
-  outline-color: rgb(96, 165, 250);
+/* =====================================================================
+   Utilitaires réutilisables
+   ===================================================================== */
+.grad-text {
+  background: var(--brand-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--brand-grad-soft);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--brand-violet);
+  border: 1px solid color-mix(in oklab, var(--brand-violet) 30%, transparent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

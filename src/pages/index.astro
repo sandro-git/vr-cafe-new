@@ -4,9 +4,9 @@ export const prerender = true;
 // is your "component frontmatter". It never runs in the browser.
 
 //components
-import LandingImage from "../components/LandingImage.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
+import LiveBookingWidget from "../components/LiveBookingWidget.astro";
 import Features from "../components/Features.astro";
 import FAQ from "../components/FAQ.astro";
 import Partners from "../components/Partners.astro";
@@ -76,8 +76,8 @@ import Testimonials from "../components/Testimonials.astro";
       }
     ]
   })} />
-  <LandingImage />
   <Hero />
+  <LiveBookingWidget />
   <Features />
   <Testimonials />
   <Partners />

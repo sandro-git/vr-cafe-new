@@ -5,12 +5,18 @@ interface Props {
   mode: 'client' | 'admin';
   title?: string;
   successRedirect?: string;
+  initialDate?: string;    // YYYY-MM-DD
+  initialJoueurs?: number; // 1-6
+  initialDuree?: number;   // 30 | 60
 }
 
 const {
   mode,
   title = mode === 'admin' ? 'Nouvelle réservation' : 'Réserver votre session VR',
   successRedirect = '/admin/planning',
+  initialDate    = '',
+  initialJoueurs = 0,
+  initialDuree   = 0,
 } = Astro.props;
 ---
 
@@ -193,9 +199,10 @@ const {
   </div>
 </div>
 
-<script define:vars={{ mode, successRedirect }} is:inline>
+<script define:vars={{ mode, successRedirect, initialDate, initialJoueurs, initialDuree }} is:inline>
   window.__rvMode = mode;
   window.__rvRedirect = successRedirect;
+  window.__rvInitial = { date: initialDate, joueurs: initialJoueurs, duree: initialDuree };
 </script>
 
 <script>
@@ -258,6 +265,44 @@ const {
     });
 
     renderDurees();
+    applyInitialValues();
+  }
+
+  function applyInitialValues() {
+    const init = (window as any).__rvInitial ?? {};
+    if (!init.date && !init.joueurs && !init.duree) return;
+
+    // Pré-sélectionner la date
+    if (init.date) {
+      const [y, m, d] = init.date.split('-').map(Number);
+      document.dispatchEvent(new CustomEvent('datepicker:preselect', {
+        detail: { id: 'dp', date: init.date, year: y, month: m, day: d }
+      }));
+      selectedDate = init.date;
+    }
+
+    // Pré-sélectionner le nombre de joueurs
+    if (init.joueurs >= 1 && init.joueurs <= 6) {
+      const grid = document.getElementById('nb-personnes-grid');
+      const btns = grid?.querySelectorAll('button');
+      btns?.forEach((btn, idx) => {
+        if (idx + 1 === init.joueurs) btn.click();
+      });
+    }
+
+    // Pré-sélectionner la durée (après render)
+    if (init.duree > 0) {
+      const list = document.getElementById('durees-list');
+      const durBtns = list?.querySelectorAll('button');
+      durBtns?.forEach(btn => {
+        const label = btn.textContent?.toLowerCase() ?? '';
+        const matches30 = init.duree === 30 && label.includes('30');
+        const matches60 = init.duree === 60 && (label.includes('1h') || label.includes('1 h') || label.includes('60'));
+        if (matches30 || matches60) btn.click();
+      });
+    }
+
+    checkStep1Valid();
   }
 
   async function loadConfig() {
