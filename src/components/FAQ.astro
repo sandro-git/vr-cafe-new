@@ -7,45 +7,43 @@ type SanityBlock = { children?: { text: string }[] };
 const FALLBACK_FAQS: FaqItem[] = [
   {
     question: "Qu'est-ce qu'un escape game en réalité virtuelle ?",
-    answer:
-      "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
+    answer: "La VR (Réalité Virtuelle) est un monde généré par ordinateur. Vous y accéderez à l'aide d'un casque. Une fois à l'intérieur, l'objectif est de collaborer pour réussir une ou plusieurs missions dans un temps imparti.",
   },
   {
-    question:
-      "Je porte des lunettes, comment cela fonctionne-t-il avec un casque VR ?",
-    answer:
-      "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais il est vrai que la VR est plus confortable sans lunettes ; les lentilles de contact sont donc vos alliées si vous pouvez en porter.",
+    question: "Je porte des lunettes, est-ce compatible ?",
+    answer: "La plupart des lunettes peuvent être portées à l'intérieur de nos casques, mais la VR est plus confortable sans lunettes. Les lentilles de contact sont vos alliées si vous pouvez en porter.",
   },
   {
     question: "Y aura-t-il d'autres personnes dans notre partie ?",
-    answer:
-      "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
+    answer: "Non. Votre réservation est privée, la partie est exclusivement pour votre groupe.",
   },
   {
     question: "Vos jeux sont-ils adaptés aux enfants ?",
-    answer:
-      "Par soucis de taille des casques, nous conseillons aux parents de ne pas faire venir leurs enfants de moins de 7 ans, cependant, la plupart de nos jeux VR conviennent aux enfants. N'hésitez pas à discuter avec nous pour que nous conseillons le jeu le plus adapté à l'âge de vos enfants au moment du choix du jeu sur place.",
+    answer: "Nous conseillons de ne pas faire venir des enfants de moins de 7 ans (taille des casques). La plupart de nos jeux conviennent aux enfants — notre équipe vous conseillera le titre le plus adapté à l'âge de vos enfants.",
   },
   {
-    question:
-      "Les jeux en VR peuvent-ils provoquer des maux s'apparentant à un mal des transports ?",
-    answer:
-      'Non, nous n\'avons encore rencontré aucun cas. Le "mal de VR" survient quand ce que voit votre cerveau ne correspond pas à ce que ressent votre corps (par exemple quand on "bouge" avec un joystick alors qu\'on est immobile). Ici, vous vous téléportez ou vous vous déplacez réellement dans l\'espace : votre mouvement réel correspond à celui dans le jeu, ce qui rend l\'expérience naturelle et confortable.',
+    question: "Peut-on avoir le mal des transports en VR ?",
+    answer: "Très rarement dans nos installations. Le mal de VR survient quand le cerveau perçoit un mouvement sans que le corps bouge. Ici vous vous déplacez réellement dans l'espace, ce qui rend l'expérience naturelle.",
   },
   {
-    question: "Je suis en fauteuil roulant, est-ce accessible ?",
-    answer:
-      "Oui, en ce qui concerne les espaces connectés avec fil, il n'y a pas besoin de marcher et les personnes à mobilité réduite peuvent tout à fait y jouer, cependant, l'espace sans fil n'est pas accessible pour ce genre de situation de handicap.",
+    question: "Le site est-il accessible aux personnes en fauteuil roulant ?",
+    answer: "Oui pour les espaces filaires — aucune marche n'est requise. L'arène free-roaming nécessite malheureusement de se déplacer et n'est pas accessible aux PMR.",
   },
   {
-    question: "Peut-on annuler ou reporter ?",
-    answer:
-      "Oui, vous avez jusqu'à 24h avant votre réservation pour demander une annulation ou un report de cession de jeux.",
+    question: "Peut-on annuler ou reporter une réservation ?",
+    answer: "Oui, jusqu'à 24h avant votre créneau. Contactez-nous par téléphone ou par email pour organiser le report.",
   },
   {
-    question: "Peut-on venir sans réserver ?",
-    answer:
-      "Ce n'est pas conseillé, mais vous pouvez réserver en ligne jusqu'à 1h avant le début du créneau ou appeler l'établissement pour connaître les disponibilités.",
+    question: "Faut-il réserver à l'avance ?",
+    answer: "La réservation en ligne est possible jusqu'à 1h avant le créneau. Pour les groupes de 6+ personnes nous recommandons de réserver plusieurs jours à l'avance pour garantir la disponibilité.",
+  },
+  {
+    question: "C'est quoi le free-roaming ?",
+    answer: "Le free-roaming est notre arène sans fil de 60 m². Vous portez un casque autonome et vous déplacez librement — pas de câbles, pas de manettes. Jusqu'à 8 joueurs peuvent s'affronter ou coopérer simultanément.",
+  },
+  {
+    question: "Vous convient-il pour un événement de groupe ou d'entreprise ?",
+    answer: "Absolument. Nous proposons des formules team building, anniversaires, EVG/EVJF et séminaires. Contactez-nous pour un devis personnalisé en moins de 24h.",
   },
 ];
 
@@ -53,142 +51,197 @@ const extractText = (blocks: SanityBlock[]) =>
   blocks?.map((b) => b.children?.map((c) => c.text).join("")).join("\n") ?? "";
 
 const {
-  title = "FAQ VR Café",
-  subtitle = "Les réponses à vos questions les plus fréquentes",
   faqs: propFaqs,
   showCTA = true,
-  ctaText = "Vous avez d'autres questions ?",
-  ctaButtonText = "Contactez-nous",
   ctaLink = "/contact",
 } = Astro.props;
 
 let faqs: FaqItem[] = propFaqs ?? [];
 
 if (faqs.length === 0) {
-  const data = await sanityClient.fetch<{ question: string; reponse: SanityBlock[] }[]>(
-    `*[_type == "faq"] | order(ordre asc) { question, reponse }`
-  );
-  if (data?.length > 0) {
-    faqs = data.map((f) => ({ question: f.question, answer: extractText(f.reponse) }));
-  } else {
+  try {
+    const data = await sanityClient.fetch<{ question: string; reponse: SanityBlock[] }[]>(
+      `*[_type == "faq"] | order(ordre asc) { question, reponse }`
+    );
+    if (data?.length > 0) {
+      faqs = data.map((f) => ({ question: f.question, answer: extractText(f.reponse) }));
+    } else {
+      faqs = FALLBACK_FAQS;
+    }
+  } catch (_) {
     faqs = FALLBACK_FAQS;
   }
 }
+
+const mid = Math.ceil(faqs.length / 2);
+const col1 = faqs.slice(0, mid);
+const col2 = faqs.slice(mid);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map((f) => ({
+    "@type": "Question",
+    "name": f.question,
+    "acceptedAnswer": { "@type": "Answer", "text": f.answer },
+  })),
+};
 ---
 
-<section class="bg-white dark:bg-gray-900 py-12 md:py-20">
-  <div class="container mx-auto px-4 max-w-4xl">
-    <h2
-      class="mb-8 text-4xl md:text-5xl font-extrabold text-center text-gray-900 dark:text-white"
-    >
-      {title}
-    </h2>
-    {
-      subtitle && (
-        <p class="text-center text-gray-600 dark:text-gray-300 mb-12 text-lg">
-          {subtitle}
-        </p>
-      )
-    }
+<style>
+  .faq-section {
+    padding: 96px 0;
+    background: var(--bg);
+  }
+  .faq-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .faq-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    margin-bottom: 56px;
+    flex-wrap: wrap;
+  }
+  .faq-header h2 {
+    font-size: clamp(32px, 3.8vw, 52px);
+    font-weight: 700;
+    margin-top: 12px;
+    color: var(--text);
+  }
 
-    <div class="space-y-4">
-      {
-        faqs.map((faq, index) => (
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-            <button
-              class="faq-question w-full text-left px-6 py-5 flex justify-between items-center gap-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-              data-faq-index={index}
-              aria-expanded="false"
-            >
-              <span class="text-lg font-semibold text-gray-900 dark:text-white pr-8">
-                {faq.question}
-              </span>
-              <svg
-                class="faq-icon w-6 h-6 text-blue-600 dark:text-blue-400 shrink-0 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-answer max-h-0 overflow-hidden transition-all duration-300"
-              data-faq-answer={index}
-            >
-              <div class="px-6 py-5 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {faq.answer}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))
-      }
+  /* 2-column grid */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 40px;
+    align-items: start;
+  }
+
+  /* Individual item */
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+  }
+  .faq-item:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    user-select: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+
+  .faq-chevron {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--text-mute);
+    transition: transform 0.25s ease, color 0.25s ease;
+  }
+  details[open] .faq-chevron {
+    transform: rotate(180deg);
+    color: var(--brand-violet);
+  }
+  details[open] summary {
+    color: var(--brand-violet);
+  }
+
+  .faq-answer {
+    padding: 0 0 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  /* CTA */
+  .faq-cta {
+    margin-top: 56px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .faq-cta p {
+    color: var(--text-dim);
+    font-size: 16px;
+  }
+  .faq-cta a {
+    display: inline-block;
+    padding: 14px 32px;
+    border-radius: var(--r-md);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .faq-cta a:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-2);
+  }
+
+  @media (max-width: 767px) {
+    .faq-section { padding: 56px 0; }
+    .faq-inner { padding: 0 20px; }
+    .faq-header { gap: 20px; }
+    .faq-grid { grid-template-columns: 1fr; gap: 0; }
+    .faq-col:last-child .faq-item:first-child { border-top: none; }
+  }
+</style>
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+<section class="faq-section">
+  <div class="faq-inner">
+
+    <div class="faq-header">
+      <div>
+        <span class="kicker">FAQ</span>
+        <h2>Questions fréquentes.</h2>
+      </div>
     </div>
 
-    <!-- CTA Section -->
-    {
-      showCTA && (
-        <div class="mt-12 text-center">
-          <p class="text-gray-600 dark:text-gray-300 mb-4">{ctaText}</p>
-          <a
-            href={ctaLink}
-            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            {ctaButtonText}
-          </a>
+    <div class="faq-grid">
+      {[col1, col2].map((col) => (
+        <div class="faq-col">
+          {col.map((faq) => (
+            <details class="faq-item">
+              <summary>
+                {faq.question}
+                <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </summary>
+              <p class="faq-answer">{faq.answer}</p>
+            </details>
+          ))}
         </div>
-      )
-    }
+      ))}
+    </div>
+
+    {showCTA && (
+      <div class="faq-cta">
+        <p>Vous avez d'autres questions ?</p>
+        <a href={ctaLink}>Contactez-nous</a>
+      </div>
+    )}
+
   </div>
 </section>
-
-<script>
-  // FAQ Accordion functionality
-  document.addEventListener("DOMContentLoaded", () => {
-    const faqButtons = document.querySelectorAll(".faq-question");
-
-    faqButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const index = button.getAttribute("data-faq-index");
-        const answer = document.querySelector(
-          `[data-faq-answer="${index}"]`
-        ) as HTMLElement;
-        const icon = button.querySelector(".faq-icon");
-        const isExpanded = button.getAttribute("aria-expanded") === "true";
-
-        // Close all other answers
-        document.querySelectorAll(".faq-answer").forEach((ans) => {
-          if (ans !== answer) {
-            (ans as HTMLElement).style.maxHeight = "0";
-          }
-        });
-
-        document.querySelectorAll(".faq-question").forEach((btn) => {
-          if (btn !== button) {
-            btn.setAttribute("aria-expanded", "false");
-            const btnIcon = btn.querySelector(".faq-icon");
-            btnIcon?.classList.remove("rotate-180");
-          }
-        });
-
-        // Toggle current answer
-        if (isExpanded) {
-          button.setAttribute("aria-expanded", "false");
-          answer.style.maxHeight = "0";
-          icon?.classList.remove("rotate-180");
-        } else {
-          button.setAttribute("aria-expanded", "true");
-          answer.style.maxHeight = answer.scrollHeight + "px";
-          icon?.classList.add("rotate-180");
-        }
-      });
-    });
-  });
-</script>
