@@ -237,6 +237,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       datesFermees: [...datesFermees],
       periodesVacances,
       joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+      adminMode: (window.__anniversaireMode ?? 'client') === 'admin',
     }}));
 
     document.addEventListener('datepicker:select', (e) => {
