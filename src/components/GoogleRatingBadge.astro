@@ -22,7 +22,7 @@ const demiEtoile = note - etoilesPlein >= 0.5;
     target={lien ? "_blank" : undefined}
     rel={lien ? "noopener noreferrer" : undefined}
     class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2.5 hover:bg-white/20 transition-colors"
-    aria-label={`Avis Google : ${note} sur 5 — ${nombreAvis} avis`}
+    aria-label={`${note.toFixed(1)} sur 5 · ${nombreAvis} avis Google`}
   >
     <!-- Logo Google -->
     <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
