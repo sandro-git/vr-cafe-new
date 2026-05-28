@@ -28,7 +28,7 @@ const STAR_INDICES = [0, 1, 2, 3, 4];
       {avis.map((a) => (
         <article class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6 flex flex-col gap-4">
           <!-- Étoiles -->
-          <div class="flex gap-0.5" aria-label={`Note : ${a.note} sur 5`}>
+          <div class="flex gap-0.5" role="img" aria-label={`Note : ${a.note} sur 5`}>
             {STAR_INDICES.map((i) => (
               <svg
                 class={`w-5 h-5 ${i < a.note ? "text-yellow-400" : "text-gray-300"} fill-current`}
