@@ -6,7 +6,52 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 <BaseLayout
   title="Salle de Réalité Virtuelle à Perpignan — VR Café Canet-en-Roussillon"
   description="La meilleure salle VR près de Perpignan. Escape games, jeux multijoueurs et free roaming à Canet-en-Roussillon, à seulement 10 min de Perpignan."
+  canonical="https://www.vr-cafe.fr/realite-virtuelle-perpignan"
 >
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": ["EntertainmentBusiness", "LocalBusiness"],
+    "name": "VR Café",
+    "url": "https://www.vr-cafe.fr",
+    "description": "La salle VR la plus proche de Perpignan. Escape games, jeux multijoueurs et free roaming à Canet-en-Roussillon, à seulement 10 minutes de Perpignan.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "2 rue du Pilou",
+      "addressLocality": "Canet-en-Roussillon",
+      "postalCode": "66140",
+      "addressRegion": "Occitanie",
+      "addressCountry": "FR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 42.7025,
+      "longitude": 3.0211
+    },
+    "telephone": "+33671410695",
+    "email": "contact@vr-cafe.fr",
+    "priceRange": "€€",
+    "hasMap": "https://maps.google.com/?q=VR+Café+2+rue+du+Pilou+66140+Canet-en-Roussillon",
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+        "opens": "14:00",
+        "closes": "20:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Friday", "Saturday"],
+        "opens": "10:00",
+        "closes": "22:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Sunday"],
+        "opens": "10:00",
+        "closes": "20:00"
+      }
+    ]
+  })} />
   <!-- Hero -->
   <section class="relative bg-gray-900 text-white py-20 px-4">
     <div class="max-w-4xl mx-auto text-center">

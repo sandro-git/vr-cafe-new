@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /studio/
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 
 Sitemap: https://www.vr-cafe.fr/sitemap-index.xml

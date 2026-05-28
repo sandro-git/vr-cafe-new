@@ -19,7 +19,7 @@ import Testimonials from "../components/Testimonials.astro";
 >
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "EntertainmentBusiness",
+    "@type": ["EntertainmentBusiness", "LocalBusiness"],
     "name": "VR Café",
     "url": "https://www.vr-cafe.fr",
     "logo": "https://www.vr-cafe.fr/apple-touch-icon.png",
@@ -39,8 +39,8 @@ import Testimonials from "../components/Testimonials.astro";
       "longitude": 3.0211
     },
     "telephone": "+33671410695",
+    "email": "contact@vr-cafe.fr",
     "priceRange": "€€",
-    "servesCuisine": null,
     "currenciesAccepted": "EUR",
     "paymentAccepted": "Cash, Credit Card",
     "aggregateRating": {
@@ -74,7 +74,18 @@ import Testimonials from "../components/Testimonials.astro";
         "opens": "10:00",
         "closes": "20:00"
       }
-    ]
+    ],
+    "potentialAction": {
+      "@type": "ReserveAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.vr-cafe.fr/reservation"
+      },
+      "result": {
+        "@type": "Reservation",
+        "name": "Réservation session VR"
+      }
+    }
   })} />
   <LandingImage />
   <Hero />
