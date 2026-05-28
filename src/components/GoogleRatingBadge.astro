@@ -10,7 +10,7 @@ const { data } = await loadQuery<{
 
 const note = data?.noteGoogle ?? 4.8;
 const nombreAvis = data?.nombreAvis ?? 60;
-const lien = data?.lienGoogleMaps ?? null;
+const lien = data?.lienGoogleMaps ?? "https://maps.google.com/?q=VR+Caf%C3%A9+2+rue+du+Pilou+66140+Canet-en-Roussillon";
 
 const etoilesPlein = Math.floor(note);
 const demiEtoile = note - etoilesPlein >= 0.5;
