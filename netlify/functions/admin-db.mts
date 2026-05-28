@@ -109,6 +109,26 @@ export default async (req: Request, _context: Context) => {
       return json({ ok: true });
     }
 
+    // ── Config clé-valeur ────────────────────────────────────────────────────
+    case "set_config": {
+      const { cle, valeur } = body as { cle: string; valeur: string | null };
+      if (!cle) return json({ error: "Missing cle" }, 400);
+      if (valeur === null) {
+        const { error } = await supabase.from("config").delete().eq("cle", cle);
+        if (error) return json({ error: error.message }, 500);
+      } else {
+        const { data: existing } = await supabase.from("config").select("id").eq("cle", cle).maybeSingle();
+        if (existing) {
+          const { error } = await supabase.from("config").update({ valeur }).eq("cle", cle);
+          if (error) return json({ error: error.message }, 500);
+        } else {
+          const { error } = await supabase.from("config").insert({ cle, valeur });
+          if (error) return json({ error: error.message }, 500);
+        }
+      }
+      return json({ ok: true });
+    }
+
     default:
       return json({ error: "Unknown action" }, 400);
   }

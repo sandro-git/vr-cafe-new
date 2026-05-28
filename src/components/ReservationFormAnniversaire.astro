@@ -429,6 +429,11 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     const now = new Date();
     const slots = [];
 
+    // Réservations bloquées manuellement par l'admin pour aujourd'hui
+    if (selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
+      return [];
+    }
+
     for (let start = openTotal; start + dureeMin + bufferMin <= closeTotal; start += 30) {
       const debut = dateAtMinutes(selectedDate, start);
       if (selectedDate === todayStr && debut <= now) continue;

@@ -24,6 +24,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         </div>
         <!-- Boutons : grille 2 colonnes sur mobile, inline sur desktop -->
         <div class="grid grid-cols-2 sm:flex sm:justify-end gap-3">
+          <button
+            id="btn-block-reservations"
+            class="flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+          >
+            <span id="btn-block-label">⏳ Chargement…</span>
+          </button>
           <a
             href="/admin/planning"
             class="flex items-center justify-center px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl transition-colors border border-gray-600"
@@ -388,4 +394,52 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
   loadReservations(currentDate);
+  initBlockButton();
+
+  // ── Bouton blocage réservations ───────────────────────────────────────────
+  async function initBlockButton() {
+    const btn = document.getElementById('btn-block-reservations');
+    const label = document.getElementById('btn-block-label');
+    if (!btn || !label) return;
+
+    const todayStr = localDateStr(new Date());
+
+    // Lire l'état actuel depuis Supabase
+    const { data } = await supabase
+      .from('config')
+      .select('valeur')
+      .eq('cle', 'reservations_bloquees_date')
+      .maybeSingle();
+
+    let bloque = data?.valeur === todayStr;
+    updateBlockBtn(btn, label, bloque);
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const newValeur = bloque ? null : todayStr;
+      const res = await fetch('/api/admin/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_config', cle: 'reservations_bloquees_date', valeur: newValeur }),
+      });
+      btn.disabled = false;
+      if (res.ok) {
+        bloque = !bloque;
+        updateBlockBtn(btn, label, bloque);
+      } else {
+        showError('Erreur lors de la mise à jour du blocage');
+      }
+    });
+  }
+
+  function updateBlockBtn(btn, label, bloque) {
+    const base = 'flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1';
+    if (bloque) {
+      btn.className = `${base} bg-red-900/60 border-red-700 text-red-300 hover:bg-red-900`;
+      label.textContent = '🔴 Réservations bloquées — Débloquer';
+    } else {
+      btn.className = `${base} bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600`;
+      label.textContent = '🚫 Bloquer les réservations du jour';
+    }
+  }
 </script>
