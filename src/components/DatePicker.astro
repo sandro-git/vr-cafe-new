@@ -55,12 +55,14 @@ const { id = 'dp' } = Astro.props;
     let datesFermees = new Set<string>();
     let periodesVacances: { date_debut: string; date_fin: string }[] = [];
     let joursNormaux = new Set<number>([0, 3, 5, 6]);
+    let adminMode = false;
 
     function pad(n: number) { return String(n).padStart(2, '0'); }
     function localDateStr(d: Date) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
     const today = localDateStr(new Date());
 
     function estOuvert(dateStr: string) {
+      if (adminMode) return true;
       if (datesFermees.has(dateStr)) return false;
       const d = new Date(dateStr + 'T12:00:00');
       const enVacances = periodesVacances.some(p => dateStr >= p.date_debut && dateStr <= p.date_fin);
@@ -68,13 +70,24 @@ const { id = 'dp' } = Astro.props;
       return joursNormaux.has(d.getDay());
     }
 
-    function dayClass(isPast: boolean, isOpen: boolean, isSelected: boolean, isToday: boolean) {
+    function estNormalementFerme(dateStr: string) {
+      if (datesFermees.has(dateStr)) return true;
+      const d = new Date(dateStr + 'T12:00:00');
+      const enVacances = periodesVacances.some(p => dateStr >= p.date_debut && dateStr <= p.date_fin);
+      if (enVacances) return false;
+      return !joursNormaux.has(d.getDay());
+    }
+
+    function dayClass(isPast: boolean, isOpen: boolean, isSelected: boolean, isToday: boolean, isFermeAdmin: boolean) {
       const base = 'w-8 h-8 flex items-center justify-center text-sm rounded-lg mx-auto';
       if (isPast || !isOpen) {
         return `${base} text-gray-700 cursor-not-allowed line-through`;
       }
       if (isSelected) {
         return `${base} bg-blue-700 text-white font-bold ${isToday ? 'ring-1 ring-blue-400' : ''}`;
+      }
+      if (isFermeAdmin) {
+        return `${base} text-amber-400 hover:bg-amber-700/30 cursor-pointer transition-colors ${isToday ? 'ring-1 ring-amber-500' : ''}`;
       }
       if (isToday) {
         return `${base} text-white ring-1 ring-blue-500 hover:bg-blue-700/40 cursor-pointer transition-colors`;
@@ -108,11 +121,12 @@ const { id = 'dp' } = Astro.props;
         const isOpen = estOuvert(dateStr);
         const isSelected = dateStr === selectedDate;
         const isToday = dateStr === today;
+        const isFermeAdmin = adminMode && estNormalementFerme(dateStr);
 
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = String(day);
-        btn.className = dayClass(isPast, isOpen, isSelected, isToday);
+        btn.className = dayClass(isPast, isOpen, isSelected, isToday, isFermeAdmin);
 
         if (!isPast && isOpen) {
           btn.addEventListener('click', () => selectDate(dateStr));
@@ -190,6 +204,7 @@ const { id = 'dp' } = Astro.props;
       datesFermees = new Set(detail.datesFermees ?? []);
       periodesVacances = detail.periodesVacances ?? [];
       joursNormaux = new Set(detail.joursNormaux ?? [0, 3, 5, 6]);
+      adminMode = detail.adminMode ?? false;
       render();
     });
 

@@ -252,6 +252,7 @@ const {
       datesFermees: [...datesFermees],
       periodesVacances,
       joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+      adminMode: mode === 'admin',
     }}));
 
     // Écouter la sélection de date
@@ -499,6 +500,12 @@ const {
     const todayStr = localDateStr(new Date());
     const now = new Date();
     const slots = [];
+
+    // Réservations bloquées manuellement par l'admin pour aujourd'hui (clients uniquement)
+    if (mode !== 'admin' && selectedDate === todayStr &&
+        appConfig.reservations_bloquees_date === todayStr) {
+      return [];
+    }
 
     for (let start = openTotal; start + dureeMin + bufferMin <= closeTotal; start += 30) {
       const debut = dateAtMinutes(selectedDate, start);
