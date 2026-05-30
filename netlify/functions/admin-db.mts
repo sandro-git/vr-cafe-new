@@ -117,14 +117,8 @@ export default async (req: Request, _context: Context) => {
         const { error } = await supabase.from("config").delete().eq("cle", cle);
         if (error) return json({ error: error.message }, 500);
       } else {
-        const { data: existing } = await supabase.from("config").select("id").eq("cle", cle).maybeSingle();
-        if (existing) {
-          const { error } = await supabase.from("config").update({ valeur }).eq("cle", cle);
-          if (error) return json({ error: error.message }, 500);
-        } else {
-          const { error } = await supabase.from("config").insert({ cle, valeur });
-          if (error) return json({ error: error.message }, 500);
-        }
+        const { error } = await supabase.from("config").upsert({ cle, valeur }, { onConflict: "cle" });
+        if (error) return json({ error: error.message }, 500);
       }
       return json({ ok: true });
     }

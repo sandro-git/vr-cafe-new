@@ -302,7 +302,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // Helper : toutes les écritures admin passent par la fonction serveur
   async function adminDb(action, params = {}) {
-    const res = await fetch('/api/admin-db', {
+    const res = await fetch('/api/admin/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...params }),

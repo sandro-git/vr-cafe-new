@@ -311,7 +311,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     /** @type {HTMLButtonElement} */ (btn).disabled = true;
     btn.textContent = '...';
 
-    const httpRes = await fetch('/api/admin-db', {
+    const httpRes = await fetch('/api/admin/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update_reservation', id, fields: { statut: newStatut } }),
@@ -417,7 +417,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     btn.addEventListener('click', async () => {
       btn.disabled = true;
       const newValeur = bloque ? null : todayStr;
-      const res = await fetch('/api/admin-db', {
+      const res = await fetch('/api/admin/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'set_config', cle: 'reservations_bloquees_date', valeur: newValeur }),
