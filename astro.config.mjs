@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 
 import sanity from '@sanity/astro';
-import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -19,8 +18,8 @@ export default defineConfig({
       dataset: 'production',
       useCdn: import.meta.env.PROD,
       apiVersion: "2025-01-28",
-    }), react(), sitemap({
-    filter: (page) => !page.includes('/admin/') && !page.includes('/studio'),
+    }), sitemap({
+    filter: (page) => !page.includes('/admin/'),
   })],
 
   vite: {

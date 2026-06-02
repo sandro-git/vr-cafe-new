@@ -22,12 +22,11 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 
 - **Astro 6** en mode SSR (`output: "server"`)
 - **Adaptateur Netlify** pour le déploiement (fonctions Netlify dans `netlify/functions/`)
-- **Sanity CMS** :
+- **Sanity CMS** (headless) :
   - Project ID : `0oshw5tf` / Dataset : `production`
-  - Studio accessible sur `/studio`
+  - Le Studio est un projet **standalone** dans `vr-cafe-studio/` (plus de studio embarqué sur `/studio`) ; le site n'utilise `@sanity/astro` que comme client de données (`loadQuery`)
   - API version : `2025-01-28`, CDN activé
   - Types générés dans `sanity.types.ts` via TypeGen
-- **React 19** — uniquement pour Sanity Studio (`/studio`), pas utilisé dans les composants frontend
 - **Tailwind CSS v4** via le plugin Vite
 - **Supabase** — backend réservations (tables + RPC)
 - **Mailjet** — emails transactionnels (confirmation réservation, formulaire contact)
