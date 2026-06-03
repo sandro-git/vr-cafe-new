@@ -8,6 +8,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 
 import { sanityClient } from "sanity:client";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
 const freeroaming =
   await sanityClient.fetch(`*[_type == "games" && tag->title == "freeroaming"]{
@@ -21,12 +23,22 @@ const freeroaming =
   slug
 }`);
 // This fetches all games with the tag "jeuxVR" from Sanity
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Free Roaming VR", path: "/freeroaming" },
+  ]),
+  gameListSchema(freeroaming),
+]);
 ---
 
 <BaseLayout
   title="Jumpers VR à Canet-en-Roussillon — Saut en Réalité Virtuelle | VR Café"
   description="Sautez dans la réalité virtuelle sans fil à Canet-en-Roussillon. L'expérience free roaming la plus immersive près de Perpignan. Réservez !"
 >
+  <JsonLd schema={schema} />
   <GamesLayout>
     <GameList experiences={freeroaming} />
   </GamesLayout>

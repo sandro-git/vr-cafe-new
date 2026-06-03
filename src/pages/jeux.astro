@@ -10,14 +10,26 @@ import GamesLayout from "../layouts/GamesLayout.astro";
 import { loadQuery } from "../sanity/lib/load-query";
 import { JEUX_VR_QUERY } from "../sanity/lib/queries";
 import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
 const { data: jeux } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: JEUX_VR_QUERY });
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Jeux VR", path: "/jeux" },
+  ]),
+  gameListSchema(jeux),
+]);
 ---
 
 <BaseLayout
   title="Tous nos jeux VR à Perpignan | VR Café Canet-en-Roussillon"
   description="Explorez notre catalogue de jeux VR : escape games, free roaming, multijoueur. Salle VR à Canet-en-Roussillon près de Perpignan."
 >
+  <JsonLd schema={schema} />
   <GamesLayout>
     <GameList experiences={jeux} />
   </GamesLayout>

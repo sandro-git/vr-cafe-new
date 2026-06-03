@@ -3,6 +3,8 @@ export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { loadQuery } from "../sanity/lib/load-query";
 import { TARIF_ANNIVERSAIRE_QUERY } from "../sanity/lib/queries";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, service } from "../lib/seo";
 
 type Tarif = {
   _id: string;
@@ -12,12 +14,32 @@ type Tarif = {
 };
 
 const { data: tarifAnniversaire } = await loadQuery<Tarif | null>({ query: TARIF_ANNIVERSAIRE_QUERY });
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Anniversaire VR", path: "/anniversaire" },
+  ]),
+  service({
+    name: "Anniversaire en réalité virtuelle",
+    description:
+      "Fêtez un anniversaire inoubliable en réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan. Formules groupe pour enfants, ados et adultes, jusqu'à 10 personnes.",
+    serviceType: "Anniversaire",
+    path: "/anniversaire",
+    offer: {
+      price: tarifAnniversaire?.prix ?? 25,
+      description: "Formule anniversaire, 60 min de VR par personne",
+    },
+  }),
+]);
 ---
 
 <BaseLayout
   title="Anniversaire en Réalité Virtuelle à Perpignan | VR Café Canet-en-Roussillon"
   description="Organisez un anniversaire inoubliable en réalité virtuelle à Canet-en-Roussillon, à 10 min de Perpignan. Escape games, jeux VR, formules groupe. Réservez !"
 >
+  <JsonLd schema={schema} />
   <!-- Hero -->
   <section class="bg-gray-900 text-white py-20 px-4">
     <div class="max-w-4xl mx-auto text-center">

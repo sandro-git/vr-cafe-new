@@ -1,12 +1,31 @@
 ---
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, service } from "../lib/seo";
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Team Building VR", path: "/team-building" },
+  ]),
+  service({
+    name: "Team building en réalité virtuelle",
+    description:
+      "Renforcez la cohésion de votre équipe avec des escape games collaboratifs et des défis VR au VR Café de Canet-en-Roussillon, près de Perpignan. Sessions libres, tournois inter-équipes et séminaires.",
+    serviceType: "Team building",
+    path: "/team-building",
+    offer: { price: 18, description: "Session libre, dès 18 €/personne" },
+  }),
+]);
 ---
 
 <BaseLayout
   title="Team Building VR à Perpignan | VR Café Canet-en-Roussillon"
   description="Organisez un team building en réalité virtuelle inoubliable à Canet-en-Roussillon, près de Perpignan. Cohésion, fun, défi. Demandez votre devis !"
 >
+  <JsonLd schema={schema} />
   <!-- Hero -->
   <section class="bg-gray-900 text-white py-20 px-4">
     <div class="max-w-4xl mx-auto text-center">

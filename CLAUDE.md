@@ -260,6 +260,13 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 - Pour les fonctions Netlify : utiliser `SUPABASE_SERVICE_ROLE_KEY` (accès service role)
 - RPC `get_boxes_disponibles` pour vérifier la disponibilité des boxes
 
+**SEO / données structurées (JSON-LD) :**
+- Helpers centralisés dans `src/lib/seo.ts` (`businessNode`, `graph`, `breadcrumb`, `service`, `product`, `faqPage`, `itemList`, `gameListSchema`)
+- Composant `src/components/JsonLd.astro` pour émettre un bloc `<script type="application/ld+json">`
+- Convention : une page émet un `graph([businessNode, breadcrumb([...]), <schéma page>])` ; `businessNode` doit rester dans le `@graph` pour que les `provider`/`brand` `{"@id": ".../#business"}` se résolvent
+- `FAQ.astro` émet automatiquement un `FAQPage` dès qu'il affiche des questions
+- Image OG (`public/og-image.jpg`, 1200×630) régénérable via `node scripts/gen-og-image.mjs`
+
 **Sécurité :**
 - CSRF via HMAC-SHA256 sur le formulaire contact
 - Cookie `admin_session` httpOnly + secure sur toutes les routes `/admin/*`

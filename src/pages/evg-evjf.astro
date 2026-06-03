@@ -1,12 +1,31 @@
 ---
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, service } from "../lib/seo";
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "EVG & EVJF VR", path: "/evg-evjf" },
+  ]),
+  service({
+    name: "EVG / EVJF en réalité virtuelle",
+    description:
+      "Organisez un enterrement de vie de garçon ou de jeune fille en réalité virtuelle au VR Café de Canet-en-Roussillon, près de Perpignan. Escape games, défis VR et ambiance festive pour 2 à 12 personnes.",
+    serviceType: "Enterrement de vie de garçon / jeune fille",
+    path: "/evg-evjf",
+    offer: { price: 25, description: "Petit groupe, session 60 min" },
+  }),
+]);
 ---
 
 <BaseLayout
   title="EVG & EVJF en Réalité Virtuelle à Perpignan | VR Café Canet-en-Roussillon"
   description="Organisez un EVG ou EVJF inoubliable en VR à Canet-en-Roussillon, près de Perpignan. Escape games, ambiance festive, formules groupe. Réservez !"
 >
+  <JsonLd schema={schema} />
   <!-- Hero -->
   <section class="bg-gray-900 text-white py-20 px-4">
     <div class="max-w-4xl mx-auto text-center">

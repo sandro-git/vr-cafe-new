@@ -8,6 +8,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 
 import { sanityClient } from "sanity:client";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
 const escapeFreeroaming =
   await sanityClient.fetch(`*[_type == "games" && tag->title == "escapeFreeroaming"]{
@@ -21,12 +23,22 @@ const escapeFreeroaming =
   slug
 }`);
 // This fetches all games with the tag "jeuxVR" from Sanity
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Escapes VR Sans Fil", path: "/escapesFreeroaming" },
+  ]),
+  gameListSchema(escapeFreeroaming),
+]);
 ---
 
 <BaseLayout
   title="Escape Games VR Sans Fil à Perpignan | Canet-en-Roussillon — VR Café"
   description="Vivez des escape games en réalité virtuelle sans fil à Canet-en-Roussillon. Liberté totale, immersion maximale. Réservez près de Perpignan !"
 >
+  <JsonLd schema={schema} />
   <GamesLayout>
     <GameList experiences={escapeFreeroaming} />
   </GamesLayout>
