@@ -1,5 +1,12 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
+import { updateClientInMailjet, deleteClientFromMailjet } from "../lib/mailjet-contacts.ts";
+
+function mailjetCreds(): { apiKey: string; apiSecret: string } | null {
+  const apiKey = process.env.MAILJET_API_KEY;
+  const apiSecret = process.env.MAILJET_API_SECRET;
+  return apiKey && apiSecret ? { apiKey, apiSecret } : null;
+}
 
 function checkAuth(req: Request): boolean {
   const cookieHeader = req.headers.get("cookie") ?? "";
@@ -50,6 +57,108 @@ export default async (req: Request, _context: Context) => {
       const { error } = await supabase.from("reservations").update(fields).eq("id", id);
       if (error) return json({ error: error.message }, 500);
       return json({ ok: true });
+    }
+
+    // ── Clients ──────────────────────────────────────────────────────────────
+    case "update_client": {
+      const { id, fields } = body as {
+        id: string;
+        fields: { nom?: string; email?: string; telephone?: string };
+      };
+      if (!id || !fields || typeof fields !== "object" || !Object.keys(fields).length)
+        return json({ error: "Missing id or fields" }, 400);
+
+      // 0. Récupérer la fiche actuelle (pour l'ancien email — clé Mailjet)
+      const { data: before, error: beforeErr } = await supabase
+        .from("clients")
+        .select("nom, email, telephone")
+        .eq("id", id)
+        .single();
+      if (beforeErr) return json({ error: beforeErr.message }, 500);
+
+      // 1. Mettre à jour la fiche client
+      const { error: cErr } = await supabase
+        .from("clients")
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (cErr) return json({ error: cErr.message }, 500);
+
+      // 2. Propager aux champs dénormalisés des réservations du client
+      const resaFields: Record<string, unknown> = {};
+      if (fields.nom !== undefined) resaFields.client_nom = fields.nom;
+      if (fields.email !== undefined) resaFields.client_email = fields.email;
+      if (fields.telephone !== undefined) resaFields.client_telephone = fields.telephone;
+      if (Object.keys(resaFields).length) {
+        const { error: rErr } = await supabase
+          .from("reservations")
+          .update(resaFields)
+          .eq("client_id", id);
+        if (rErr) return json({ error: rErr.message }, 500);
+      }
+
+      // 3. Synchroniser Mailjet (non bloquant — Supabase est la source de vérité)
+      let mailjet_warning: string | undefined;
+      const creds = mailjetCreds();
+      if (creds) {
+        try {
+          await updateClientInMailjet({
+            oldEmail: before?.email ?? "",
+            nom: fields.nom ?? before?.nom ?? "",
+            email: fields.email ?? before?.email ?? "",
+            telephone: fields.telephone ?? before?.telephone ?? "",
+            ...creds,
+          });
+        } catch (e) {
+          mailjet_warning = e instanceof Error ? e.message : String(e);
+        }
+      }
+      return json({ ok: true, mailjet_warning });
+    }
+
+    case "delete_client": {
+      const { id } = body as { id: string };
+      if (!id) return json({ error: "Missing id" }, 400);
+
+      // 0. Récupérer l'email du client (clé Mailjet) avant suppression
+      const { data: before } = await supabase
+        .from("clients")
+        .select("email")
+        .eq("id", id)
+        .single();
+
+      // 1. Récupérer les réservations du client
+      const { data: resas, error: selErr } = await supabase
+        .from("reservations")
+        .select("id")
+        .eq("client_id", id);
+      if (selErr) return json({ error: selErr.message }, 500);
+
+      const ids = (resas ?? []).map((r) => r.id);
+
+      // 2. Supprimer explicitement les box associées (ne pas dépendre de la cascade)
+      if (ids.length) {
+        const { error: boxErr } = await supabase
+          .from("reservation_boxes")
+          .delete()
+          .in("reservation_id", ids);
+        if (boxErr) return json({ error: boxErr.message }, 500);
+      }
+
+      // 3. Supprimer le client (cascade vers ses réservations via client_id)
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+      if (error) return json({ error: error.message }, 500);
+
+      // 4. Suppression définitive (RGPD) du contact Mailjet (non bloquant)
+      let mailjet_warning: string | undefined;
+      const creds = mailjetCreds();
+      if (creds && before?.email) {
+        try {
+          await deleteClientFromMailjet({ email: before.email, ...creds });
+        } catch (e) {
+          mailjet_warning = e instanceof Error ? e.message : String(e);
+        }
+      }
+      return json({ ok: true, deleted: ids.length, mailjet_warning });
     }
 
     // ── Périodes de vacances ─────────────────────────────────────────────────

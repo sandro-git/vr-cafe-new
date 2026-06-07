@@ -67,9 +67,20 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
       <!-- Vue détail client -->
       <div id="view-detail" class="hidden">
-        <button id="btn-back" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6">
-          ← Retour aux clients
-        </button>
+        <div class="flex items-center justify-between gap-3 mb-6">
+          <button id="btn-back" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+            ← Retour aux clients
+          </button>
+          <div class="flex gap-2">
+            <button id="btn-edit" class="text-sm text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+              ✏️ Modifier
+            </button>
+            <button id="btn-delete" class="text-sm text-red-400 hover:text-red-300 transition-colors border border-red-800 rounded-xl px-4 py-2 hover:border-red-600">
+              🗑️ Supprimer
+            </button>
+          </div>
+        </div>
+        <div id="detail-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
         <div id="client-header" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 mb-6"></div>
         <h2 class="text-lg font-semibold text-white mb-4">Historique des réservations</h2>
         <div id="client-reservations" class="space-y-3"></div>
@@ -77,6 +88,39 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     </div>
   </main>
+
+  <!-- Modale de modification client -->
+  <div id="modal-edit" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-black/60">
+    <div class="bg-gray-800 border border-gray-600 rounded-2xl p-6 w-full max-w-md">
+      <h3 class="text-lg font-bold text-white mb-5">Modifier le client</h3>
+      <div id="modal-error" class="hidden mb-4 p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1.5" for="edit-nom">Nom</label>
+          <input id="edit-nom" type="text" autocomplete="off"
+            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1.5" for="edit-email">Email</label>
+          <input id="edit-email" type="email" autocomplete="off"
+            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1.5" for="edit-telephone">Téléphone</label>
+          <input id="edit-telephone" type="tel" autocomplete="off"
+            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button id="modal-cancel" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+          Annuler
+        </button>
+        <button id="modal-save" class="text-sm text-white bg-blue-600 hover:bg-blue-500 transition-colors rounded-xl px-4 py-2 disabled:opacity-50">
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
 </AdminLayout>
 
 <style>
@@ -107,57 +151,62 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── État ──────────────────────────────────────────────────────────────────
   let allClients = [];
+  let currentClient = null;
   let activeChip = 'tous';
   let searchQuery = '';
   let searchTimer = null;
 
   // ── Chargement initial de tous les clients ────────────────────────────────
   async function loadAllClients() {
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('client_nom, client_email, client_telephone, statut, creneau_debut')
-      .order('creneau_debut', { ascending: false });
+    // 1. Les clients (source de vérité)
+    const { data: clients, error: cErr } = await supabase
+      .from('clients')
+      .select('id, nom, email, telephone');
 
-    if (error) {
+    if (cErr) {
       document.getElementById('state-loading').classList.add('hidden');
-      showError('Erreur de chargement : ' + error.message);
+      showError('Erreur de chargement : ' + cErr.message);
+      return;
+    }
+
+    // 2. Les réservations pour calculer les statistiques (par client_id)
+    const { data: resas, error: rErr } = await supabase
+      .from('reservations')
+      .select('client_id, statut, creneau_debut');
+
+    if (rErr) {
+      document.getElementById('state-loading').classList.add('hidden');
+      showError('Erreur de chargement : ' + rErr.message);
       return;
     }
 
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    const clientMap = new Map();
-
-    for (const r of (data ?? [])) {
-      const key = r.client_email?.toLowerCase().trim() || r.client_nom?.toLowerCase().trim();
-      if (!key) continue;
-
-      const isConfirmee = r.statut === 'confirmée';
+    // Agrégation des stats par client_id
+    const statsMap = new Map();
+    for (const r of (resas ?? [])) {
+      if (!r.client_id || r.statut !== 'confirmée') continue;
       const date = r.creneau_debut ? new Date(r.creneau_debut) : null;
-
-      if (!clientMap.has(key)) {
-        clientMap.set(key, {
-          nom: r.client_nom ?? '',
-          email: r.client_email ?? '',
-          telephone: r.client_telephone ?? '',
-          nbConfirmees: isConfirmee ? 1 : 0,
-          derniereResa: isConfirmee && date ? date : null,
-        });
-      } else {
-        const c = clientMap.get(key);
-        if (isConfirmee) {
-          c.nbConfirmees++;
-          if (date && (!c.derniereResa || date > c.derniereResa)) c.derniereResa = date;
-        }
-      }
+      const s = statsMap.get(r.client_id) ?? { nbConfirmees: 0, derniereResa: null };
+      s.nbConfirmees++;
+      if (date && (!s.derniereResa || date > s.derniereResa)) s.derniereResa = date;
+      statsMap.set(r.client_id, s);
     }
 
-    allClients = [...clientMap.values()].map(c => ({
-      ...c,
-      isFidele: c.nbConfirmees >= 5,
-      isInactif: c.nbConfirmees > 0 && (!c.derniereResa || c.derniereResa < threeMonthsAgo),
-    })).sort((a, b) => (b.derniereResa ?? 0) - (a.derniereResa ?? 0));
+    allClients = (clients ?? []).map(c => {
+      const s = statsMap.get(c.id) ?? { nbConfirmees: 0, derniereResa: null };
+      return {
+        id: c.id,
+        nom: c.nom ?? '',
+        email: c.email ?? '',
+        telephone: c.telephone ?? '',
+        nbConfirmees: s.nbConfirmees,
+        derniereResa: s.derniereResa,
+        isFidele: s.nbConfirmees >= 5,
+        isInactif: s.nbConfirmees > 0 && (!s.derniereResa || s.derniereResa < threeMonthsAgo),
+      };
+    }).sort((a, b) => (b.derniereResa ?? 0) - (a.derniereResa ?? 0));
 
     // Compter pour les chips
     document.getElementById('count-tous').textContent     = allClients.length;
@@ -228,6 +277,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Fiche client ──────────────────────────────────────────────────────────
   async function openClient(client) {
+    currentClient = client;
     document.getElementById('view-list').classList.add('hidden');
     document.getElementById('view-detail').classList.remove('hidden');
 
@@ -260,7 +310,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       .select('*, reservation_boxes(box_id, boxes(nom, type))')
       .order('creneau_debut', { ascending: false });
 
-    if (client.email) q.eq('client_email', client.email);
+    if (client.id) q.eq('client_id', client.id);
+    else if (client.email) q.eq('client_email', client.email);
     else { q.eq('client_nom', client.nom); if (client.telephone) q.eq('client_telephone', client.telephone); }
 
     const { data, error } = await q;
@@ -347,9 +398,107 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     searchTimer = setTimeout(applyFilters, 250);
   });
 
-  document.getElementById('btn-back').addEventListener('click', () => {
+  function backToList() {
     document.getElementById('view-detail').classList.add('hidden');
+    document.getElementById('detail-error').classList.add('hidden');
     document.getElementById('view-list').classList.remove('hidden');
+  }
+
+  document.getElementById('btn-back').addEventListener('click', backToList);
+
+  function showDetailError(msg) {
+    const el = document.getElementById('detail-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  // ── Modale de modification ─────────────────────────────────────────────────
+  function openModal() {
+    if (!currentClient) return;
+    document.getElementById('edit-nom').value = currentClient.nom ?? '';
+    document.getElementById('edit-email').value = currentClient.email ?? '';
+    document.getElementById('edit-telephone').value = currentClient.telephone ?? '';
+    document.getElementById('modal-error').classList.add('hidden');
+    const modal = document.getElementById('modal-edit');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('modal-edit');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function showModalError(msg) {
+    const el = document.getElementById('modal-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  document.getElementById('btn-edit').addEventListener('click', openModal);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-edit').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.getElementById('modal-save').addEventListener('click', async () => {
+    if (!currentClient) return;
+    const nom = document.getElementById('edit-nom').value.trim();
+    const email = document.getElementById('edit-email').value.trim();
+    const telephone = document.getElementById('edit-telephone').value.trim();
+
+    if (!nom) { showModalError('Le nom est obligatoire.'); return; }
+
+    const btn = document.getElementById('modal-save');
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement...';
+    try {
+      const res = await fetch('/api/admin/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_client',
+          id: currentClient.id,
+          fields: { nom, email, telephone },
+        }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || out.error) throw new Error(out.error || `Erreur ${res.status}`);
+      closeModal();
+      backToList();
+      await loadAllClients();
+    } catch (err) {
+      showModalError('Échec de la modification : ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer';
+    }
+  });
+
+  // ── Suppression ────────────────────────────────────────────────────────────
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    if (!currentClient) return;
+    if (!confirm(`Supprimer « ${currentClient.nom || currentClient.email} » ?\n\nCela supprimera définitivement toutes ses réservations. Cette action est irréversible.`))
+      return;
+
+    const btn = document.getElementById('btn-delete');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/admin/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_client', id: currentClient.id }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || out.error) throw new Error(out.error || `Erreur ${res.status}`);
+      backToList();
+      await loadAllClients();
+    } catch (err) {
+      showDetailError('Échec de la suppression : ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   // ── Init ──────────────────────────────────────────────────────────────────
