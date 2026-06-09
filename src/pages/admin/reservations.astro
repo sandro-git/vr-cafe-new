@@ -46,7 +46,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       </div>
 
       <!-- Statistiques du jour -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
           <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Total</p>
           <p id="stat-total" class="text-2xl font-bold text-white">—</p>
@@ -62,6 +62,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
           <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Joueurs</p>
           <p id="stat-players" class="text-2xl font-bold text-blue-400">—</p>
+        </div>
+        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4 col-span-2 sm:col-span-1">
+          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">CA théorique</p>
+          <p id="stat-revenue" class="text-2xl font-bold text-purple-400">—</p>
         </div>
       </div>
 
@@ -165,15 +169,23 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   // ── Stats ─────────────────────────────────────────────────────────────────
+  function calcMontant(duree, nb) {
+    if (duree === 30) return 18 * nb;
+    if (duree === 60) return (nb <= 2 ? 29 : nb <= 4 ? 27 : 25) * nb;
+    return 0;
+  }
+
   function updateStats(reservations) {
     const confirmed = reservations.filter(r => r.statut === 'confirmée');
     const cancelled = reservations.filter(r => r.statut === 'annulée');
     const players = confirmed.reduce((sum, r) => sum + (r.nb_personnes || 0), 0);
+    const revenue = confirmed.reduce((sum, r) => sum + calcMontant(r.duree_minutes, r.nb_personnes || 0), 0);
 
     document.getElementById('stat-total').textContent = String(reservations.length);
     document.getElementById('stat-confirmed').textContent = String(confirmed.length);
     document.getElementById('stat-cancelled').textContent = String(cancelled.length);
     document.getElementById('stat-players').textContent = String(players);
+    document.getElementById('stat-revenue').textContent = `${revenue} €`;
   }
 
   // ── Tableau desktop ────────────────────────────────────────────────────────
