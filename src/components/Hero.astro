@@ -8,7 +8,7 @@ import vrcafe from '../assets/vrcafe.webp';
   @media (min-width: 1024px) { .hero-photo { aspect-ratio: 4/3.05; } }
 </style>
 
-<section class="relative overflow-hidden" style="padding: 36px 0 80px; background: var(--bg);">
+<section class="relative overflow-hidden" style="padding: 128px 0 80px; background: var(--bg);">
 
   <!-- Halos décoratifs -->
   <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -24,7 +24,7 @@ import vrcafe from '../assets/vrcafe.webp';
          LAYOUT DESKTOP : grille 1.05fr / 1fr
          LAYOUT MOBILE  : colonne unique (photo en premier)
          ============================================================ -->
-    <div class="flex flex-col lg:grid lg:items-center" style="gap:56px;grid-template-columns:1.05fr 1fr;">
+    <div class="flex flex-col lg:grid lg:items-start" style="gap:56px;grid-template-columns:1.05fr 1fr;">
 
       <!-- ──────────────────── COLONNE TEXTE (desktop) ──────────────────── -->
       <div class="hidden lg:flex flex-col order-1">
