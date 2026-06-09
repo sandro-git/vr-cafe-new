@@ -205,7 +205,24 @@ const { id = 'dp' } = Astro.props;
       periodesVacances = detail.periodesVacances ?? [];
       joursNormaux = new Set(detail.joursNormaux ?? [0, 3, 5, 6]);
       adminMode = detail.adminMode ?? false;
-      render();
+      if (detail.selectedDate) {
+        const d = new Date(detail.selectedDate + 'T12:00:00');
+        calYear = d.getFullYear();
+        calMonth = d.getMonth();
+        selectDate(detail.selectedDate);
+      } else {
+        render();
+      }
+    });
+
+    // Pilotage externe : set la date depuis du code parent (boutons prev/next/today, etc.)
+    document.addEventListener('datepicker:setDate', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== rootId) return;
+      const d = new Date(detail.date + 'T12:00:00');
+      calYear = d.getFullYear();
+      calMonth = d.getMonth();
+      selectDate(detail.date);
     });
 
     // Init sur le mois courant

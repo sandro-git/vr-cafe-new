@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import DatePicker from "../../components/DatePicker.astro";
 ---
 
 <AdminLayout>
@@ -13,13 +14,28 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <h1 class="text-2xl font-bold text-white">Réservations</h1>
             <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
           </div>
-          <!-- Date : au-dessus sur mobile, inline sur desktop -->
-          <div class="flex items-center gap-2 sm:order-last">
-            <label for="date-filter" class="text-sm text-gray-400 shrink-0">Date :</label>
-            <input
-              type="date" id="date-filter"
-              class="bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 sm:flex-none"
-            />
+          <!-- Date : navigation jour + datepicker -->
+          <div class="flex items-center gap-2 sm:order-last flex-wrap">
+            <button
+              id="btn-prev"
+              type="button"
+              aria-label="Jour précédent"
+              class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+            >‹</button>
+            <button
+              id="btn-today"
+              type="button"
+              class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl border border-gray-600 transition-colors"
+            >Aujourd'hui</button>
+            <button
+              id="btn-next"
+              type="button"
+              aria-label="Jour suivant"
+              class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+            >›</button>
+            <div class="ml-1 w-60">
+              <DatePicker id="dp-reservations" />
+            </div>
           </div>
         </div>
         <!-- Boutons : grille 2 colonnes sur mobile, inline sur desktop -->
@@ -397,11 +413,68 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   }
 
   // ── Contrôles date ─────────────────────────────────────────────────────────
-  const dateInput = /** @type {HTMLInputElement} */ (document.getElementById('date-filter'));
-  dateInput.value = currentDate;
-  dateInput.addEventListener('change', e => {
-    currentDate = /** @type {HTMLInputElement} */ (e.target).value;
+  const DP_ID = 'dp-reservations';
+
+  function shiftDay(dateStr, delta) {
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + delta);
+    return localDateStr(d);
+  }
+
+  function setDate(newDate) {
+    if (newDate === currentDate) return;
+    document.dispatchEvent(new CustomEvent('datepicker:setDate', {
+      detail: { id: DP_ID, date: newDate }
+    }));
+    // datepicker:setDate déclenche datepicker:select → recharge les réservations
+  }
+
+  // Sélection depuis le calendrier (ou pilotée par setDate ci-dessus)
+  document.addEventListener('datepicker:select', e => {
+    if (e.detail.id !== DP_ID) return;
+    if (e.detail.date === currentDate) return;
+    currentDate = e.detail.date;
     loadReservations(currentDate);
+  });
+
+  document.getElementById('btn-prev').addEventListener('click', () => setDate(shiftDay(currentDate, -1)));
+  document.getElementById('btn-next').addEventListener('click', () => setDate(shiftDay(currentDate, +1)));
+  document.getElementById('btn-today').addEventListener('click', () => setDate(localDateStr(new Date())));
+
+  // Raccourcis clavier ← / → pour naviguer entre jours
+  document.addEventListener('keydown', e => {
+    const tag = /** @type {HTMLElement} */ (e.target).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (e.target).isContentEditable) return;
+    if (e.key === 'ArrowLeft')  { setDate(shiftDay(currentDate, -1)); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { setDate(shiftDay(currentDate, +1)); e.preventDefault(); }
+  });
+
+  // Charger les jours fermés + périodes de vacances pour colorer correctement
+  // le datepicker (sinon les jours hors ouverture habituelle apparaissent à
+  // tort en ambre même pendant les vacances scolaires).
+  async function loadJoursOuvertureData() {
+    const [fermesRes, vacancesRes] = await Promise.all([
+      supabase.from('jours_fermeture').select('date'),
+      supabase.from('periodes_vacances').select('date_debut, date_fin').order('date_debut'),
+    ]);
+    return {
+      datesFermees: (fermesRes.data ?? []).map(j => j.date),
+      periodesVacances: vacancesRes.data ?? [],
+    };
+  }
+
+  // Init du datepicker en mode admin avec la date courante + données d'ouverture
+  loadJoursOuvertureData().then(({ datesFermees, periodesVacances }) => {
+    document.dispatchEvent(new CustomEvent('datepicker:init', {
+      detail: {
+        id: DP_ID,
+        adminMode: true,
+        selectedDate: currentDate,
+        datesFermees,
+        periodesVacances,
+        joursNormaux: [0, 3, 5, 6], // dim, mer, ven, sam — cf. ReservationForm.astro
+      }
+    }));
   });
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
