@@ -29,14 +29,6 @@ import vrcafe from '../assets/vrcafe.webp';
       <!-- ──────────────────── COLONNE TEXTE (desktop) ──────────────────── -->
       <div class="hidden lg:flex flex-col order-1">
 
-        <!-- Eyebrow -->
-        <div class="self-start inline-flex items-center gap-2.5 rounded-full text-xs mb-5"
-             style="padding:6px 12px 6px 8px;border:1px solid var(--line);background:var(--surface);color:var(--text-dim);">
-          <span class="inline-flex items-center rounded-full font-semibold"
-                style="padding:3px 8px;background:var(--brand-grad);color:white;font-size:11px;">Nouveau</span>
-          Free Roaming sans fil
-        </div>
-
         <!-- H1 -->
         <h1 style="font-size:clamp(40px,5.4vw,76px);font-weight:700;letter-spacing:-0.035em;color:var(--text);">
           La réalité virtuelle,<br>version <span class="grad-text">café.</span>
@@ -131,13 +123,7 @@ import vrcafe from '../assets/vrcafe.webp';
           <div class="absolute inset-0 lg:hidden pointer-events-none"
                style="background:linear-gradient(180deg,rgba(10,10,18,.10) 0%,rgba(10,10,18,.55) 50%,rgba(10,10,18,.96) 92%)"></div>
 
-          <!-- ── MOBILE ONLY : eyebrow + rating superposés en haut ── -->
-          <div class="absolute lg:hidden z-10 inline-flex items-center gap-1.5 rounded-full"
-               style="top:38px;left:32px;padding:5px 10px 5px 6px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px);font-size:11px;color:white;">
-            <span class="rounded-full font-bold"
-                  style="padding:2px 8px;background:var(--brand-grad);font-size:10px;">Nouveau</span>
-            Free Roaming sans fil
-          </div>
+          <!-- ── MOBILE ONLY : rating superposé en haut ── -->
           <div class="absolute lg:hidden z-10 inline-flex items-center gap-1.5 rounded-full"
                style="top:38px;right:32px;padding:6px 10px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px);font-size:12px;color:white;">
             <span class="flex gap-px" style="color:var(--gold);">

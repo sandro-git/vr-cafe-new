@@ -22,14 +22,14 @@ const partenaires = [
     padding: 0 28px;
   }
   .ts-card {
-    padding: 24px 32px;
+    padding: 28px 40px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 28px;
-    flex-wrap: wrap;
+    gap: 36px;
   }
   .ts-label {
     font-family: 'JetBrains Mono', monospace;
@@ -41,16 +41,19 @@ const partenaires = [
     flex-shrink: 0;
   }
   .ts-logos {
-    display: flex;
-    gap: 32px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     align-items: center;
-    flex-wrap: wrap;
+    gap: 28px;
     flex: 1;
+    min-width: 0;
   }
   .ts-logo {
     display: flex;
     align-items: center;
-    opacity: 0.65;
+    justify-content: center;
+    min-width: 0;
+    opacity: 0.7;
     filter: grayscale(1);
     transition: opacity 0.2s ease, filter 0.2s ease;
   }
@@ -58,9 +61,22 @@ const partenaires = [
     opacity: 1;
     filter: none;
   }
-  @media (max-width: 560px) {
-    .ts-card { padding: 18px 20px; gap: 20px; }
-    .ts-logos { gap: 20px; }
+  .ts-logo img {
+    height: 44px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  @media (max-width: 900px) {
+    .ts-card { padding: 24px 28px; flex-direction: column; align-items: flex-start; gap: 20px; }
+    .ts-logos { grid-template-columns: repeat(3, 1fr); gap: 24px 28px; width: 100%; }
+    .ts-logo img { height: 38px; }
+  }
+  @media (max-width: 480px) {
+    .ts-card { padding: 22px 20px; gap: 18px; }
+    .ts-logos { grid-template-columns: repeat(2, 1fr); gap: 22px 20px; }
+    .ts-logo img { height: 32px; }
   }
 </style>
 
@@ -71,7 +87,7 @@ const partenaires = [
       <div class="ts-logos">
         {partenaires.map(({ src, alt, href }) => (
           <a href={href} class="ts-logo" target="_blank" rel="noopener noreferrer" aria-label={alt} title={alt}>
-            <Image src={src} alt={alt} height={24} style="height:24px;width:auto;" loading="lazy" />
+            <Image src={src} alt={alt} height={56} loading="lazy" />
           </a>
         ))}
       </div>

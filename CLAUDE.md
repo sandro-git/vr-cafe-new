@@ -11,7 +11,8 @@ Site web complet d'un VR Café (vr-cafe.fr) construit avec Astro 6 + Sanity CMS 
 Toutes les commandes utilisent `bun` et doivent être exécutées depuis la racine du projet :
 
 - **`bun install`** - Installer les dépendances
-- **`bun dev`** - Démarrer le serveur de développement sur `localhost:4321`
+- **`bun dev`** - Démarrer le serveur de développement Astro seul sur `localhost:4321` (⚠️ ne charge pas les Netlify Functions ni les env Netlify — à éviter)
+- **`netlify dev`** - **Mode dev par défaut** sur `localhost:8888` : sert Astro + les Netlify Functions (`/api/*`) + injecte les variables d'env Netlify (project settings + `.env`). À utiliser systématiquement dès qu'on teste réservation, contact, push, admin-db, etc.
 - **`bun run build`** - Construire le site en production dans `./dist/`
 - **`bun run preview`** - Prévisualiser le build de production en local
 - **`bun astro ...`** - Exécuter les commandes Astro CLI (ex. `bun astro check`)
