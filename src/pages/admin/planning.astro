@@ -197,13 +197,16 @@ import DatePicker from "../../components/DatePicker.astro";
       <!-- Vue édition -->
       <div id="modal-edit" class="hidden p-6">
 
-        <!-- Onglets Standard / Anniversaire -->
+        <!-- Onglets Standard / Anniversaire / MDJ -->
         <div class="flex gap-1.5 bg-gray-900/80 rounded-2xl p-1 border border-gray-700 mb-5">
           <button type="button" id="edit-tab-standard" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors bg-blue-700 text-white">
             🎮 Standard
           </button>
           <button type="button" id="edit-tab-anniversaire" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-gray-400 hover:text-white">
             🎂 Anniversaire
+          </button>
+          <button type="button" id="edit-tab-mdj" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-gray-400 hover:text-white">
+            🏠 MDJ
           </button>
         </div>
 
@@ -255,12 +258,16 @@ import DatePicker from "../../components/DatePicker.astro";
             Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-gray-500">(fixe pour les anniversaires)</span>
           </div>
 
-          <div>
+          <div id="edit-vr-section">
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
             <div id="edit-vr-type-auto" class="hidden mt-3 px-4 py-3 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200">
               🎉 Pour les groupes de plus de 6 personnes, nous réservons automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
             </div>
+          </div>
+          <div id="edit-mdj-info" class="hidden px-4 py-3 bg-violet-900/30 border border-violet-800 rounded-xl text-sm text-violet-200">
+            🏠 La réservation MDJ bloque automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
+            <div id="edit-mdj-repartition" class="mt-2 text-violet-100/80 text-xs"></div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
@@ -440,6 +447,7 @@ import DatePicker from "../../components/DatePicker.astro";
   }
 
   function statusClass(res) {
+    if (res.type_reservation === 'mdj') return 'bg-violet-700/60 border-violet-400 text-violet-100';
     if (res.type_reservation === 'anniversaire') return 'bg-pink-700/60 border-pink-400 text-pink-100';
     if (isSansFil(res)) return 'bg-emerald-700/60 border-emerald-500 text-emerald-100';
     return res.duree_minutes <= 30
@@ -615,7 +623,7 @@ import DatePicker from "../../components/DatePicker.astro";
         bloc.style.cssText = `position:absolute;top:${top}px;left:${left};width:${width};height:${height}px;pointer-events:auto;overflow:hidden;`;
         bloc.className = `rounded border px-1.5 py-1 text-xs leading-tight cursor-pointer ${statusClass(res)}`;
         bloc.innerHTML = `
-          <span class="font-semibold truncate block">${res.type_reservation === 'anniversaire' ? '🎂 ' : ''}${esc(res.client_nom)}</span>
+          <span class="font-semibold truncate block">${res.type_reservation === 'mdj' ? '🏠 ' : res.type_reservation === 'anniversaire' ? '🎂 ' : ''}${esc(res.client_nom)}</span>
           <span class="opacity-75 block">${formatTime(debut)}</span>
           ${height >= 72 ? `<span class="opacity-60 block">👥${res.nb_personnes} · ${res.duree_minutes}min</span>` : ''}
         `;
@@ -717,9 +725,18 @@ import DatePicker from "../../components/DatePicker.astro";
     document.getElementById('edit-notes').value = res.notes ?? '';
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     editSelectedNb = res.nb_personnes ?? 1;
-    const isAnniv = res.type_reservation === 'anniversaire';
-    switchEditTab(isAnniv ? 'anniversaire' : 'standard');
-    if (!isAnniv) setupEditDuree(res.duree_minutes);
+    const t = res.type_reservation;
+    if (t === 'mdj') {
+      // Pré-régler la durée par session = durée bloquée / nbCreneaux
+      const nbCreneaux = Math.max(1, Math.ceil((res.nb_personnes ?? 7) / 12));
+      editSelectedDuree = Math.round((res.duree_minutes ?? 30) / nbCreneaux);
+      switchEditTab('mdj');
+    } else if (t === 'anniversaire') {
+      switchEditTab('anniversaire');
+    } else {
+      switchEditTab('standard');
+      setupEditDuree(res.duree_minutes);
+    }
     document.getElementById('modal-edit-error').classList.add('hidden');
 
     // Afficher vue détail
@@ -749,7 +766,11 @@ import DatePicker from "../../components/DatePicker.astro";
     editSelectedDuree = currentMinutes;
     const grid = document.getElementById('edit-duree-grid');
     grid.innerHTML = '';
-    dureeOptions.forEach(d => {
+    // En MDJ on n'autorise que 30 et 60 min ; sinon on prend toute la liste configurée
+    const options = editTypeResa === 'mdj'
+      ? dureeOptions.filter(d => d.duree_minutes === 30 || d.duree_minutes === 60)
+      : dureeOptions;
+    options.forEach(d => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = dureeBtnClass(d.duree_minutes === currentMinutes);
@@ -760,6 +781,7 @@ import DatePicker from "../../components/DatePicker.astro";
         grid.querySelectorAll('button').forEach(b => {
           b.className = dureeBtnClass(Number(b.dataset.minutes) === d.duree_minutes);
         });
+        if (editTypeResa === 'mdj') updateMdjRepartition();
       });
       grid.appendChild(btn);
     });
@@ -880,12 +902,21 @@ import DatePicker from "../../components/DatePicker.astro";
     }
   }
 
-  function setupEditNbPersonnes(currentNb, isAnniv) {
-    const min = isAnniv ? 5 : 1;
-    const max = isAnniv ? 12 : 6;
+  function updateMdjRepartition() {
+    const el = document.getElementById('edit-mdj-repartition');
+    if (!el) return;
+    const dureeUnit = editSelectedDuree || 30;
+    const nbCreneaux = Math.ceil((editSelectedNb || 7) / 12);
+    const dureeBlocage = nbCreneaux * dureeUnit;
+    el.innerHTML = `${nbCreneaux} session${nbCreneaux > 1 ? 's' : ''} de ${dureeUnit} min · Blocage : <strong class="text-white">${dureeBlocage} min</strong> + ${BUFFER_MIN} min de buffer`;
+  }
+
+  function setupEditNbPersonnes(currentNb, isAnniv, isMDJ) {
+    const min = isMDJ ? 7 : isAnniv ? 5 : 1;
+    const max = isMDJ ? 24 : isAnniv ? 12 : 6;
     editSelectedNb = Math.min(Math.max(currentNb ?? min, min), max);
     const grid = document.getElementById('edit-nb-grid');
-    grid.className = isAnniv ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-6 gap-2';
+    grid.className = isMDJ ? 'grid grid-cols-6 gap-2' : isAnniv ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-6 gap-2';
     grid.innerHTML = '';
     for (let i = min; i <= max; i++) {
       const btn = document.createElement('button');
@@ -897,11 +928,13 @@ import DatePicker from "../../components/DatePicker.astro";
         grid.querySelectorAll('button').forEach((b, idx) => {
           b.className = nbEditBtnClass(idx + min === i);
         });
-        updateEditVrTypeForNb(i, isAnniv);
+        if (isMDJ) updateMdjRepartition();
+        else updateEditVrTypeForNb(i, isAnniv);
       });
       grid.appendChild(btn);
     }
-    updateEditVrTypeForNb(editSelectedNb, isAnniv);
+    if (isMDJ) updateMdjRepartition();
+    else updateEditVrTypeForNb(editSelectedNb, isAnniv);
   }
 
   function populateHeures(selectedDate) {
@@ -919,30 +952,53 @@ import DatePicker from "../../components/DatePicker.astro";
     }
   }
 
-  // ── Onglets Standard / Anniversaire dans l'édition ───────────────────────
+  // ── Onglets Standard / Anniversaire / MDJ dans l'édition ─────────────────
   function switchEditTab(type) {
     editTypeResa = type;
     const isAnniv = type === 'anniversaire';
+    const isMDJ = type === 'mdj';
+    const isStandard = !isAnniv && !isMDJ;
 
     document.getElementById('edit-tab-standard').className =
-      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${!isAnniv ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`;
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`;
     document.getElementById('edit-tab-anniversaire').className =
       `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isAnniv ? 'bg-pink-700 text-white' : 'text-gray-400 hover:text-white'}`;
+    document.getElementById('edit-tab-mdj').className =
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-violet-700 text-white' : 'text-gray-400 hover:text-white'}`;
 
+    // Durée : standard + MDJ = sélection 30/60 · anniversaire = fixe 1 h
     document.getElementById('edit-duree-section').classList.toggle('hidden', isAnniv);
     document.getElementById('edit-duree-fixed').classList.toggle('hidden', !isAnniv);
 
-    if (modalRes) setupEditNbPersonnes(editSelectedNb, isAnniv);
+    // Type VR : standard + anniversaire utilisent la grille · MDJ utilise l'encart violet
+    document.getElementById('edit-vr-section').classList.toggle('hidden', isMDJ);
+    document.getElementById('edit-mdj-info').classList.toggle('hidden', !isMDJ);
+
+    if (isMDJ) editSelectedVrType = 'both';
+
+    if (modalRes) setupEditNbPersonnes(editSelectedNb, isAnniv, isMDJ);
 
     if (isAnniv) {
       editSelectedDuree = 60;
     } else if (modalRes) {
-      setupEditDuree(editSelectedDuree ?? modalRes.duree_minutes);
+      // En MDJ, si on arrive d'une résa MDJ, on pré-sélectionne la durée par session
+      let initial = editSelectedDuree;
+      if (isMDJ && modalRes.type_reservation === 'mdj') {
+        const nbCreneaux = Math.max(1, Math.ceil((modalRes.nb_personnes ?? 7) / 12));
+        initial = Math.round(modalRes.duree_minutes / nbCreneaux);
+      } else if (isMDJ) {
+        initial = 30;
+      } else {
+        initial = initial ?? modalRes.duree_minutes;
+      }
+      setupEditDuree(initial);
+      if (isMDJ) updateMdjRepartition();
     }
   }
 
   document.getElementById('edit-tab-standard').addEventListener('click', () => switchEditTab('standard'));
   document.getElementById('edit-tab-anniversaire').addEventListener('click', () => switchEditTab('anniversaire'));
+  document.getElementById('edit-tab-mdj').addEventListener('click', () => switchEditTab('mdj'));
 
   // Fermeture modal
   document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -1013,8 +1069,8 @@ import DatePicker from "../../components/DatePicker.astro";
     const dateVal = document.getElementById('edit-date').value;
     const heureVal = document.getElementById('edit-heure').value;
     const newDebut = new Date(`${dateVal}T${heureVal}:00`);
-    const dureeMin = editSelectedDuree ?? modalRes.duree_minutes;
-    const newFin = new Date(newDebut.getTime() + dureeMin * 60000);
+    let dureeMin = editSelectedDuree ?? modalRes.duree_minutes;
+    let newFin = new Date(newDebut.getTime() + dureeMin * 60000);
 
     const emailVal = document.getElementById('edit-email').value.trim();
     const telVal = document.getElementById('edit-telephone').value.trim();
@@ -1039,14 +1095,24 @@ import DatePicker from "../../components/DatePicker.astro";
     const typeResa = editTypeResa;
     const bufMin = typeResa === 'anniversaire' ? 60 : BUFFER_MIN;
 
+    // MDJ : recalculer la durée totale bloquée (nbCreneaux × durée par session)
+    if (typeResa === 'mdj') {
+      const dureeUnit = editSelectedDuree || 30;
+      const nbCreneaux = Math.ceil(nbPersonnes / 12);
+      dureeMin = nbCreneaux * dureeUnit;
+      newFin = new Date(newDebut.getTime() + dureeMin * 60000);
+      editSelectedVrType = 'both';
+    }
+
     const newFinBlocage = new Date(newFin.getTime() + bufMin * 60000);
 
-    // Cas anniversaire >6 : les deux espaces VR simultanément
+    // Cas anniversaire >6 / MDJ : les deux espaces VR simultanément
     if (editSelectedVrType === 'both') {
-      // Pour une modification, on ne vérifie que les types pas encore assignés à cette réservation
-      const assignedTypes = new Set(modalRes.reservation_boxes?.map(rb => rb.boxes?.type).filter(Boolean) ?? []);
-      const needFilaire = !assignedTypes.has('filaire');
-      const needSansFil = !assignedTypes.has('sans_fil');
+      // MDJ exige 6 filaires + 1 sans-fil ; si l'ancienne résa n'avait pas le bon nombre on refait l'attribution
+      const filaireCount = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'filaire').length ?? 0;
+      const sansFilCount = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'sans_fil').length ?? 0;
+      const needFilaire = typeResa === 'mdj' ? filaireCount < 6 : filaireCount === 0;
+      const needSansFil = sansFilCount === 0;
 
       let filaireBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'filaire').map(rb => ({ box_id: rb.box_id })) ?? [];
       let sansFillBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'sans_fil').map(rb => ({ box_id: rb.box_id })) ?? [];

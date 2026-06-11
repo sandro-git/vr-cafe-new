@@ -25,7 +25,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     <!-- ===== ÉTAPE 1 : Configuration ===== -->
     <div id="step-1" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
       <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-        <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">1/3</span>
+        <span class="w-8 h-8 rounded-full bg-violet-700 flex items-center justify-center text-xs font-bold shrink-0">1/3</span>
         Configurez votre session
       </h2>
 
@@ -45,7 +45,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         </div>
 
         <!-- Type VR : forcé sur "both" -->
-        <div class="px-4 py-3 bg-emerald-900/30 border border-emerald-800 rounded-xl text-sm text-emerald-200">
+        <div class="px-4 py-3 bg-violet-900/30 border border-violet-800 rounded-xl text-sm text-violet-200">
           🏠 La réservation MDJ bloque automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
         </div>
 
@@ -62,7 +62,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
       <button
         id="btn-search"
-        class="mt-8 w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="mt-8 w-full py-4 bg-violet-700 hover:bg-violet-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         disabled
       >
         Voir les créneaux disponibles →
@@ -73,7 +73,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     <div id="step-2" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-white flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">2/3</span>
+          <span class="w-8 h-8 rounded-full bg-violet-700 flex items-center justify-center text-xs font-bold shrink-0">2/3</span>
           Choisir un créneau
         </h2>
         <button id="btn-back-1" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
@@ -82,7 +82,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       <div id="step2-summary" class="mb-3 px-4 py-2.5 bg-gray-800 rounded-lg text-sm text-gray-400"></div>
 
       <div id="slots-loading" class="py-12 text-center">
-        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-violet-500 rounded-full animate-spin mb-4"></div>
         <p class="text-gray-400">Recherche des créneaux disponibles...</p>
       </div>
 
@@ -99,13 +99,13 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     <div id="step-3" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-white flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">3/3</span>
+          <span class="w-8 h-8 rounded-full bg-violet-700 flex items-center justify-center text-xs font-bold shrink-0">3/3</span>
           Vos informations
         </h2>
         <button id="btn-back-2" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
       </div>
 
-      <div id="step3-summary" class="mb-6 p-4 bg-emerald-900/30 border border-emerald-800 rounded-xl text-sm text-emerald-200 leading-relaxed"></div>
+      <div id="step3-summary" class="mb-6 p-4 bg-violet-900/30 border border-violet-800 rounded-xl text-sm text-violet-200 leading-relaxed"></div>
 
       <form id="reservation-form" class="space-y-4" novalidate>
         <div class="relative">
@@ -113,7 +113,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           <input
             type="text" id="client-nom" required placeholder="Jean Dupont"
             autocomplete={mode === 'admin' ? 'off' : 'name'}
-            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500"
           />
           {mode === 'admin' && <ul id="client-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
@@ -123,7 +123,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           <input
             type="email" id="client-email" required placeholder="jean@exemple.fr"
             autocomplete={mode === 'admin' ? 'off' : 'email'}
-            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500"
           />
           {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
@@ -133,7 +133,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           <input
             type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
             autocomplete={mode === 'admin' ? 'off' : 'tel'}
-            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500"
           />
           {mode === 'admin' && <ul id="client-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
@@ -142,7 +142,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           <label for="client-notes" class="block text-sm font-medium text-gray-300 mb-1.5">Notes (optionnel)</label>
           <textarea
             id="client-notes" rows="2" placeholder="Nom du groupe, âges, particularités..."
-            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 resize-none"
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500 resize-none"
           ></textarea>
         </div>
 
@@ -150,7 +150,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
         <button
           type="submit" id="btn-submit"
-          class="w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          class="w-full py-4 bg-violet-700 hover:bg-violet-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
         >
           Confirmer la réservation
         </button>
@@ -170,7 +170,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
       <div id="confirmation-card" class="bg-gray-800 rounded-xl p-5 text-left mb-8 space-y-3 text-sm"></div>
 
-      <a href="/" class="inline-block px-8 py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors">
+      <a href="/" class="inline-block px-8 py-3 bg-violet-700 hover:bg-violet-600 text-white font-semibold rounded-xl transition-colors">
         Retour à l'accueil
       </a>
     </div>
@@ -697,19 +697,19 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   }
   function nbBtnClass(active) {
     return active
-      ? 'py-3 rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white font-bold text-base transition-all'
-      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-base transition-all hover:border-emerald-400';
+      ? 'py-3 rounded-xl border-2 border-violet-500 bg-violet-700/30 text-white font-bold text-base transition-all'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-base transition-all hover:border-violet-400';
   }
   function dureeBtnClass(active) {
     return active
-      ? 'py-4 rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white text-center transition-all'
-      : 'py-4 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-emerald-400';
+      ? 'py-4 rounded-xl border-2 border-violet-500 bg-violet-700/30 text-white text-center transition-all'
+      : 'py-4 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-violet-400';
   }
   function slotBtnClass(active) {
     if (active) {
-      return 'py-3 px-2 text-center rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white transition-all';
+      return 'py-3 px-2 text-center rounded-xl border-2 border-violet-500 bg-violet-700/30 text-white transition-all';
     }
-    return 'py-3 px-2 text-center rounded-xl border-2 border-emerald-700 hover:border-emerald-500 text-white transition-all hover:bg-white/5';
+    return 'py-3 px-2 text-center rounded-xl border-2 border-violet-700 hover:border-violet-500 text-white transition-all hover:bg-white/5';
   }
 
   // ── Autocomplete admin ────────────────────────────────────────────────────
