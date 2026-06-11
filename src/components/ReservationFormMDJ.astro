@@ -1,0 +1,784 @@
+---
+import DatePicker from "./DatePicker.astro";
+
+interface Props {
+  mode?: 'client' | 'admin';
+}
+const { mode = 'client' } = Astro.props;
+const successRedirect = mode === 'admin' ? '/admin/planning' : null;
+---
+
+<div class="min-h-screen py-12 px-4 sm:px-6">
+  <div class="max-w-xl mx-auto">
+
+    <!-- En-tête -->
+    <div class="text-center mb-10">
+      <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">
+        {mode === 'admin' ? 'Nouvelle réservation · MDJ' : 'Réservation MDJ'}
+      </h1>
+      <p class="text-gray-400">VR Café · Canet-en-Roussillon</p>
+    </div>
+
+    <!-- Erreur globale -->
+    <div id="global-error" class="hidden mb-6 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+    <!-- ===== ÉTAPE 1 : Configuration ===== -->
+    <div id="step-1" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">1/3</span>
+        Configurez votre session
+      </h2>
+
+      <div class="space-y-6">
+
+        <!-- Date -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+          <DatePicker id="dp" />
+          <p id="date-error" class="hidden mt-2 text-sm text-red-400"></p>
+        </div>
+
+        <!-- Nombre d'enfants (7 à 24) -->
+        <div>
+          <p class="text-sm font-medium text-gray-300 mb-3">Nombre d'enfants *</p>
+          <div id="nb-personnes-grid" class="grid gap-2" style="grid-template-columns: repeat(6, 1fr);"></div>
+        </div>
+
+        <!-- Type VR : forcé sur "both" -->
+        <div class="px-4 py-3 bg-emerald-900/30 border border-emerald-800 rounded-xl text-sm text-emerald-200">
+          🏠 La réservation MDJ bloque automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
+        </div>
+
+        <!-- Sélecteur durée : 30 min ou 1 h -->
+        <div>
+          <p class="text-sm font-medium text-gray-300 mb-3">Durée par session *</p>
+          <div id="duree-grid" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- Récap répartition (apparaît dès qu'on a nb + durée) -->
+        <div id="repartition-info" class="hidden px-4 py-3 bg-gray-800 rounded-xl text-sm text-gray-300"></div>
+
+      </div>
+
+      <button
+        id="btn-search"
+        class="mt-8 w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled
+      >
+        Voir les créneaux disponibles →
+      </button>
+    </div>
+
+    <!-- ===== ÉTAPE 2 : Créneaux ===== -->
+    <div id="step-2" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">2/3</span>
+          Choisir un créneau
+        </h2>
+        <button id="btn-back-1" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
+      </div>
+
+      <div id="step2-summary" class="mb-3 px-4 py-2.5 bg-gray-800 rounded-lg text-sm text-gray-400"></div>
+
+      <div id="slots-loading" class="py-12 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-400">Recherche des créneaux disponibles...</p>
+      </div>
+
+      <div id="slots-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+
+      <div id="slots-empty" class="hidden py-10 text-center">
+        <p class="text-3xl mb-3">😕</p>
+        <p class="text-white font-medium mb-1">Aucun créneau disponible</p>
+        <p class="text-gray-400 text-sm">Essayez une autre date ou réduisez la durée</p>
+      </div>
+    </div>
+
+    <!-- ===== ÉTAPE 3 : Formulaire contact ===== -->
+    <div id="step-3" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">3/3</span>
+          Vos informations
+        </h2>
+        <button id="btn-back-2" class="text-sm text-gray-400 hover:text-white transition-colors">← Retour</button>
+      </div>
+
+      <div id="step3-summary" class="mb-6 p-4 bg-emerald-900/30 border border-emerald-800 rounded-xl text-sm text-emerald-200 leading-relaxed"></div>
+
+      <form id="reservation-form" class="space-y-4" novalidate>
+        <div class="relative">
+          <label for="client-nom" class="block text-sm font-medium text-gray-300 mb-1.5">Nom du responsable *</label>
+          <input
+            type="text" id="client-nom" required placeholder="Jean Dupont"
+            autocomplete={mode === 'admin' ? 'off' : 'name'}
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+          />
+          {mode === 'admin' && <ul id="client-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
+        </div>
+
+        <div class="relative">
+          <label for="client-email" class="block text-sm font-medium text-gray-300 mb-1.5">Adresse email *</label>
+          <input
+            type="email" id="client-email" required placeholder="jean@exemple.fr"
+            autocomplete={mode === 'admin' ? 'off' : 'email'}
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+          />
+          {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
+        </div>
+
+        <div class="relative">
+          <label for="client-telephone" class="block text-sm font-medium text-gray-300 mb-1.5">Téléphone *</label>
+          <input
+            type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
+            autocomplete={mode === 'admin' ? 'off' : 'tel'}
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
+          />
+          {mode === 'admin' && <ul id="client-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
+        </div>
+
+        <div>
+          <label for="client-notes" class="block text-sm font-medium text-gray-300 mb-1.5">Notes (optionnel)</label>
+          <textarea
+            id="client-notes" rows="2" placeholder="Nom du groupe, âges, particularités..."
+            class="w-full bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 resize-none"
+          ></textarea>
+        </div>
+
+        <div id="form-error" class="hidden p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+
+        <button
+          type="submit" id="btn-submit"
+          class="w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          Confirmer la réservation
+        </button>
+      </form>
+    </div>
+
+    <!-- ===== ÉTAPE 4 : Confirmation ===== -->
+    <div id="step-4" class="hidden mt-4 bg-gray-700/40 border border-gray-600 rounded-2xl p-8 shadow-xl text-center">
+      <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-white mb-2">Réservation confirmée !</h2>
+      <p class="text-gray-400 mb-8">Nous vous attendons. À très bientôt !</p>
+
+      <div id="confirmation-card" class="bg-gray-800 rounded-xl p-5 text-left mb-8 space-y-3 text-sm"></div>
+
+      <a href="/" class="inline-block px-8 py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors">
+        Retour à l'accueil
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script define:vars={{ successRedirect, mode }} is:inline>
+  window.__mdjSuccessRedirect = successRedirect;
+  window.__mdjMode = mode;
+</script>
+<script>
+  // @ts-nocheck
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  // ── Constantes MDJ ────────────────────────────────────────────────────────
+  const CAPACITE_PAR_CRENEAU = 12; // 6 filaires + 6 sans-fil
+  const NB_FILAIRES_REQUIS = 6;
+
+  // ── État ──────────────────────────────────────────────────────────────────
+  let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 30, nb_boxes: 6 };
+  let datesFermees = new Set();
+  let periodesVacances = [];
+  const JOURS_OUVERTURE_NORMAL = new Set([0, 3, 5, 6]);
+  let selectedDate = '';
+  let selectedNb = 0;
+  let selectedDuree = null; // { id, label, duree_minutes }
+  let selectedSlot = null;
+  let dureeOptions = [];
+
+  // ── Initialisation ────────────────────────────────────────────────────────
+  async function init() {
+    setupNbPersonnes();
+    setupButtons();
+
+    try {
+      await Promise.all([loadConfig(), loadDurees(), loadJoursFermes(), loadPeriodesVacances()]);
+    } catch (err) {
+      console.error('Init error:', err);
+      showError('global-error', 'Impossible de charger la configuration. Veuillez rafraîchir la page.');
+      return;
+    }
+
+    renderDurees();
+
+    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
+      id: 'dp',
+      datesFermees: [...datesFermees],
+      periodesVacances,
+      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+      adminMode: (window.__mdjMode ?? 'client') === 'admin',
+    }}));
+
+    document.addEventListener('datepicker:select', (e) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.id !== 'dp') return;
+      selectedDate = detail.date;
+      document.getElementById('date-error').classList.add('hidden');
+      checkStep1Valid();
+    });
+  }
+
+  async function loadConfig() {
+    const { data, error } = await supabase.from('config').select('*');
+    if (error) throw error;
+    if (!data?.length) return;
+    const first = data[0];
+    if ('heure_ouverture' in first) {
+      appConfig.heure_ouverture = first.heure_ouverture ?? appConfig.heure_ouverture;
+      appConfig.heure_fermeture = first.heure_fermeture ?? appConfig.heure_fermeture;
+      appConfig.buffer_minutes = first.buffer_minutes ?? appConfig.buffer_minutes;
+      appConfig.nb_boxes = first.nb_boxes ?? appConfig.nb_boxes;
+      return;
+    }
+    data.forEach(row => {
+      const key = row.cle ?? row.key ?? row.nom ?? row.name;
+      const val = row.valeur ?? row.value ?? row.val;
+      if (key != null && val != null) appConfig[key] = val;
+    });
+    appConfig.nb_boxes = parseInt(String(appConfig.nb_boxes)) || 6;
+    appConfig.buffer_minutes = parseInt(String(appConfig.buffer_minutes)) || 30;
+  }
+
+  async function loadDurees() {
+    const { data } = await supabase
+      .from('durees_session')
+      .select('id, label, duree_minutes')
+      .in('duree_minutes', [30, 60])
+      .eq('actif', true)
+      .order('duree_minutes');
+    const byMin = new Map((data ?? []).map(d => [d.duree_minutes, d]));
+    dureeOptions = [
+      byMin.get(30) ?? { id: null, label: '30 min', duree_minutes: 30 },
+      byMin.get(60) ?? { id: null, label: '1 heure', duree_minutes: 60 },
+    ];
+  }
+
+  async function loadJoursFermes() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('jours_fermeture')
+      .select('date')
+      .gte('date', today);
+    if (error) throw error;
+    datesFermees = new Set(data?.map(j => j.date) ?? []);
+  }
+
+  async function loadPeriodesVacances() {
+    const today = localDateStr(new Date());
+    const { data, error } = await supabase
+      .from('periodes_vacances')
+      .select('date_debut, date_fin')
+      .gte('date_fin', today)
+      .order('date_debut');
+    if (error) throw error;
+    periodesVacances = data ?? [];
+  }
+
+  // ── Setup UI ──────────────────────────────────────────────────────────────
+  function setupNbPersonnes() {
+    const grid = document.getElementById('nb-personnes-grid');
+    for (let i = 7; i <= 24; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = String(i);
+      btn.className = nbBtnClass(false);
+      btn.addEventListener('click', () => {
+        selectedNb = i;
+        grid.querySelectorAll('button').forEach((b, idx) => {
+          b.className = nbBtnClass(idx + 7 === i);
+        });
+        updateRepartitionInfo();
+        checkStep1Valid();
+      });
+      grid.appendChild(btn);
+    }
+  }
+
+  function renderDurees() {
+    const list = document.getElementById('duree-grid');
+    list.innerHTML = '';
+    dureeOptions.forEach(d => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = dureeBtnClass(false);
+      btn.innerHTML = `<span class="font-semibold text-base">${d.label}</span>`;
+      btn.addEventListener('click', () => {
+        selectedDuree = d;
+        list.querySelectorAll('button').forEach(b => { b.className = dureeBtnClass(false); });
+        btn.className = dureeBtnClass(true);
+        updateRepartitionInfo();
+        checkStep1Valid();
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  function updateRepartitionInfo() {
+    const info = document.getElementById('repartition-info');
+    if (!selectedNb || !selectedDuree) {
+      info.classList.add('hidden');
+      return;
+    }
+    const nbCreneaux = Math.ceil(selectedNb / CAPACITE_PAR_CRENEAU);
+    const dureeBlocage = nbCreneaux * selectedDuree.duree_minutes;
+    const bufferMin = Number(appConfig.buffer_minutes);
+    info.classList.remove('hidden');
+    info.innerHTML = nbCreneaux === 1
+      ? `⏱️ Blocage : <strong class="text-white">${dureeBlocage} min</strong> + ${bufferMin} min de buffer après`
+      : `⏱️ ${nbCreneaux} sessions de ${selectedDuree.duree_minutes} min enchaînées · Blocage total : <strong class="text-white">${dureeBlocage} min</strong> + ${bufferMin} min de buffer après`;
+  }
+
+  function setupButtons() {
+    document.getElementById('btn-search').addEventListener('click', handleSearch);
+    document.getElementById('btn-back-1').addEventListener('click', () => showStep(1));
+    document.getElementById('btn-back-2').addEventListener('click', () => showStep(2));
+    document.getElementById('reservation-form').addEventListener('submit', handleSubmit);
+  }
+
+  function checkStep1Valid() {
+    (document.getElementById('btn-search') as HTMLButtonElement).disabled =
+      !(selectedDate && selectedNb > 0 && selectedDuree);
+  }
+
+  // ── Étape 2 : Recherche de créneaux ──────────────────────────────────────
+  async function handleSearch() {
+    showStep(2);
+
+    const dateFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+    const nbCreneaux = Math.ceil(selectedNb / CAPACITE_PAR_CRENEAU);
+    const dureeBlocage = nbCreneaux * selectedDuree.duree_minutes;
+    document.getElementById('step2-summary').innerHTML =
+      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} enfants &nbsp;·&nbsp; ${nbCreneaux}×${selectedDuree.duree_minutes} min = ${dureeBlocage} min`;
+
+    document.getElementById('slots-loading').classList.remove('hidden');
+    document.getElementById('slots-grid').classList.add('hidden');
+    document.getElementById('slots-empty').classList.add('hidden');
+
+    try {
+      const slots = generateSlots();
+
+      if (slots.length === 0) {
+        document.getElementById('slots-loading').classList.add('hidden');
+        document.getElementById('slots-empty').classList.remove('hidden');
+        return;
+      }
+
+      const results = await Promise.all(slots.map(checkSlotAvailability));
+      const available = results.filter(Boolean);
+
+      document.getElementById('slots-loading').classList.add('hidden');
+
+      if (available.length === 0) {
+        document.getElementById('slots-empty').classList.remove('hidden');
+      } else {
+        renderSlots(available);
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('slots-loading').classList.add('hidden');
+      showError('global-error', 'Erreur lors de la recherche des créneaux. Veuillez réessayer.');
+    }
+  }
+
+  function generateSlots() {
+    const nbCreneaux = Math.ceil(selectedNb / CAPACITE_PAR_CRENEAU);
+    const dureeBlocage = nbCreneaux * selectedDuree.duree_minutes;
+    const bufferMin = Number(appConfig.buffer_minutes);
+    const [oh, om] = (appConfig.heure_ouverture || '10:00').split(':').map(Number);
+    const [ch, cm] = (appConfig.heure_fermeture || '20:00').split(':').map(Number);
+    const openTotal = oh * 60 + om;
+    const closeTotal = ch * 60 + cm;
+    const todayStr = localDateStr(new Date());
+    const now = new Date();
+    const slots = [];
+
+    if (selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
+      return [];
+    }
+
+    for (let start = openTotal; start + dureeBlocage + bufferMin <= closeTotal; start += 30) {
+      const debut = dateAtMinutes(selectedDate, start);
+      if (selectedDate === todayStr && debut <= now) continue;
+      slots.push({
+        debut,
+        fin: dateAtMinutes(selectedDate, start + dureeBlocage),
+        finBlocage: dateAtMinutes(selectedDate, start + dureeBlocage + bufferMin),
+        dureeBlocage,
+        nbCreneaux,
+      });
+    }
+    return slots;
+  }
+
+  async function checkSlotAvailability(slot) {
+    const [filaireRes, sansFillRes] = await Promise.all([
+      supabase.rpc('get_boxes_disponibles', {
+        p_debut: slot.debut.toISOString(),
+        p_fin_blocage: slot.finBlocage.toISOString(),
+        p_vr_type: 'filaire',
+      }),
+      supabase.rpc('get_boxes_disponibles', {
+        p_debut: slot.debut.toISOString(),
+        p_fin_blocage: slot.finBlocage.toISOString(),
+        p_vr_type: 'sans_fil',
+      }),
+    ]);
+    if (filaireRes.error || sansFillRes.error) return null;
+    const filaireBoxes = filaireRes.data ?? [];
+    const sansFillBoxes = sansFillRes.data ?? [];
+    if (filaireBoxes.length < NB_FILAIRES_REQUIS || sansFillBoxes.length === 0) return null;
+    return { ...slot, boxes: filaireBoxes, boxesSansFil: sansFillBoxes.slice(0, 1) };
+  }
+
+  function renderSlots(slots) {
+    const grid = document.getElementById('slots-grid');
+    grid.innerHTML = '';
+    grid.classList.remove('hidden');
+
+    slots.forEach(slot => {
+      const h1 = slot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const h2 = slot.fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = slotBtnClass(false);
+      btn.innerHTML = `
+        <span class="block text-base font-semibold">${h1} → ${h2}</span>
+        <span class="block text-xs mt-0.5 opacity-75">${slot.dureeBlocage} min</span>
+      `;
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('button').forEach(b => { b.className = slotBtnClass(false); });
+        btn.className = slotBtnClass(true);
+        selectedSlot = slot;
+        setTimeout(() => showStep3Summary(), 200);
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function showStep3Summary() {
+    const { debut, fin, dureeBlocage, nbCreneaux } = selectedSlot;
+    const dateFmt = debut.toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('step3-summary').innerHTML =
+      `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
+      `⏰ ${h1} → ${h2} (${dureeBlocage} min · ${nbCreneaux} session${nbCreneaux > 1 ? 's' : ''} de ${selectedDuree.duree_minutes} min)<br>` +
+      `👥 ${selectedNb} enfants &nbsp;·&nbsp; 🏠 MDJ (Filaire + Sans Fil)`;
+
+    showStep(3);
+  }
+
+  // ── Étape 3 : Soumission ──────────────────────────────────────────────────
+  async function handleSubmit(e) {
+    e.preventDefault();
+    hideError('form-error');
+
+    const nom = (document.getElementById('client-nom') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('client-email') as HTMLInputElement).value.trim();
+    const tel = (document.getElementById('client-telephone') as HTMLInputElement).value.trim();
+    const notes = (document.getElementById('client-notes') as HTMLTextAreaElement).value.trim();
+
+    if (!nom || !email || !tel) {
+      showError('form-error', 'Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      showError('form-error', 'Adresse email invalide.');
+      return;
+    }
+    if (!isValidPhone(tel)) {
+      showError('form-error', 'Numéro de téléphone invalide (format français attendu).');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Réservation en cours...';
+
+    try {
+      const [fr, sfr] = await Promise.all([
+        supabase.rpc('get_boxes_disponibles', {
+          p_debut: selectedSlot.debut.toISOString(),
+          p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+          p_vr_type: 'filaire',
+        }),
+        supabase.rpc('get_boxes_disponibles', {
+          p_debut: selectedSlot.debut.toISOString(),
+          p_fin_blocage: selectedSlot.finBlocage.toISOString(),
+          p_vr_type: 'sans_fil',
+        }),
+      ]);
+      if (fr.error || sfr.error || (fr.data?.length ?? 0) < NB_FILAIRES_REQUIS || !(sfr.data?.length > 0)) {
+        showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
+        btn.disabled = false;
+        btn.textContent = 'Confirmer la réservation';
+        return;
+      }
+      const finalBoxes = fr.data;
+      const finalBoxesSansFil = sfr.data.slice(0, 1);
+
+      const { data: res, error: resErr } = await supabase
+        .from('reservations')
+        .insert({
+          client_nom: nom,
+          client_email: email,
+          client_telephone: tel,
+          nb_personnes: selectedNb,
+          duree_minutes: selectedSlot.dureeBlocage,
+          creneau_debut: selectedSlot.debut.toISOString(),
+          creneau_fin: selectedSlot.fin.toISOString(),
+          creneau_fin_blocage: selectedSlot.finBlocage.toISOString(),
+          statut: 'confirmée',
+          type_reservation: 'mdj',
+          notes: notes || null,
+        })
+        .select()
+        .single();
+
+      if (resErr) throw resErr;
+
+      const allBoxes = [...finalBoxes, ...finalBoxesSansFil];
+
+      const { error: boxErr } = await supabase
+        .from('reservation_boxes')
+        .insert(allBoxes.map(b => ({ reservation_id: res.id, box_id: b.box_id })));
+
+      if (boxErr) throw boxErr;
+
+      const boxNamesEmail = allBoxes.map(b => b.box_nom).join(', ');
+
+      fetch('/api/reservation-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_nom: res.client_nom,
+          client_email: res.client_email,
+          client_telephone: res.client_telephone,
+          nb_personnes: res.nb_personnes,
+          duree_minutes: res.duree_minutes,
+          vr_type: 'filaire + sans_fil',
+          creneau_debut: res.creneau_debut,
+          creneau_fin: res.creneau_fin,
+          box_names: boxNamesEmail,
+          ref: res.id.split('-')[0].toUpperCase(),
+          notes: res.notes ?? null,
+        }),
+      }).catch(err => console.error('Email notification failed:', err));
+
+      const h1 = selectedSlot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      fetch('/api/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '🏠 Réservation MDJ',
+          body: `${nom} — ${selectedNb} enfants — ${h1}`,
+          url: '/admin/reservations',
+        }),
+      }).catch(() => {});
+
+      if (window.__mdjSuccessRedirect) {
+        window.location.href = window.__mdjSuccessRedirect;
+        return;
+      }
+      showConfirmation(res, allBoxes);
+    } catch (err) {
+      console.error(err);
+      showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
+      btn.disabled = false;
+      btn.textContent = 'Confirmer la réservation';
+    }
+  }
+
+  function showConfirmation(res, boxes) {
+    const { debut, fin, dureeBlocage, nbCreneaux } = selectedSlot;
+    const dateFmt = debut.toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const boxNames = boxes.map(b => b.box_nom).join(', ');
+    const ref = res.id.split('-')[0].toUpperCase();
+
+    document.getElementById('confirmation-card').innerHTML = `
+      <div class="flex justify-between items-center pb-3 border-b border-gray-700">
+        <span class="text-gray-400">Référence</span>
+        <span class="text-white font-mono font-bold">#${ref}</span>
+      </div>
+      <div class="flex justify-between pt-3">
+        <span class="text-gray-400">Nom</span>
+        <span class="text-white">${esc(res.client_nom)}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Date</span>
+        <span class="text-white">${dateFmt}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Horaire</span>
+        <span class="text-white">${h1} → ${h2}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Durée</span>
+        <span class="text-white">${dureeBlocage} min (${nbCreneaux}×${selectedDuree.duree_minutes})</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Enfants</span>
+        <span class="text-white">${selectedNb}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Espaces</span>
+        <span class="text-white">🏠 MDJ (Filaire + Sans Fil)</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">Box${boxes.length > 1 ? 'es' : ''}</span>
+        <span class="text-white">${esc(boxNames)}</span>
+      </div>
+    `;
+
+    showStep(4);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidPhone(v) {
+    return /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/.test(v.trim());
+  }
+  function showStep(n) {
+    [1, 2, 3, 4].forEach(i => {
+      document.getElementById(`step-${i}`).classList.toggle('hidden', i !== n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function hideError(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  function dateAtMinutes(dateStr, totalMin) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setHours(Math.floor(totalMin / 60), totalMin % 60, 0, 0);
+    return d;
+  }
+  function esc(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function nbBtnClass(active) {
+    return active
+      ? 'py-3 rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white font-bold text-base transition-all'
+      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-base transition-all hover:border-emerald-400';
+  }
+  function dureeBtnClass(active) {
+    return active
+      ? 'py-4 rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white text-center transition-all'
+      : 'py-4 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-emerald-400';
+  }
+  function slotBtnClass(active) {
+    if (active) {
+      return 'py-3 px-2 text-center rounded-xl border-2 border-emerald-500 bg-emerald-700/30 text-white transition-all';
+    }
+    return 'py-3 px-2 text-center rounded-xl border-2 border-emerald-700 hover:border-emerald-500 text-white transition-all hover:bg-white/5';
+  }
+
+  // ── Autocomplete admin ────────────────────────────────────────────────────
+  const mode = window.__mdjMode ?? 'client';
+  if (mode === 'admin') {
+    let acTimer = null;
+
+    async function fetchClientSuggestions(field, value) {
+      if (value.length < 2) return [];
+      const col = field === 'nom' ? 'client_nom' : field === 'email' ? 'client_email' : 'client_telephone';
+      const { data } = await supabase
+        .from('reservations')
+        .select('client_nom, client_email, client_telephone')
+        .ilike(col, `%${value}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!data) return [];
+      const seen = new Set();
+      return data.filter(r => {
+        const key = r.client_email || r.client_nom;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function showSuggestions(ulId, suggestions, onSelect) {
+      const ul = document.getElementById(ulId);
+      if (!ul) return;
+      ul.innerHTML = '';
+      if (!suggestions.length) { ul.classList.add('hidden'); return; }
+      suggestions.forEach(s => {
+        const li = document.createElement('li');
+        li.className = 'px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0';
+        li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom ?? '')}</span><span class="text-gray-500 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
+        li.addEventListener('mousedown', e => { e.preventDefault(); onSelect(s); ul.classList.add('hidden'); });
+        ul.appendChild(li);
+      });
+      ul.classList.remove('hidden');
+    }
+
+    function fillClient(s) {
+      (document.getElementById('client-nom') as HTMLInputElement).value = s.client_nom ?? '';
+      (document.getElementById('client-email') as HTMLInputElement).value = s.client_email ?? '';
+      (document.getElementById('client-telephone') as HTMLInputElement).value = s.client_telephone ?? '';
+    }
+
+    function setupAcField(inputId, ulId, field) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.addEventListener('input', e => {
+        clearTimeout(acTimer);
+        const val = (e.target as HTMLInputElement).value.trim();
+        if (val.length < 2) { document.getElementById(ulId)?.classList.add('hidden'); return; }
+        acTimer = setTimeout(async () => {
+          showSuggestions(ulId, await fetchClientSuggestions(field, val), fillClient);
+        }, 250);
+      });
+      input.addEventListener('blur', () => setTimeout(() => document.getElementById(ulId)?.classList.add('hidden'), 150));
+      input.addEventListener('focus', async e => {
+        const val = (e.target as HTMLInputElement).value.trim();
+        if (val.length >= 2) showSuggestions(ulId, await fetchClientSuggestions(field, val), fillClient);
+      });
+    }
+
+    setupAcField('client-nom', 'client-nom-suggestions', 'nom');
+    setupAcField('client-email', 'client-email-suggestions', 'email');
+    setupAcField('client-telephone', 'client-tel-suggestions', 'tel');
+  }
+
+  init();
+</script>

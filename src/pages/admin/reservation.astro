@@ -2,18 +2,21 @@
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import ReservationForm from "../../components/ReservationForm.astro";
 import ReservationFormAnniversaire from "../../components/ReservationFormAnniversaire.astro";
+import ReservationFormMDJ from "../../components/ReservationFormMDJ.astro";
 
 const type = Astro.url.searchParams.get('type') ?? 'standard';
 const isAnniversaire = type === 'anniversaire';
+const isMDJ = type === 'mdj';
+const isStandard = !isAnniversaire && !isMDJ;
 ---
 
 <AdminLayout>
-  <!-- Onglets Standard / Anniversaire -->
+  <!-- Onglets Standard / Anniversaire / MDJ -->
   <div class="max-w-xl mx-auto px-4 pt-8 pb-0">
     <div class="flex gap-2 bg-gray-800 rounded-2xl p-1 border border-gray-700">
       <a
         href="/admin/reservation?type=standard"
-        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${!isAnniversaire ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`}
+        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`}
       >
         🎮 Standard
       </a>
@@ -23,11 +26,19 @@ const isAnniversaire = type === 'anniversaire';
       >
         🎂 Anniversaire
       </a>
+      <a
+        href="/admin/reservation?type=mdj"
+        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-emerald-700 text-white' : 'text-gray-400 hover:text-white'}`}
+      >
+        🏠 MDJ
+      </a>
     </div>
   </div>
 
-  {isAnniversaire
-    ? <ReservationFormAnniversaire mode="admin" />
-    : <ReservationForm mode="admin" />
+  {isMDJ
+    ? <ReservationFormMDJ mode="admin" />
+    : isAnniversaire
+      ? <ReservationFormAnniversaire mode="admin" />
+      : <ReservationForm mode="admin" />
   }
 </AdminLayout>
