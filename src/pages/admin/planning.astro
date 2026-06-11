@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import DatePicker from "../../components/DatePicker.astro";
 ---
 
 <AdminLayout>
@@ -37,6 +38,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
           >›</button>
           <span id="date-label" class="text-white font-medium ml-2 text-sm sm:text-base"></span>
+          <div class="ml-1 w-60">
+            <DatePicker id="dp-planning" />
+          </div>
         </div>
       </div>
 
@@ -1198,18 +1202,39 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   });
 
   // ── Event listeners navigation ─────────────────────────────────────────────
+  const DP_ID = 'dp-planning';
+
+  function syncDatePicker() {
+    document.dispatchEvent(new CustomEvent('datepicker:setDate', {
+      detail: { id: DP_ID, date: localDateStr(currentWeekStart) }
+    }));
+  }
+
   document.getElementById('btn-today').addEventListener('click', () => {
     currentWeekStart = getMonday(new Date());
     renderWeek();
+    syncDatePicker();
   });
 
   document.getElementById('btn-prev').addEventListener('click', () => {
     currentWeekStart = addDays(currentWeekStart, -7);
     renderWeek();
+    syncDatePicker();
   });
 
   document.getElementById('btn-next').addEventListener('click', () => {
     currentWeekStart = addDays(currentWeekStart, 7);
+    renderWeek();
+    syncDatePicker();
+  });
+
+  // Sélection depuis le datepicker → saute à la semaine contenant cette date
+  document.addEventListener('datepicker:select', e => {
+    if (e.detail.id !== DP_ID) return;
+    const [y, m, d] = e.detail.date.split('-').map(Number);
+    const newMonday = getMonday(new Date(y, m - 1, d));
+    if (localDateStr(newMonday) === localDateStr(currentWeekStart)) return;
+    currentWeekStart = newMonday;
     renderWeek();
   });
 
@@ -1423,6 +1448,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Démarrage ──────────────────────────────────────────────────────────────
   await Promise.all([loadConfig(), loadBoxes(), loadDurees(), loadCalendarConstraints()]);
+  document.dispatchEvent(new CustomEvent('datepicker:init', {
+    detail: {
+      id: DP_ID,
+      adminMode: true,
+      selectedDate: localDateStr(currentWeekStart),
+      datesFermees: joursFermetureCache,
+      periodesVacances: periodesVacancesCache,
+      joursNormaux: [0, 3, 5, 6],
+    }
+  }));
   renderWeek();
   setInterval(updateNowLine, 60_000);
   setInterval(() => {
