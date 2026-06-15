@@ -4,7 +4,7 @@ Get VR session pricing at VR Café Lyon.
 
 ## MCP Tool
 
-**Endpoint:** `https://www.vr-cafe.fr/api/mcp`
+**Endpoint:** `https://vr-cafe.fr/api/mcp`
 **Method:** `tools/call` → `get_pricing`
 
 ## Input Schema

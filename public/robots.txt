@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 # Content-Signal: ai-train=no, search=yes, ai-input=yes
 
-Sitemap: https://www.vr-cafe.fr/sitemap-index.xml
+Sitemap: https://vr-cafe.fr/sitemap-index.xml

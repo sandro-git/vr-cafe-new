@@ -6,7 +6,7 @@
   },
   "transport": {
     "type": "http",
-    "endpoint": "https://www.vr-cafe.fr/api/mcp"
+    "endpoint": "https://vr-cafe.fr/api/mcp"
   },
   "capabilities": {
     "tools": true,

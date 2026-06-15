@@ -4,7 +4,7 @@ List VR games available at VR Café Lyon, with optional category filtering.
 
 ## MCP Tool
 
-**Endpoint:** `https://www.vr-cafe.fr/api/mcp`
+**Endpoint:** `https://vr-cafe.fr/api/mcp`
 **Method:** `tools/call` → `list_games`
 
 ## Input Schema

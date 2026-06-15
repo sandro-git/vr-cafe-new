@@ -1,30 +1,30 @@
 {
   "linkset": [
     {
-      "anchor": "https://www.vr-cafe.fr/api/reservation-confirmation",
+      "anchor": "https://vr-cafe.fr/api/reservation-confirmation",
       "service-desc": [
         {
-          "href": "https://www.vr-cafe.fr/openapi.yaml",
+          "href": "https://vr-cafe.fr/openapi.yaml",
           "type": "application/openapi+yaml"
         }
       ],
       "service-doc": [
         {
-          "href": "https://www.vr-cafe.fr/reservation"
+          "href": "https://vr-cafe.fr/reservation"
         }
       ]
     },
     {
-      "anchor": "https://www.vr-cafe.fr/api/contact",
+      "anchor": "https://vr-cafe.fr/api/contact",
       "service-desc": [
         {
-          "href": "https://www.vr-cafe.fr/openapi.yaml",
+          "href": "https://vr-cafe.fr/openapi.yaml",
           "type": "application/openapi+yaml"
         }
       ],
       "service-doc": [
         {
-          "href": "https://www.vr-cafe.fr/contact"
+          "href": "https://vr-cafe.fr/contact"
         }
       ]
     }

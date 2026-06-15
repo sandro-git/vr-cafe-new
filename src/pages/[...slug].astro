@@ -36,7 +36,7 @@ if (!game) {
 <BaseLayout
   title={`${game.name} — VR Café Canet-en-Roussillon`}
   description={game.description ? game.description.slice(0, 155) + (game.description.length > 155 ? '…' : '') : `Découvrez ${game.name} en réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan. Réservez en ligne !`}
-  canonical={`https://www.vr-cafe.fr/${params.slug}`}
+  canonical={`https://vr-cafe.fr/${params.slug}`}
 >
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
@@ -46,13 +46,13 @@ if (!game) {
         "@type": "ListItem",
         "position": 1,
         "name": "Accueil",
-        "item": "https://www.vr-cafe.fr"
+        "item": "https://vr-cafe.fr"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": game.name,
-        "item": `https://www.vr-cafe.fr/${params.slug}`
+        "item": `https://vr-cafe.fr/${params.slug}`
       }
     ]
   })} />

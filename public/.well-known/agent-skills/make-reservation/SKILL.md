@@ -4,7 +4,7 @@ Book a VR session at VR Café Lyon. Inserts the reservation into the database, a
 
 ## MCP Tool
 
-**Endpoint:** `https://www.vr-cafe.fr/api/mcp`
+**Endpoint:** `https://vr-cafe.fr/api/mcp`
 **Method:** `tools/call` → `create_reservation`
 
 ## Input Schema

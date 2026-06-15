@@ -6,7 +6,7 @@ info:
   contact:
     email: contact@vr-cafe.fr
 servers:
-  - url: https://www.vr-cafe.fr
+  - url: https://vr-cafe.fr
 paths:
   /api/reservation-confirmation:
     post:

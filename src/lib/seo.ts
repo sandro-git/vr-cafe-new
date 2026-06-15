@@ -1,7 +1,7 @@
 // Helpers de données structurées (JSON-LD schema.org) partagés entre les pages.
 // Chaque helper renvoie un nœud SANS @context ; assemblez-les avec graph().
 
-export const SITE_URL = "https://www.vr-cafe.fr";
+export const SITE_URL = "https://vr-cafe.fr";
 export const BUSINESS_ID = `${SITE_URL}/#business`;
 
 type SchemaNode = Record<string, unknown>;

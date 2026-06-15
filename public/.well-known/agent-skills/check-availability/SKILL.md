@@ -4,7 +4,7 @@ Check available VR session time slots at VR Café Lyon for a given date, number 
 
 ## MCP Tool
 
-**Endpoint:** `https://www.vr-cafe.fr/api/mcp`
+**Endpoint:** `https://vr-cafe.fr/api/mcp`
 **Method:** `tools/call` → `check_availability`
 
 ## Input Schema

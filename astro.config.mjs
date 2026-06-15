@@ -11,7 +11,7 @@ import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://www.vr-cafe.fr',
+  site: 'https://vr-cafe.fr',
   integrations: [sanity(
     {
       projectId: '0oshw5tf',
@@ -19,7 +19,7 @@ export default defineConfig({
       useCdn: import.meta.env.PROD,
       apiVersion: "2025-01-28",
     }), sitemap({
-    filter: (page) => !page.includes('/admin/'),
+    filter: (page) => !page.includes('/admin/') && !page.includes('/contact/merci'),
   })],
 
   vite: {

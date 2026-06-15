@@ -128,7 +128,7 @@ async function toolListGames(args: Record<string, unknown>) {
 
   const lines = games.map(
     (g: Record<string, unknown>) =>
-      `- **${g.name}** (https://www.vr-cafe.fr/${g.slug}) — ${g.players} joueurs, ${g.duration} min, difficulté: ${g.difficulty}`
+      `- **${g.name}** (https://vr-cafe.fr/${g.slug}) — ${g.players} joueurs, ${g.duration} min, difficulté: ${g.difficulty}`
   );
   return text(lines.join("\n"));
 }
@@ -270,9 +270,9 @@ async function toolCreateReservation(args: Record<string, unknown>) {
   const boxNames = assigned.map((b: Record<string, unknown>) => b.box_nom).join(", ");
 
   // Send confirmation email (fire-and-forget)
-  fetch("https://www.vr-cafe.fr/api/reservation-confirmation", {
+  fetch("https://vr-cafe.fr/api/reservation-confirmation", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Origin: "https://www.vr-cafe.fr" },
+    headers: { "Content-Type": "application/json", Origin: "https://vr-cafe.fr" },
     body: JSON.stringify({
       client_nom: args.client_nom,
       client_email: args.client_email,
@@ -289,7 +289,7 @@ async function toolCreateReservation(args: Record<string, unknown>) {
   }).catch(() => {});
 
   // Push notification admin (fire-and-forget)
-  fetch("https://www.vr-cafe.fr/api/push-notify", {
+  fetch("https://vr-cafe.fr/api/push-notify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
