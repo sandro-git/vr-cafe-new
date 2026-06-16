@@ -44,7 +44,7 @@ const loop = [...partners, ...partners];
           tabindex={i >= partners.length ? -1 : 0}
           class="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-[var(--dur-base)] grayscale hover:grayscale-0"
         >
-          <Image src={p.src} alt={p.alt} class="h-10 lg:h-12 w-auto" height={48} />
+          <Image src={p.src} alt={p.alt} class="h-10 lg:h-12 w-auto" height={48} loading="eager" />
         </a>
       ))}
     </div>
