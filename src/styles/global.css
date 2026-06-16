@@ -2,13 +2,241 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Amélioration de l'accessibilité - Focus visible */
-*:focus-visible {
-  outline: 2px solid rgb(59, 130, 246);
-  outline-offset: 2px;
+/* ─────────────────────────────────────────────────────────────
+   Design tokens — VR Café
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand-50:  #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  --color-accent-300: #fde68a;
+  --color-accent-400: #facc15;
+  --color-accent-500: #eab308;
+
+  --color-glow-pink: #ec4899;
+  --color-glow-blue: #3b82f6;
+  --color-glow-cyan: #22d3ee;
+
+  /* Surfaces (dark first) */
+  --color-surface:           #0b0b14;
+  --color-surface-elevated:  #14141f;
+  --color-surface-card:      #1c1c2b;
+  --color-surface-border:    #2a2a3d;
+
+  /* Text */
+  --color-text-strong:  #ffffff;
+  --color-text-base:    #e5e7eb;
+  --color-text-muted:   #9ca3af;
+  --color-text-faded:   #6b7280;
+
+  /* Typography */
+  --font-display: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+
+  /* Spacing — section rhythm */
+  --spacing-section: 5rem;
+  --spacing-section-lg: 7rem;
+
+  /* Radius */
+  --radius-card: 1.25rem;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 600ms;
 }
 
-/* Assurer que le focus est visible même sur fond sombre */
+/* ─────────────────────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────────────────────── */
+html {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Focus visible — accessibilité */
+*:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 .dark *:focus-visible {
-  outline-color: rgb(96, 165, 250);
+  outline-color: var(--color-brand-300);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-brand-500);
+  color: white;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Animations
+   ───────────────────────────────────────────────────────────── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes reveal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45); }
+  50%      { box-shadow: 0 0 0 18px rgba(139, 92, 246, 0); }
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(40px, -30px, 0) scale(1.08); }
+  66%      { transform: translate3d(-30px, 40px, 0) scale(0.94); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Utilities
+   ───────────────────────────────────────────────────────────── */
+
+/* Reveal on scroll — toggled by IntersectionObserver */
+@utility reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity var(--dur-slow) var(--ease-out-soft),
+              transform var(--dur-slow) var(--ease-out-soft);
+  will-change: opacity, transform;
+}
+@utility reveal-fade {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out-soft);
+}
+
+/* When the element enters the viewport, JS adds `is-visible` */
+.is-visible.reveal,
+.is-visible.reveal-fade {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger children — delay i-th child */
+.reveal-stagger > * { transition-delay: 0ms; }
+.is-visible.reveal-stagger > *:nth-child(1) { transition-delay: 60ms; }
+.is-visible.reveal-stagger > *:nth-child(2) { transition-delay: 140ms; }
+.is-visible.reveal-stagger > *:nth-child(3) { transition-delay: 220ms; }
+.is-visible.reveal-stagger > *:nth-child(4) { transition-delay: 300ms; }
+.is-visible.reveal-stagger > *:nth-child(5) { transition-delay: 380ms; }
+.is-visible.reveal-stagger > *:nth-child(6) { transition-delay: 460ms; }
+
+/* Gradient mesh background — used in Hero */
+@utility mesh-bg {
+  background:
+    radial-gradient(40% 60% at 15% 20%, rgba(139, 92, 246, 0.35), transparent 60%),
+    radial-gradient(35% 55% at 85% 15%, rgba(236, 72, 153, 0.28), transparent 60%),
+    radial-gradient(45% 65% at 50% 100%, rgba(59, 130, 246, 0.30), transparent 60%),
+    #0b0b14;
+}
+
+/* Card with subtle gradient border */
+@utility card-glow {
+  position: relative;
+  background: var(--color-surface-card);
+  border-radius: var(--radius-card);
+  isolation: isolate;
+}
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.55), rgba(236, 72, 153, 0.25) 50%, rgba(59, 130, 246, 0.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity var(--dur-base) var(--ease-out-soft);
+}
+.card-glow:hover::before { opacity: 1; }
+
+/* Marquee — used by Partners */
+@utility marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+/* Pulse glow ring */
+@utility pulse-ring {
+  animation: pulse-glow 2.4s var(--ease-out-soft) infinite;
+}
+
+/* Floating orb */
+@utility orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.55;
+  animation: orb-float 14s var(--ease-out-soft) infinite;
+  pointer-events: none;
+}
+
+/* Shimmer text */
+@utility text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-300),
+    var(--color-glow-pink) 30%,
+    var(--color-glow-cyan) 60%,
+    var(--color-brand-300)
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reduced motion — kill everything that moves
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal, .reveal-fade {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .marquee-track { animation: none !important; }
+  .orb { animation: none !important; }
 }

@@ -2,6 +2,7 @@
 import { sanityClient } from "sanity:client";
 import JsonLd from "./JsonLd.astro";
 import { faqPage } from "../lib/seo";
+import Button from "./Button.astro";
 
 type FaqItem = { question: string; answer: string };
 type SanityBlock = { children?: { text: string }[] };
@@ -55,8 +56,8 @@ const extractText = (blocks: SanityBlock[]) =>
   blocks?.map((b) => b.children?.map((c) => c.text).join("")).join("\n") ?? "";
 
 const {
-  title = "FAQ VR Café",
-  subtitle = "Les réponses à vos questions les plus fréquentes",
+  title = "Questions fréquentes",
+  subtitle = "Tout ce que vous avez besoin de savoir avant votre première session.",
   faqs: propFaqs,
   showCTA = true,
   ctaText = "Vous avez d'autres questions ?",
@@ -80,119 +81,116 @@ if (faqs.length === 0) {
 
 {faqs.length > 0 && <JsonLd schema={faqPage(faqs)} />}
 
-<section class="bg-white dark:bg-gray-900 py-12 md:py-20">
-  <div class="container mx-auto px-4 max-w-4xl">
-    <h2
-      class="mb-8 text-4xl md:text-5xl font-extrabold text-center text-gray-900 dark:text-white"
-    >
-      {title}
-    </h2>
-    {
-      subtitle && (
-        <p class="text-center text-gray-600 dark:text-gray-300 mb-12 text-lg">
+<section class="relative bg-[var(--color-surface)] py-20 lg:py-28">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="reveal text-center mb-14">
+      <span class="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-brand-400)] mb-3">
+        FAQ
+      </span>
+      <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-5">
+        {title}
+      </h2>
+      {subtitle && (
+        <p class="text-lg text-white/70 leading-relaxed">
           {subtitle}
         </p>
-      )
-    }
+      )}
+    </div>
 
-    <div class="space-y-4">
-      {
-        faqs.map((faq, index) => (
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-            <button
-              class="faq-question w-full text-left px-6 py-5 flex justify-between items-center gap-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-              data-faq-index={index}
-              aria-expanded="false"
-            >
-              <span class="text-lg font-semibold text-gray-900 dark:text-white pr-8">
-                {faq.question}
-              </span>
+    <!-- Accordion -->
+    <div class="reveal reveal-stagger space-y-3">
+      {faqs.map((faq, index) => (
+        <div class="faq-item card-glow overflow-hidden">
+          <button
+            class="faq-question w-full text-left px-6 py-5 flex justify-between items-center gap-4 focus:outline-none transition-colors duration-[var(--dur-fast)] hover:bg-white/[0.02]"
+            data-faq-index={index}
+            aria-expanded="false"
+            aria-controls={`faq-answer-${index}`}
+          >
+            <span class="text-base sm:text-lg font-semibold text-white pr-4">
+              {faq.question}
+            </span>
+            <span class="faq-icon shrink-0 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)]">
               <svg
-                class="faq-icon w-6 h-6 text-blue-600 dark:text-blue-400 shrink-0 transition-transform duration-300"
+                class="w-4 h-4 text-[var(--color-brand-300)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
               </svg>
-            </button>
-            <div
-              class="faq-answer max-h-0 overflow-hidden transition-all duration-300"
-              data-faq-answer={index}
-            >
-              <div class="px-6 py-5 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {faq.answer}
-                </p>
+            </span>
+          </button>
+          <div
+            id={`faq-answer-${index}`}
+            class="faq-answer grid grid-rows-[0fr] transition-[grid-template-rows] duration-[var(--dur-base)] ease-[var(--ease-out-soft)]"
+            data-faq-answer={index}
+          >
+            <div class="overflow-hidden">
+              <div class="px-6 pb-6 pt-2 border-t border-white/10">
+                <p class="text-white/75 leading-relaxed">{faq.answer}</p>
               </div>
             </div>
           </div>
-        ))
-      }
+        </div>
+      ))}
     </div>
 
-    <!-- CTA Section -->
-    {
-      showCTA && (
-        <div class="mt-12 text-center">
-          <p class="text-gray-600 dark:text-gray-300 mb-4">{ctaText}</p>
-          <a
-            href={ctaLink}
-            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            {ctaButtonText}
-          </a>
-        </div>
-      )
-    }
+    {showCTA && (
+      <div class="reveal mt-14 text-center">
+        <p class="text-white/70 mb-5">{ctaText}</p>
+        <Button href={ctaLink} variant="primary" size="md">
+          {ctaButtonText}
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Button>
+      </div>
+    )}
   </div>
 </section>
 
 <script>
-  // FAQ Accordion functionality
-  document.addEventListener("DOMContentLoaded", () => {
-    const faqButtons = document.querySelectorAll(".faq-question");
+  const initFAQ = () => {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(".faq-question");
 
-    faqButtons.forEach((button) => {
+    buttons.forEach((button) => {
+      if (button.dataset.faqBound === "1") return;
+      button.dataset.faqBound = "1";
       button.addEventListener("click", () => {
         const index = button.getAttribute("data-faq-index");
-        const answer = document.querySelector(
+        const answer = document.querySelector<HTMLElement>(
           `[data-faq-answer="${index}"]`
-        ) as HTMLElement;
+        );
         const icon = button.querySelector(".faq-icon");
         const isExpanded = button.getAttribute("aria-expanded") === "true";
 
-        // Close all other answers
-        document.querySelectorAll(".faq-answer").forEach((ans) => {
-          if (ans !== answer) {
-            (ans as HTMLElement).style.maxHeight = "0";
-          }
+        // Close all others
+        document.querySelectorAll<HTMLElement>(".faq-answer").forEach((ans) => {
+          if (ans !== answer) ans.style.gridTemplateRows = "0fr";
         });
-
-        document.querySelectorAll(".faq-question").forEach((btn) => {
+        document.querySelectorAll<HTMLButtonElement>(".faq-question").forEach((btn) => {
           if (btn !== button) {
             btn.setAttribute("aria-expanded", "false");
-            const btnIcon = btn.querySelector(".faq-icon");
-            btnIcon?.classList.remove("rotate-180");
+            btn.querySelector(".faq-icon")?.classList.remove("rotate-180", "bg-[var(--color-brand-500)]/20");
           }
         });
 
-        // Toggle current answer
         if (isExpanded) {
           button.setAttribute("aria-expanded", "false");
-          answer.style.maxHeight = "0";
-          icon?.classList.remove("rotate-180");
+          if (answer) answer.style.gridTemplateRows = "0fr";
+          icon?.classList.remove("rotate-180", "bg-[var(--color-brand-500)]/20");
         } else {
           button.setAttribute("aria-expanded", "true");
-          answer.style.maxHeight = answer.scrollHeight + "px";
-          icon?.classList.add("rotate-180");
+          if (answer) answer.style.gridTemplateRows = "1fr";
+          icon?.classList.add("rotate-180", "bg-[var(--color-brand-500)]/20");
         }
       });
     });
-  });
+  };
+
+  document.addEventListener("DOMContentLoaded", initFAQ);
+  document.addEventListener("astro:page-load", initFAQ);
 </script>

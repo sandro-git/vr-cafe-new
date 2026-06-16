@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar.astro";
 import Footer from "../components/Footer.astro";
 import BaseHead from "./BaseHead.astro";
 import FloatingActions from "../components/FloatingActions.astro";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
   title?: string;
@@ -15,8 +16,10 @@ const { title, description, canonical, ogImage } = Astro.props;
 ---
 
 <html lang="fr" class="smooth scroll-smooth pt-16 dark">
-  <BaseHead title={title} description={description} canonical={canonical} ogImage={ogImage} />
-  <body class="dark:bg-gray-800">
+  <BaseHead title={title} description={description} canonical={canonical} ogImage={ogImage}>
+    <ClientRouter />
+  </BaseHead>
+  <body class="bg-[var(--color-surface)] text-[var(--color-text-base)]">
     <!-- Google Tag Manager (noscript) -->
     <noscript
       ><iframe
@@ -42,5 +45,42 @@ const { title, description, canonical, ogImage } = Astro.props;
         scroll-padding-top: var(--navHeight);
       }
     </style>
+
+    <!-- Reveal-on-scroll (IntersectionObserver natif, respect prefers-reduced-motion) -->
+    <script is:inline>
+      (function () {
+        const init = () => {
+          const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          const targets = document.querySelectorAll(".reveal, .reveal-fade");
+
+          if (reduced || !("IntersectionObserver" in window)) {
+            targets.forEach((el) => el.classList.add("is-visible"));
+            return;
+          }
+
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  io.unobserve(entry.target);
+                }
+              });
+            },
+            { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
+          );
+
+          targets.forEach((el) => io.observe(el));
+        };
+
+        // Run now (initial load) and on every navigation (View Transitions)
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+        document.addEventListener("astro:page-load", init);
+      })();
+    </script>
   </body>
 </html>

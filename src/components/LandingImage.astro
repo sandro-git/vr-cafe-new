@@ -3,13 +3,25 @@ import { Image } from "astro:assets";
 import vrcafe from "../assets/vrcafe.webp";
 ---
 
-<Image
-  loading="eager"
-  fetchpriority="high"
-  class="mx-auto h-auto max-w-full rounded-xl mt-8"
-  src={vrcafe}
-  alt="VR Café - Réalité virtuelle à Canet-en-Roussillon"
-  widths={[320, 640, 768, 1024, 1280]}
-  sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 1024px"
-  format="webp"
-/>
+<section class="relative bg-[var(--color-surface)] py-12 lg:py-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="reveal relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-[0_30px_120px_-20px_rgba(139,92,246,0.45)]">
+      <Image
+        loading="eager"
+        fetchpriority="high"
+        class="w-full h-auto block"
+        src={vrcafe}
+        alt="VR Café — salle de réalité virtuelle à Canet-en-Roussillon"
+        widths={[320, 640, 768, 1024, 1280, 1600]}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
+        format="webp"
+      />
+      <!-- Gradient veil + caption -->
+      <div class="absolute inset-x-0 bottom-0 p-5 sm:p-8 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
+        <p class="text-white/95 text-sm sm:text-base font-medium">
+          Notre salle à Canet-en-Roussillon · à 10 min de Perpignan
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

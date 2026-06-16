@@ -1,79 +1,104 @@
 ---
+import Button from "./Button.astro";
 ---
 
-<section class="relative bg-white dark:bg-gray-900">
-  <div class="py-16 px-4 mx-auto max-w-(--breakpoint-xl) text-center lg:py-24 lg:px-12">
-    <!-- Titre principal -->
-    <h1 class="mb-8 text-4xl font-extrabold tracking-tight leading-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
-      Explorez les possibilités de la réalité virtuelle au VR Café !
-    </h1>
+<section class="relative isolate overflow-hidden mesh-bg">
+  <!-- Floating orbs -->
+  <div
+    class="orb"
+    style="width: 480px; height: 480px; background: var(--color-brand-500); top: -120px; left: -120px; animation-delay: 0s;"
+    aria-hidden="true"
+  ></div>
+  <div
+    class="orb"
+    style="width: 380px; height: 380px; background: var(--color-glow-pink); top: 40%; right: -100px; animation-delay: -4s;"
+    aria-hidden="true"
+  ></div>
+  <div
+    class="orb"
+    style="width: 420px; height: 420px; background: var(--color-glow-blue); bottom: -160px; left: 30%; animation-delay: -8s;"
+    aria-hidden="true"
+  ></div>
 
-    <!-- Contenu avec cartes -->
-    <div class="max-w-5xl mx-auto mb-12 space-y-6">
-      <!-- Carte 1 -->
-      <div class="bg-linear-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
-        <div class="flex items-start gap-4">
-          <div class="shrink-0 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-            </svg>
-          </div>
-          <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
-            Plongez au cœur d'univers extraordinaires grâce à nos casques de réalité virtuelle dernière génération ! Au VR Café, chaque visite devient une véritable aventure : explorez des mondes fantastiques, défiez les lois de la gravité, vivez des sensations fortes ou découvrez des expériences contemplatives plus apaisantes.
-          </p>
-        </div>
-      </div>
+  <!-- Grid noise overlay -->
+  <div
+    class="absolute inset-0 opacity-[0.04] pointer-events-none"
+    style="background-image: linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px); background-size: 48px 48px;"
+    aria-hidden="true"
+  ></div>
 
-      <!-- Carte 2 -->
-      <div class="bg-linear-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
-        <div class="flex items-start gap-4">
-          <div class="shrink-0 w-12 h-12 bg-pink-400 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
-            </svg>
-          </div>
-          <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
-            Que vous soyez en famille, entre amis ou en session de team-building, notre équipe vous accompagne pour créer des moments inoubliables. Notre espace chaleureux et convivial est pensé pour tous : débutants curieux, joueurs passionnés ou groupes en quête d'une activité originale.
-          </p>
-        </div>
-      </div>
-
-      <!-- Carte 3 -->
-      <div class="bg-linear-to-br from-purple-600 via-blue-600 to-pink-600 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 rounded-2xl p-6 lg:p-8 shadow-2xl hover:scale-105 transition-transform duration-300">
-        <div class="flex items-start gap-4">
-          <div class="shrink-0 w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-900" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-            </svg>
-          </div>
-          <p class="text-left text-white text-lg lg:text-xl leading-relaxed">
-            Partagez des fous rires, des frissons et des émotions intenses dans un environnement moderne, accueillant et immersif. Au VR Café de Canet, ce ne sont pas seulement des jeux… mais des souvenirs uniques qui vous attendent.
-          </p>
-        </div>
-      </div>
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-36">
+    <!-- Eyebrow -->
+    <div class="reveal flex justify-center mb-6">
+      <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 backdrop-blur-md px-4 py-1.5 text-xs font-medium text-white/80">
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-[var(--color-glow-cyan)] opacity-75 animate-ping"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-glow-cyan)]"></span>
+        </span>
+        Canet-en-Roussillon · à 10 min de Perpignan
+      </span>
     </div>
 
-    <!-- Bouton CTA -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-      <a
-        href="/reservation"
-        class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-purple-900 bg-white rounded-full hover:bg-yellow-300 transform hover:scale-110 transition-all duration-300 shadow-2xl"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Title -->
+    <h1 class="reveal text-center mx-auto max-w-5xl text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-white">
+      Plongez dans
+      <span class="text-shimmer block sm:inline">d'autres mondes.</span>
+      <span class="block text-white/90 text-3xl sm:text-4xl lg:text-5xl font-bold mt-4">
+        Sans bouger de Canet.
+      </span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="reveal text-center mx-auto max-w-2xl mt-8 text-lg sm:text-xl text-white/70 leading-relaxed">
+      Escape games, free roaming, jeux multi-joueurs : vivez la réalité virtuelle
+      nouvelle génération dans un espace pensé pour vous, en famille, entre amis
+      ou en équipe.
+    </p>
+
+    <!-- CTAs -->
+    <div class="reveal mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <Button href="/reservation" variant="primary" size="lg" pulse>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         Réserver maintenant
-      </a>
-      <a
-        href="/jeux"
-        class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white border-2 border-white rounded-full hover:bg-white/20 backdrop-blur-sm transform hover:scale-110 transition-all duration-300"
-      >
+      </Button>
+      <Button href="/jeux" variant="secondary" size="lg">
         Découvrir nos jeux
-        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
         </svg>
-      </a>
+      </Button>
     </div>
+
+    <!-- Trust strip -->
+    <div class="reveal mt-16 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-white/60 text-sm">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-[var(--color-accent-400)]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+        <span><strong class="text-white">4,9/5</strong> · 56 avis Google</span>
+      </div>
+      <div class="hidden sm:block w-px h-4 bg-white/15"></div>
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-[var(--color-glow-cyan)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Réservation en ligne · 24h/24</span>
+      </div>
+      <div class="hidden sm:block w-px h-4 bg-white/15"></div>
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-[var(--color-glow-pink)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-8a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>De 7 à 77 ans</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/40" aria-hidden="true">
+    <span class="text-[10px] uppercase tracking-[0.2em]">Scroll</span>
+    <span class="w-px h-10 bg-gradient-to-b from-white/40 to-transparent"></span>
   </div>
 </section>

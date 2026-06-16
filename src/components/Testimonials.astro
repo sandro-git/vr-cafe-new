@@ -15,23 +15,48 @@ const { data: avis } = await loadQuery<Avis[]>({ query: AVIS_QUERY });
 if (!avis || avis.length === 0) return;
 
 const STAR_INDICES = [0, 1, 2, 3, 4];
+
+// Color palette pour les avatars (rotation déterministe par prénom)
+const palette = [
+  "from-[var(--color-brand-500)] to-[var(--color-glow-pink)]",
+  "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]",
+  "from-[var(--color-glow-pink)] to-[var(--color-accent-400)]",
+  "from-[var(--color-glow-cyan)] to-[var(--color-brand-500)]",
+];
+const colorFor = (name: string) =>
+  palette[name.charCodeAt(0) % palette.length];
 ---
 
-<section class="bg-gray-50 dark:bg-gray-800 py-12 lg:py-20">
-  <div class="px-4 mx-auto max-w-(--breakpoint-xl)">
-    <h2 class="mb-6 text-3xl font-extrabold tracking-tight text-center text-gray-900 md:text-4xl dark:text-white">
-      Ce que disent nos clients
-    </h2>
-    <GoogleRatingBadge />
+<section class="relative bg-[var(--color-surface-elevated)] py-20 lg:py-28">
+  <!-- Subtle top divider -->
+  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="reveal text-center mb-14 lg:mb-20">
+      <span class="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-brand-400)] mb-3">
+        Témoignages
+      </span>
+      <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-6">
+        Ce que disent <span class="text-shimmer">nos joueurs.</span>
+      </h2>
+      <GoogleRatingBadge />
+    </div>
+
+    <!-- Grid -->
+    <div class="reveal reveal-stagger grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {avis.map((a) => (
-        <article class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6 flex flex-col gap-4">
-          <!-- Étoiles -->
+        <article class="card-glow group p-7 flex flex-col gap-5 transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
+          <!-- Quote mark -->
+          <svg class="w-8 h-8 text-[var(--color-brand-400)]/40 -mb-2" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M9.333 8C5.467 8 2.667 11.733 2.667 16v8h8v-8h-4c0-2.4 1.6-4 4-4V8H9.333zm13.334 0c-3.867 0-6.667 3.733-6.667 8v8h8v-8h-4c0-2.4 1.6-4 4-4V8h-1.333z" />
+          </svg>
+
+          <!-- Stars -->
           <div class="flex gap-0.5" role="img" aria-label={`Note : ${a.note} sur 5`}>
             {STAR_INDICES.map((i) => (
               <svg
-                class={`w-5 h-5 ${i < a.note ? "text-yellow-400" : "text-gray-300"} fill-current`}
+                class={`w-5 h-5 ${i < a.note ? "text-[var(--color-accent-400)]" : "text-white/15"} fill-current`}
                 viewBox="0 0 20 20"
                 aria-hidden="true"
               >
@@ -40,20 +65,20 @@ const STAR_INDICES = [0, 1, 2, 3, 4];
             ))}
           </div>
 
-          <!-- Commentaire -->
-          <p class="text-gray-700 dark:text-gray-300 leading-relaxed grow">
+          <!-- Comment -->
+          <p class="text-white/85 leading-relaxed grow text-[15px]">
             "{a.commentaire}"
           </p>
 
-          <!-- Auteur -->
-          <div class="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <!-- Author -->
+          <div class="flex items-center gap-3 pt-4 border-t border-white/10">
+            <div class={`w-10 h-10 rounded-full bg-gradient-to-br ${colorFor(a.prenom)} flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md`}>
               {a.prenom.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p class="font-semibold text-gray-900 dark:text-white text-sm">{a.prenom}</p>
+              <p class="font-semibold text-white text-sm">{a.prenom}</p>
               {a.dateVisite && (
-                <p class="text-xs text-gray-400">
+                <p class="text-xs text-white/50">
                   {new Date(a.dateVisite).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
                 </p>
               )}

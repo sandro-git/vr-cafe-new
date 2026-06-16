@@ -1,0 +1,61 @@
+---
+type Bg = "default" | "elevated" | "mesh" | "transparent";
+type Size = "sm" | "md" | "lg";
+type Tag = "section" | "div" | "article";
+
+interface Props {
+  id?: string;
+  as?: Tag;
+  bg?: Bg;
+  size?: Size;
+  reveal?: boolean;
+  stagger?: boolean;
+  class?: string;
+}
+
+const {
+  id,
+  as: TagName = "section",
+  bg = "default",
+  size = "md",
+  reveal = true,
+  stagger = false,
+  class: className = "",
+} = Astro.props as Props;
+
+const BG_MAP: Record<Bg, string> = {
+  default: "bg-[--color-surface]",
+  elevated: "bg-[--color-surface-elevated]",
+  mesh: "mesh-bg",
+  transparent: "",
+};
+
+const PAD_MAP: Record<Size, string> = {
+  sm: "py-12 lg:py-16",
+  md: "py-16 lg:py-24",
+  lg: "py-20 lg:py-32",
+};
+
+const bgClass = BG_MAP[bg];
+const padClass = PAD_MAP[size];
+---
+
+<TagName
+  id={id}
+  class:list={[
+    "relative w-full",
+    bgClass,
+    className,
+  ]}
+>
+  <div
+    class:list={[
+      "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8",
+      padClass,
+      reveal && "reveal",
+      stagger && "reveal-stagger",
+    ]}
+  >
+    <slot />
+  </div>
+</TagName>

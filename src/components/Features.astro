@@ -1,89 +1,60 @@
 ---
-import FamilyIcon from "../icons/FamilyIcon.astro";
-import TeamLine from "../icons/TeamLine.astro";
-import UserFriendsLineAwesome from "../icons/UserFriendsLineAwesome.astro";
+const features = [
+  {
+    title: "En famille",
+    description:
+      "Des souvenirs inoubliables, en partageant des aventures VR avec vos proches. De 7 à 77 ans, tout le monde y trouve son bonheur.",
+    accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]",
+    icon: `<path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />`,
+  },
+  {
+    title: "Entre amis",
+    description:
+      "Anniversaires, EVG/EVJF, soirée fun : vivez des aventures épiques ensemble et créez des souvenirs impérissables.",
+    accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]",
+    icon: `<path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />`,
+  },
+  {
+    title: "Entreprises",
+    description:
+      "Team-building, séminaires, événements corporate : renforcez la cohésion de votre équipe avec des défis VR mémorables.",
+    accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]",
+    icon: `<path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" /><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />`,
+  },
+];
 ---
 
-<section class="bg-white dark:bg-gray-900">
-  <div class="py-8 px-4 mx-auto max-w-(--breakpoint-xl) sm:py-16 lg:px-6">
-    <div class="max-w-screen mb-8 lg:mb-16">
-      <h2
-        class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white"
-      >
-        Pour Qui ?
+<section class="relative bg-[var(--color-surface)] py-20 lg:py-28">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="reveal max-w-2xl mb-14 lg:mb-20">
+      <span class="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-brand-400)] mb-3">
+        Pour qui
+      </span>
+      <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
+        Un espace conçu pour tous,<br />
+        <span class="text-shimmer">conçu pour vous.</span>
       </h2>
-      <p class="text-gray-500 sm:text-xl dark:text-gray-400">
-        Un espace convivial pour tous. Profitez de notre coin café entre deux sessions VR !
+      <p class="mt-5 text-lg text-white/70 max-w-xl leading-relaxed">
+        Profitez de notre coin café entre deux sessions VR. Un lieu chaleureux,
+        un accueil pensé pour vous mettre à l'aise dès la porte.
       </p>
     </div>
-    <div
-      class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0"
-    >
-      <div>
-        <div
-          class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-blue-100 lg:h-12 lg:w-12 dark:bg-blue-900"
-        >
-          <svg
-            class="w-6 h-6 text-blue-600 dark:text-blue-300"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
-            />
-          </svg>
-        </div>
-        <h3 class="mb-2 text-xl font-bold dark:text-white">En Famille</h3>
-        <p class="text-gray-500 dark:text-gray-400">
-          Créez des souvenirs inoubliables en partageant des aventures VR avec vos proches.
-          De 7 à 77 ans, tout le monde trouve son bonheur !
-        </p>
-      </div>
-      <div>
-        <div
-          class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-green-100 lg:h-12 lg:w-12 dark:bg-green-900"
-        >
-          <svg
-            class="w-6 h-6 text-green-600 dark:text-green-300"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"
-            />
-          </svg>
-        </div>
-        <h3 class="mb-2 text-xl font-bold dark:text-white">Entre Amis</h3>
-        <p class="text-gray-500 dark:text-gray-400">
-          Anniversaires, EVG/EVJF, ou simple soirée fun : vivez des aventures épiques
-          et créez des souvenirs impérissables ensemble !
-        </p>
-      </div>
-      <div>
-        <div
-          class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-purple-100 lg:h-12 lg:w-12 dark:bg-purple-900"
-        >
-          <svg
-            class="w-6 h-6 text-purple-600 dark:text-purple-300"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
-              clip-rule="evenodd"
-            />
-            <path
-              d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"
-            />
-          </svg>
-        </div>
-        <h3 class="mb-2 text-xl font-bold dark:text-white">Entreprises</h3>
-        <p class="text-gray-500 dark:text-gray-400">
-          Team-building innovant, séminaires ou événements corporate : renforcez la cohésion
-          d'équipe à travers des défis VR stimulants et mémorables.
-        </p>
-      </div>
+
+    <!-- Cards -->
+    <div class="reveal reveal-stagger grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <article class="card-glow group p-8 transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-soft)] hover:-translate-y-1">
+          <!-- Icon -->
+          <div class={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${f.accent} shadow-lg mb-6 transition-transform duration-[var(--dur-base)] group-hover:scale-110 group-hover:rotate-3`}>
+            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true" set:html={f.icon} />
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">{f.title}</h3>
+          <p class="text-white/70 leading-relaxed">{f.description}</p>
+          <!-- Decorative gradient line on hover -->
+          <div class={`mt-6 h-px w-12 bg-gradient-to-r ${f.accent} transition-all duration-[var(--dur-base)] group-hover:w-full`}></div>
+        </article>
+      ))}
     </div>
   </div>
 </section>
