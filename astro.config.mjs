@@ -26,6 +26,9 @@ export default defineConfig({
     plugins: [
       tailwindcss()
     ],
+    server: {
+      host: true
+    },
     build: {
       rollupOptions: {
         output: {

@@ -285,174 +285,236 @@ const occasionsItems = [
 </nav>
 
 <script>
-  const mobileMenuButton = document.querySelector(
-    '[data-collapse-toggle="navbar-sticky"]'
-  );
-  const mobileMenu = document.querySelector("#navbar-sticky");
-  const hamburgerIcon = document.querySelector("#hamburger-icon");
-  const closeIcon = document.querySelector("#close-icon");
+  function initNavBar() {
+    const mobileMenuButton = document.querySelector<HTMLButtonElement>(
+      '[data-collapse-toggle="navbar-sticky"]'
+    );
+    const mobileMenu = document.querySelector<HTMLElement>("#navbar-sticky");
+    const hamburgerIcon = document.querySelector<HTMLElement>("#hamburger-icon");
+    const closeIcon = document.querySelector<HTMLElement>("#close-icon");
 
-  mobileMenuButton?.addEventListener("click", () => {
-    const isHidden = mobileMenu?.classList.contains("hidden");
+    const dropdownButtons = document.querySelectorAll<HTMLButtonElement>(
+      "[data-dropdown]"
+    );
 
-    if (isHidden) {
-      mobileMenu?.classList.remove("hidden");
-      hamburgerIcon?.classList.add("hidden");
-      closeIcon?.classList.remove("hidden");
-      mobileMenuButton?.setAttribute("aria-expanded", "true");
-    } else {
+    function closeAllDropdowns() {
+      dropdownButtons.forEach((btn) => {
+        const dropdownId = btn.getAttribute("data-dropdown");
+        const dropdown = dropdownId ? document.getElementById(dropdownId) : null;
+        const arrow = btn.querySelector(".dropdown-arrow");
+
+        if (dropdown) {
+          dropdown.classList.add("hidden");
+          btn.setAttribute("aria-expanded", "false");
+        }
+        arrow?.classList.remove("rotate-180");
+      });
+    }
+
+    function openDropdown(button: Element) {
+      const dropdownId = button.getAttribute("data-dropdown");
+      if (!dropdownId) return;
+
+      const dropdown = document.getElementById(dropdownId);
+      const arrow = button.querySelector(".dropdown-arrow");
+
+      if (dropdown) {
+        dropdown.classList.remove("hidden");
+        button.setAttribute("aria-expanded", "true");
+        arrow?.classList.add("rotate-180");
+
+        const firstLink = dropdown.querySelector(
+          'a[role="menuitem"]'
+        ) as HTMLElement | null;
+        firstLink?.focus();
+      }
+    }
+
+    function closeDropdown(button: Element) {
+      const dropdownId = button.getAttribute("data-dropdown");
+      if (!dropdownId) return;
+
+      const dropdown = document.getElementById(dropdownId);
+      const arrow = button.querySelector(".dropdown-arrow");
+
+      if (dropdown) {
+        dropdown.classList.add("hidden");
+        button.setAttribute("aria-expanded", "false");
+        arrow?.classList.remove("rotate-180");
+      }
+    }
+
+    function toggleDropdown(button: Element) {
+      const dropdownId = button.getAttribute("data-dropdown");
+      if (!dropdownId) return;
+
+      const dropdown = document.getElementById(dropdownId);
+      const isHidden = dropdown?.classList.contains("hidden");
+
+      dropdownButtons.forEach((btn) => {
+        if (btn !== button) closeDropdown(btn);
+      });
+
+      if (isHidden) {
+        openDropdown(button);
+      } else {
+        closeDropdown(button);
+        (button as HTMLElement).focus();
+      }
+    }
+
+    function closeMobileMenu() {
       mobileMenu?.classList.add("hidden");
       hamburgerIcon?.classList.remove("hidden");
       closeIcon?.classList.add("hidden");
       mobileMenuButton?.setAttribute("aria-expanded", "false");
     }
-  });
 
-  const dropdownButtons = document.querySelectorAll("[data-dropdown]");
-
-  function closeAllDropdowns() {
-    dropdownButtons.forEach((btn) => {
-      const dropdownId = btn.getAttribute("data-dropdown");
-      const dropdown = dropdownId ? document.getElementById(dropdownId) : null;
-      const arrow = btn.querySelector(".dropdown-arrow");
-
-      if (dropdown) {
-        dropdown.classList.add("hidden");
-        btn.setAttribute("aria-expanded", "false");
-      }
-      arrow?.classList.remove("rotate-180");
-    });
-  }
-
-  function openDropdown(button: Element) {
-    const dropdownId = button.getAttribute("data-dropdown");
-    if (!dropdownId) return;
-
-    const dropdown = document.getElementById(dropdownId);
-    const arrow = button.querySelector(".dropdown-arrow");
-
-    if (dropdown) {
-      dropdown.classList.remove("hidden");
-      button.setAttribute("aria-expanded", "true");
-      arrow?.classList.add("rotate-180");
-
-      const firstLink = dropdown.querySelector('a[role="menuitem"]') as HTMLElement;
-      firstLink?.focus();
+    // Hamburger toggle (re-bindable via data flag)
+    if (mobileMenuButton && mobileMenuButton.dataset.navbarBound !== "1") {
+      mobileMenuButton.dataset.navbarBound = "1";
+      mobileMenuButton.addEventListener("click", () => {
+        const isHidden = mobileMenu?.classList.contains("hidden");
+        if (isHidden) {
+          mobileMenu?.classList.remove("hidden");
+          hamburgerIcon?.classList.add("hidden");
+          closeIcon?.classList.remove("hidden");
+          mobileMenuButton.setAttribute("aria-expanded", "true");
+        } else {
+          closeMobileMenu();
+        }
+      });
     }
-  }
 
-  function closeDropdown(button: Element) {
-    const dropdownId = button.getAttribute("data-dropdown");
-    if (!dropdownId) return;
+    // Dropdown buttons
+    dropdownButtons.forEach((button) => {
+      if (button.dataset.navbarBound === "1") return;
+      button.dataset.navbarBound = "1";
 
-    const dropdown = document.getElementById(dropdownId);
-    const arrow = button.querySelector(".dropdown-arrow");
-
-    if (dropdown) {
-      dropdown.classList.add("hidden");
-      button.setAttribute("aria-expanded", "false");
-      arrow?.classList.remove("rotate-180");
-    }
-  }
-
-  function toggleDropdown(button: Element) {
-    const dropdownId = button.getAttribute("data-dropdown");
-    if (!dropdownId) return;
-
-    const dropdown = document.getElementById(dropdownId);
-    const isHidden = dropdown?.classList.contains("hidden");
-
-    dropdownButtons.forEach((btn) => {
-      if (btn !== button) closeDropdown(btn);
-    });
-
-    if (isHidden) {
-      openDropdown(button);
-    } else {
-      closeDropdown(button);
-      (button as HTMLElement).focus();
-    }
-  }
-
-  dropdownButtons.forEach((button) => {
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      toggleDropdown(button);
-    });
-
-    (button as HTMLElement).addEventListener("keydown", (e: KeyboardEvent) => {
-      const key = e.key;
-
-      if (key === "Enter" || key === " ") {
+      button.addEventListener("click", (e) => {
         e.preventDefault();
         toggleDropdown(button);
-      } else if (key === "Escape") {
-        closeDropdown(button);
-        (button as HTMLElement).focus();
-      } else if (key === "ArrowDown") {
-        e.preventDefault();
-        const dropdownId = button.getAttribute("data-dropdown");
-        const dropdown = dropdownId ? document.getElementById(dropdownId) : null;
-        const isHidden = dropdown?.classList.contains("hidden");
+      });
 
-        if (isHidden) {
-          openDropdown(button);
-        } else {
-          const firstLink = dropdown?.querySelector('a[role="menuitem"]') as HTMLElement;
-          firstLink?.focus();
-        }
-      }
-    });
-  });
-
-  document.querySelectorAll('[role="menu"]').forEach((menu) => {
-    const menuItems = menu.querySelectorAll('a[role="menuitem"]');
-
-    menuItems.forEach((item, index) => {
-      (item as HTMLElement).addEventListener("keydown", (e: KeyboardEvent) => {
+      button.addEventListener("keydown", (e: KeyboardEvent) => {
         const key = e.key;
 
-        if (key === "ArrowDown") {
+        if (key === "Enter" || key === " ") {
           e.preventDefault();
-          const nextIndex = (index + 1) % menuItems.length;
-          (menuItems[nextIndex] as HTMLElement).focus();
-        } else if (key === "ArrowUp") {
-          e.preventDefault();
-          const prevIndex = (index - 1 + menuItems.length) % menuItems.length;
-          (menuItems[prevIndex] as HTMLElement).focus();
+          toggleDropdown(button);
         } else if (key === "Escape") {
-          e.preventDefault();
-          const menuId = menu.id;
-          const button = document.querySelector(`[data-dropdown="${menuId}"]`) as HTMLElement;
           closeDropdown(button);
-          button?.focus();
-        } else if (key === "Tab") {
-          const menuId = menu.id;
-          const button = document.querySelector(`[data-dropdown="${menuId}"]`);
-          if (button) closeDropdown(button);
+          button.focus();
+        } else if (key === "ArrowDown") {
+          e.preventDefault();
+          const dropdownId = button.getAttribute("data-dropdown");
+          const dropdown = dropdownId
+            ? document.getElementById(dropdownId)
+            : null;
+          const isHidden = dropdown?.classList.contains("hidden");
+
+          if (isHidden) {
+            openDropdown(button);
+          } else {
+            const firstLink = dropdown?.querySelector(
+              'a[role="menuitem"]'
+            ) as HTMLElement | null;
+            firstLink?.focus();
+          }
         }
       });
     });
-  });
 
-  document.addEventListener("click", (e) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest("[data-dropdown]") && !target.closest('[role="menu"]')) {
-      closeAllDropdowns();
-    }
-  });
+    // Menu items keyboard navigation
+    document.querySelectorAll<HTMLElement>('[role="menu"]').forEach((menu) => {
+      const menuItems = menu.querySelectorAll<HTMLElement>(
+        'a[role="menuitem"]'
+      );
 
-  const navLinks = document.querySelectorAll("#navbar-sticky a");
-  navLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-      const isHidden = mobileMenu?.classList.contains("hidden");
-      if (isHidden === false) {
-        mobileMenu?.classList.add("hidden");
-        hamburgerIcon?.classList.remove("hidden");
-        closeIcon?.classList.add("hidden");
-        mobileMenuButton?.setAttribute("aria-expanded", "false");
-        closeAllDropdowns();
-      }
+      menuItems.forEach((item, index) => {
+        if (item.dataset.navbarBound === "1") return;
+        item.dataset.navbarBound = "1";
+
+        item.addEventListener("keydown", (e: KeyboardEvent) => {
+          const key = e.key;
+
+          if (key === "ArrowDown") {
+            e.preventDefault();
+            const nextIndex = (index + 1) % menuItems.length;
+            menuItems[nextIndex].focus();
+          } else if (key === "ArrowUp") {
+            e.preventDefault();
+            const prevIndex = (index - 1 + menuItems.length) % menuItems.length;
+            menuItems[prevIndex].focus();
+          } else if (key === "Escape") {
+            e.preventDefault();
+            const menuId = menu.id;
+            const button = document.querySelector<HTMLElement>(
+              `[data-dropdown="${menuId}"]`
+            );
+            if (button) closeDropdown(button);
+            button?.focus();
+          } else if (key === "Tab") {
+            const menuId = menu.id;
+            const button = document.querySelector<HTMLElement>(
+              `[data-dropdown="${menuId}"]`
+            );
+            if (button) closeDropdown(button);
+          }
+        });
+      });
     });
-  });
+
+    // Close nav menu on link click (mobile)
+    const navLinks = document.querySelectorAll<HTMLElement>(
+      "#navbar-sticky a"
+    );
+    navLinks.forEach((link) => {
+      if (link.dataset.navbarBoundLink === "1") return;
+      link.dataset.navbarBoundLink = "1";
+      link.addEventListener("click", () => {
+        const isHidden = mobileMenu?.classList.contains("hidden");
+        if (isHidden === false) {
+          closeMobileMenu();
+          closeAllDropdowns();
+        }
+      });
+    });
+
+    // Document-level click-outside (only bound once globally)
+    if (!(window as unknown as { __navbarClickOutsideBound?: boolean })
+      .__navbarClickOutsideBound) {
+      (window as unknown as { __navbarClickOutsideBound?: boolean })
+        .__navbarClickOutsideBound = true;
+      document.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest("[data-dropdown]") &&
+          !target.closest('[role="menu"]')
+        ) {
+          document
+            .querySelectorAll<HTMLButtonElement>("[data-dropdown]")
+            .forEach((btn) => {
+              const dropdownId = btn.getAttribute("data-dropdown");
+              const dropdown = dropdownId
+                ? document.getElementById(dropdownId)
+                : null;
+              const arrow = btn.querySelector(".dropdown-arrow");
+              if (dropdown) {
+                dropdown.classList.add("hidden");
+                btn.setAttribute("aria-expanded", "false");
+              }
+              arrow?.classList.remove("rotate-180");
+            });
+        }
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNavBar);
+  } else {
+    initNavBar();
+  }
+  document.addEventListener("astro:page-load", initNavBar);
 </script>

@@ -96,9 +96,16 @@ import Button from "./Button.astro";
     </div>
   </div>
 
-  <!-- Scroll cue -->
+  <!-- Scroll cue desktop (texte + ligne) -->
   <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/40" aria-hidden="true">
     <span class="text-[10px] uppercase tracking-[0.2em]">Scroll</span>
     <span class="w-px h-10 bg-gradient-to-b from-white/40 to-transparent"></span>
+  </div>
+
+  <!-- Scroll cue mobile (chevron rebondissant) -->
+  <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex lg:hidden text-white/50 bounce-soft" aria-hidden="true">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
   </div>
 </section>
