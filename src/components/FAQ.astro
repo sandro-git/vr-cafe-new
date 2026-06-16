@@ -81,7 +81,7 @@ if (faqs.length === 0) {
 
 {faqs.length > 0 && <JsonLd schema={faqPage(faqs)} />}
 
-<section class="relative bg-[var(--color-surface)] pt-10 pb-20 lg:pt-14 lg:pb-28">
+<section class="relative bg-[var(--color-surface)] pt-10 pb-12 lg:pt-14 lg:pb-16">
   <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="reveal text-center mb-14">
@@ -139,7 +139,7 @@ if (faqs.length === 0) {
     </div>
 
     {showCTA && (
-      <div class="reveal mt-14 text-center">
+      <div class="reveal mt-10 text-center">
         <p class="text-white/70 mb-5">{ctaText}</p>
         <Button href={ctaLink} variant="primary" size="md">
           {ctaButtonText}

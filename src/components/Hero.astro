@@ -2,7 +2,7 @@
 import Button from "./Button.astro";
 ---
 
-<section class="relative isolate overflow-hidden mesh-bg min-h-[100svh] -mt-16 pt-16">
+<section class="relative isolate overflow-hidden mesh-bg -mt-16 pt-16">
   <!-- Floating orbs -->
   <div
     class="orb"
@@ -94,20 +94,20 @@ import Button from "./Button.astro";
         <span>De 7 à 77 ans</span>
       </div>
     </div>
+
+    <!-- Scroll cue mobile (chevron rebondissant en flow après la trust strip) -->
+    <div class="reveal mt-6 sm:mt-8 flex lg:hidden justify-center bounce-soft" aria-hidden="true">
+      <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/25 backdrop-blur-lg text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+        </svg>
+      </span>
+    </div>
   </div>
 
   <!-- Scroll cue desktop (texte + ligne) -->
   <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/40" aria-hidden="true">
     <span class="text-[10px] uppercase tracking-[0.2em]">Scroll</span>
     <span class="w-px h-10 bg-gradient-to-b from-white/40 to-transparent"></span>
-  </div>
-
-  <!-- Scroll cue mobile (chevron rebondissant) -->
-  <div class="absolute bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] left-1/2 -translate-x-1/2 flex lg:hidden bounce-soft" aria-hidden="true">
-    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/25 backdrop-blur-lg text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)]">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-      </svg>
-    </span>
   </div>
 </section>
