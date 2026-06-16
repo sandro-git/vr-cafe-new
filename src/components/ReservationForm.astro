@@ -29,7 +29,7 @@ const {
     <!-- ===== ÉTAPE 1 : Configuration ===== -->
     <div id="step-1" class="card-glow p-6 sm:p-8 shadow-xl">
       <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-        <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-glow-pink)] flex items-center justify-center text-sm font-bold shrink-0">1</span>
+        <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-glow-blue)] to-[var(--color-brand-500)] flex items-center justify-center text-sm font-bold shrink-0">1</span>
         Configurez votre session
       </h2>
 
@@ -76,7 +76,7 @@ const {
     <div id="step-2" class="hidden mt-4 card-glow p-6 sm:p-8 shadow-xl">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-white flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-glow-pink)] flex items-center justify-center text-sm font-bold shrink-0">2</span>
+          <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-glow-pink)] to-[var(--color-brand-500)] flex items-center justify-center text-sm font-bold shrink-0">2</span>
           Choisir un créneau
         </h2>
         <button id="btn-back-1" class="text-sm text-white/55 hover:text-white transition-colors">← Retour</button>
@@ -114,7 +114,7 @@ const {
     <div id="step-3" class="hidden mt-4 card-glow p-6 sm:p-8 shadow-xl">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-white flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-glow-pink)] flex items-center justify-center text-sm font-bold shrink-0">3</span>
+          <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-glow-cyan)] to-[var(--color-brand-500)] flex items-center justify-center text-sm font-bold shrink-0">3</span>
           Vos informations
         </h2>
         <button id="btn-back-2" class="text-sm text-white/55 hover:text-white transition-colors">← Retour</button>
@@ -200,15 +200,21 @@ const {
 
 <script>
   // @ts-nocheck
-  import { createClient } from '@supabase/supabase-js';
-
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
 
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+  // Supabase chargé en import dynamique : si le chunk est lent/échoue,
+  // le rendu synchrone de l'étape 1 (joueurs/type VR) n'est pas bloqué.
+  let supabase;
+  async function ensureSupabase() {
+    if (supabase) return supabase;
+    const { createClient } = await import('@supabase/supabase-js');
+    supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+    return supabase;
+  }
 
   // ── État ──────────────────────────────────────────────────────────────────
   let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 30, nb_boxes: 6 };
@@ -232,6 +238,7 @@ const {
 
     // Supabase uniquement pour config + durées + disponibilités
     try {
+      await ensureSupabase();
       await Promise.all([loadConfig(), loadDurees(), loadJoursFermes(), loadPeriodesVacances()]);
     } catch (err) {
       console.error('Init error:', err);

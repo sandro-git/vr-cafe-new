@@ -10,36 +10,36 @@ const { id = 'dp' } = Astro.props;
   <button
     type="button"
     id={`${id}-trigger`}
-    class="w-full text-left bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+    class="w-full text-left bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] transition-colors"
   >
-    <span id={`${id}-display`} class="text-gray-500">Sélectionnez une date</span>
+    <span id={`${id}-display`} class="text-white/40">Sélectionnez une date</span>
   </button>
   <input type="hidden" id={`${id}-value`} />
 
   <!-- Popup -->
   <div
     id={`${id}-popup`}
-    class="hidden absolute z-50 top-full mt-2 left-0 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-4 w-72"
+    class="hidden absolute z-50 top-full mt-2 left-0 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-2xl shadow-2xl p-4 w-72"
   >
     <!-- Header nav -->
     <div class="flex items-center justify-between mb-3">
       <button
         id={`${id}-prev`}
         type="button"
-        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors text-lg"
+        class="w-8 h-8 flex items-center justify-center text-white/55 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-lg"
       >‹</button>
       <span id={`${id}-title`} class="text-white font-semibold text-sm capitalize"></span>
       <button
         id={`${id}-next`}
         type="button"
-        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors text-lg"
+        class="w-8 h-8 flex items-center justify-center text-white/55 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-lg"
       >›</button>
     </div>
 
     <!-- Jours de la semaine -->
     <div class="grid grid-cols-7 mb-1 text-center">
       {['Lu','Ma','Me','Je','Ve','Sa','Di'].map(j => (
-        <span class="text-xs font-bold text-gray-600 py-1">{j}</span>
+        <span class="text-xs font-bold text-white/40 py-1">{j}</span>
       ))}
     </div>
 
@@ -81,18 +81,18 @@ const { id = 'dp' } = Astro.props;
     function dayClass(isPast: boolean, isOpen: boolean, isSelected: boolean, isToday: boolean, isFermeAdmin: boolean) {
       const base = 'w-8 h-8 flex items-center justify-center text-sm rounded-lg mx-auto';
       if (isPast || !isOpen) {
-        return `${base} text-gray-700 cursor-not-allowed line-through`;
+        return `${base} text-white/20 cursor-not-allowed line-through`;
       }
       if (isSelected) {
-        return `${base} bg-blue-700 text-white font-bold ${isToday ? 'ring-1 ring-blue-400' : ''}`;
+        return `${base} bg-[var(--color-brand-600)] text-white font-bold ${isToday ? 'ring-1 ring-[var(--color-brand-400)]' : ''}`;
       }
       if (isFermeAdmin) {
         return `${base} text-amber-400 hover:bg-amber-700/30 cursor-pointer transition-colors ${isToday ? 'ring-1 ring-amber-500' : ''}`;
       }
       if (isToday) {
-        return `${base} text-white ring-1 ring-blue-500 hover:bg-blue-700/40 cursor-pointer transition-colors`;
+        return `${base} text-white ring-1 ring-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/30 cursor-pointer transition-colors`;
       }
-      return `${base} text-white hover:bg-blue-700/40 cursor-pointer transition-colors`;
+      return `${base} text-white hover:bg-[var(--color-brand-500)]/30 cursor-pointer transition-colors`;
     }
 
     function render() {
@@ -149,7 +149,7 @@ const { id = 'dp' } = Astro.props;
       const display = document.getElementById(`${rootId}-display`)!;
       const d = new Date(dateStr + 'T12:00:00');
       display.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      display.classList.remove('text-gray-500');
+      display.classList.remove('text-white/40');
       display.classList.add('text-white');
 
       // Fermer le popup
