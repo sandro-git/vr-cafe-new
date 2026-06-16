@@ -272,3 +272,47 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 - CSRF via HMAC-SHA256 sur le formulaire contact
 - Cookie `admin_session` httpOnly + secure sur toutes les routes `/admin/*`
 - Validation CORS origin sur les endpoints API critiques
+
+## Design System (refonte 2026)
+
+Refonte visuelle complète appliquée à **tout le site public** (mergée sur `master`). **L'admin (`/admin/*`) n'est PAS encore refait** — voir « Reste à faire » plus bas.
+
+**Tokens** — définis dans `src/styles/global.css` via `@theme` (Tailwind v4) :
+- Couleurs : `brand-50…900` (violet, base #8b5cf6), `accent-300/400/500` (jaune), `glow-pink/blue/cyan`, surfaces `surface` (#0b0b14) / `surface-elevated` (#14141f) / `surface-card` (#1c1c2b) / `surface-border`, textes `text-strong/base/muted/faded`.
+- Typo : `--font-display` = Space Grotesk (titres `h1/h2/h3` + classe `.font-display`).
+- Espacement section, radius (`--radius-card` 1.25rem, `--radius-pill`), motion (`--ease-out-soft`, `--dur-fast/base/slow`).
+- S'utilisent en arbitraire : `bg-[var(--color-surface)]`, `text-[var(--color-brand-300)]`, etc. Pour les couleurs auto-générées en utilitaire : `text-brand-900`, `bg-accent-400` (⚠️ jamais `text-[--color-x]` sans `var()` — invalide en Tailwind v4).
+
+**Utilities custom** (global.css) : `reveal` / `reveal-stagger` (apparition au scroll), `mesh-bg`, `card-glow` (carte fond surface-card + bord gradient brand au hover), `text-shimmer` (dégradé animé sur un mot-clé de titre), `orb` (lueurs floues, responsives via clamp côté Hero), `marquee-track`, `pulse-ring`, `dropdown-anim`, `bounce-soft`.
+- ⚠️ **Ne jamais mettre `reveal` sur une grille unique très haute** (ex. liste de 20+ cartes) : l'IntersectionObserver (`threshold 0.08`) ne se déclenche jamais → contenu invisible. Mettre `reveal` sur des blocs courts, ou rien.
+
+**Composants réutilisables** :
+- `src/components/PageHeader.astro` — en-tête de page : props `eyebrow`, `title`, `highlight` (mot recevant `text-shimmer`), `subtitle`, `align`, slot par défaut pour les CTA.
+- `src/components/Button.astro` — variants `primary` (blanc/brand) / `secondary` (outline) / `ghost` / `accent` (jaune), tailles `sm/md/lg`, supporte `href` (lien) ou `type` (bouton), prop `pulse`.
+- `src/components/Section.astro` — wrapper de section (fond, padding, reveal).
+
+**Conventions visuelles** :
+- Dark par défaut. Fonds `surface` / `surface-elevated` alternés entre sections.
+- Rythme vertical : `pt-10 pb-12/16 lg:pt-14 lg:pb-16/28` (pt resserré).
+- Titres de section : `font-display ... font-extrabold tracking-tight text-white` + `text-shimmer` sur un mot.
+- Cartes : `card-glow group p-X` + `hover:-translate-y-1` ; textes `text-white` / `text-white/70` / `text-white/55`.
+- Champs de formulaire : `bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)]`. CTA via `Button`. Pas de bleu/violet brut → palette brand.
+- Emojis décoratifs : placés dans des tuiles gradient brand (pas en gros emojis flottants).
+
+**Motion** :
+- `BaseLayout.astro` active `ClientRouter` (View Transitions) + un `IntersectionObserver` inline pour le reveal-on-scroll (réinitialisé sur `astro:page-load`, respecte `prefers-reduced-motion`).
+- ⚠️ **Tout `<script>` qui attache des listeners doit se réexécuter sur `astro:page-load`** (sinon cassé après navigation View Transitions) et utiliser un flag `data-*-bound` anti-doublon — pattern dans `NavBar.astro`, `FAQ.astro`, `[...slug].astro`.
+
+**Formulaires de réservation** (`ReservationForm`, `ReservationFormAnniversaire`, `ReservationFormMDJ`) :
+- Supabase chargé en **import dynamique** (`ensureSupabase()`) appelé dans `init()` après le rendu UI → l'étape 1 s'affiche même si le chunk Supabase échoue (504 Vite dev).
+- Badges d'étape alternés : étape 1 bleu, 2 rose, 3 cyan (gradients glow-*→brand).
+
+**Dev / test** :
+- `netlify dev --port 8888 --offline`. Accès LAN (mobile réel) : `http://192.168.1.55:8888` (activé par `vite.server.host: true` dans `astro.config.mjs`).
+- `devToolbar` désactivée (astro.config.mjs) pour le confort mobile.
+- Le bouton WhatsApp flottant (`FloatingActions`) est **commenté** dans `BaseLayout.astro` (à replacer ailleurs plus tard).
+
+**Reste à faire — refonte backend/admin** :
+- `src/layouts/AdminLayout.astro` + pages `src/pages/admin/*` (login, reservations, planning, clients, marketing, reservation) sont **encore sur l'ancienne palette** (`bg-gray-*`, `text-blue-*`). À aligner sur le design system ci-dessus.
+- Les composants de réservation admin (`ReservationForm` mode admin, MDJ, Anniversaire) sont **déjà refaits** — réutilisables tels quels.
+- Vérifier si `AdminLayout` doit inclure le script reveal / `ClientRouter` (il n'utilise pas `BaseLayout`).
