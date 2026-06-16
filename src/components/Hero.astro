@@ -6,17 +6,17 @@ import Button from "./Button.astro";
   <!-- Floating orbs -->
   <div
     class="orb"
-    style="width: 480px; height: 480px; background: var(--color-brand-500); top: -120px; left: -120px; animation-delay: 0s;"
+    style="width: clamp(200px, 55vw, 480px); height: clamp(200px, 55vw, 480px); background: var(--color-brand-500); top: -120px; left: -120px; animation-delay: 0s;"
     aria-hidden="true"
   ></div>
   <div
     class="orb"
-    style="width: 380px; height: 380px; background: var(--color-glow-pink); top: 40%; right: -100px; animation-delay: -4s;"
+    style="width: clamp(170px, 48vw, 380px); height: clamp(170px, 48vw, 380px); background: var(--color-glow-pink); top: 40%; right: -100px; animation-delay: -4s;"
     aria-hidden="true"
   ></div>
   <div
     class="orb"
-    style="width: 420px; height: 420px; background: var(--color-glow-blue); bottom: -160px; left: 30%; animation-delay: -8s;"
+    style="width: clamp(190px, 52vw, 420px); height: clamp(190px, 52vw, 420px); background: var(--color-glow-blue); bottom: -160px; left: 30%; animation-delay: -8s;"
     aria-hidden="true"
   ></div>
 

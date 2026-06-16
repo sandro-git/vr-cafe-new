@@ -217,6 +217,14 @@ h1, h2, h3, .font-display {
   pointer-events: none;
 }
 
+/* Sur mobile : orbes plus discrets (sinon ils lavent le Hero) */
+@media (max-width: 640px) {
+  .orb {
+    filter: blur(40px);
+    opacity: 0.38;
+  }
+}
+
 /* Dropdown / panel entrance */
 @utility dropdown-anim {
   animation: dropdown-in var(--dur-base) var(--ease-out-soft);
