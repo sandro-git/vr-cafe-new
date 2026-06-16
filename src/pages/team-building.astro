@@ -3,6 +3,8 @@ export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, service } from "../lib/seo";
+import PageHeader from "../components/PageHeader.astro";
+import Button from "../components/Button.astro";
 
 const schema = graph([
   businessNode,
@@ -27,160 +29,106 @@ const schema = graph([
 >
   <JsonLd schema={schema} />
   <!-- Hero -->
-  <section class="bg-gray-900 text-white py-20 px-4">
-    <div class="max-w-4xl mx-auto text-center">
-      <div class="text-6xl mb-6">🏆</div>
-      <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
-        Team Building VR à <span class="text-blue-400">Perpignan</span>
-      </h1>
-      <p class="text-xl md:text-2xl text-gray-300 mb-4">
-        Renforcez la cohésion de votre équipe autrement
-      </p>
-      <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-        Escape games collaboratifs, défis multijoueurs, moments de partage… La réalité virtuelle crée des souvenirs communs et des liens durables entre collègues.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a
-          href="/contact"
-          class="px-10 py-4 bg-linear-to-r from-blue-500 to-cyan-500 text-white font-bold text-lg rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300"
-        >
-          Demander un devis
-        </a>
-        <a
-          href="/reservation"
-          class="px-10 py-4 border-2 border-white text-white font-bold text-lg rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300"
-        >
-          Réserver directement
-        </a>
-      </div>
+  <section class="bg-[var(--color-surface)]">
+    <div class="flex flex-col items-center">
+      <PageHeader
+        eyebrow="Team Building"
+        title="Renforcez la cohésion de votre équipe autrement"
+        highlight="autrement"
+        subtitle="Escape games collaboratifs, défis multijoueurs, moments de partage… La réalité virtuelle crée des souvenirs communs et des liens durables entre collègues."
+      >
+        <Button href="/contact" variant="primary" size="lg">Demander un devis</Button>
+        <Button href="/reservation" variant="secondary" size="lg">Réserver directement</Button>
+      </PageHeader>
     </div>
   </section>
 
   <!-- Avantages -->
-  <section class="bg-gray-800 py-16 px-4">
+  <section class="bg-[var(--color-surface-elevated)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-5xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">
-        Pourquoi le team building VR ?
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">
+        Pourquoi le <span class="text-shimmer">team building VR</span> ?
       </h2>
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-3">🤝</div>
-          <h3 class="text-white font-bold mb-2">Cohésion d'équipe</h3>
-          <p class="text-gray-400 text-sm">Les escape games VR nécessitent communication et collaboration — des qualités directement transposables au travail.</p>
-        </div>
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-3">⚡</div>
-          <h3 class="text-white font-bold mb-2">Adrénaline garantie</h3>
-          <p class="text-gray-400 text-sm">Des expériences immersives qui sortent tout le monde de sa zone de confort — dans la bonne humeur.</p>
-        </div>
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-3">🎯</div>
-          <h3 class="text-white font-bold mb-2">Objectif commun</h3>
-          <p class="text-gray-400 text-sm">Réussir l'escape game ensemble crée un sentiment d'accomplissement collectif fort.</p>
-        </div>
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-3">😄</div>
-          <h3 class="text-white font-bold mb-2">Accessible à tous</h3>
-          <p class="text-gray-400 text-sm">Aucune compétence requise. Juniors et seniors participent sur le même pied d'égalité.</p>
-        </div>
+      <div class="reveal reveal-stagger grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { emoji: "🤝", accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]", title: "Cohésion d'équipe", text: "Les escape games VR nécessitent communication et collaboration — des qualités directement transposables au travail." },
+          { emoji: "⚡", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "Adrénaline garantie", text: "Des expériences immersives qui sortent tout le monde de sa zone de confort — dans la bonne humeur." },
+          { emoji: "🎯", accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]", title: "Objectif commun", text: "Réussir l'escape game ensemble crée un sentiment d'accomplissement collectif fort." },
+          { emoji: "😄", accent: "from-[var(--color-glow-cyan)] to-[var(--color-brand-500)]", title: "Accessible à tous", text: "Aucune compétence requise. Juniors et seniors participent sur le même pied d'égalité." },
+        ].map((c) => (
+          <article class="card-glow group p-6 text-center transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
+            <div class={`mx-auto mb-4 inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br ${c.accent} text-xl shadow-lg transition-transform duration-[var(--dur-base)] group-hover:scale-110`}>{c.emoji}</div>
+            <h3 class="text-white font-bold mb-2">{c.title}</h3>
+            <p class="text-white/70 text-sm leading-relaxed">{c.text}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
 
   <!-- Formats -->
-  <section class="bg-gray-900 py-16 px-4">
+  <section class="bg-[var(--color-surface)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-4xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">
         Formats disponibles
       </h2>
-      <div class="space-y-6">
-        <div class="bg-gray-800 rounded-xl p-8 flex flex-col md:flex-row gap-6 items-start">
-          <div class="shrink-0 w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-2xl">🕹️</div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Session libre (2–6 pers.)</h3>
-            <p class="text-gray-400 mb-2">Votre équipe explore nos expériences en autonomie. Idéal pour les petites équipes ou comme activité complémentaire.</p>
-            <div class="text-blue-400 font-semibold">Dès 18 €/personne — 30 ou 60 min</div>
+      <div class="reveal reveal-stagger space-y-5">
+        {[
+          { emoji: "🕹️", accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]", title: "Session libre (2–6 pers.)", text: "Votre équipe explore nos expériences en autonomie. Idéal pour les petites équipes ou comme activité complémentaire.", price: "Dès 18 €/personne — 30 ou 60 min", featured: false },
+          { emoji: "🏆", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "Tournoi inter-équipes (6–20 pers.)", text: "Divisez votre équipe en sous-groupes, organisez des défis en compétition ou en coopération. Remise des prix à la fin.", price: "Tarif sur devis — contactez-nous", featured: true },
+          { emoji: "🎪", accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]", title: "Séminaire ou afterwork (20+ pers.)", text: "Intégrez le VR Café dans votre programme de séminaire. Sessions à la demande, gestion des rotations par notre équipe.", price: "Tarif sur devis — contactez-nous", featured: false },
+        ].map((f) => (
+          <div class:list={[
+            "card-glow group p-7 flex flex-col md:flex-row gap-5 items-start transition-transform duration-[var(--dur-base)] hover:-translate-y-0.5",
+            f.featured && "ring-2 ring-[var(--color-brand-500)]/40",
+          ]}>
+            <div class={`shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${f.accent} text-2xl shadow-lg`}>{f.emoji}</div>
+            <div>
+              <h3 class="text-xl font-bold text-white mb-2">{f.title}</h3>
+              <p class="text-white/70 mb-2 leading-relaxed">{f.text}</p>
+              <div class="text-[var(--color-brand-300)] font-semibold text-sm">{f.price}</div>
+            </div>
           </div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-8 flex flex-col md:flex-row gap-6 items-start border-2 border-blue-500">
-          <div class="shrink-0 w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-2xl">🏆</div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Tournoi inter-équipes (6–20 pers.)</h3>
-            <p class="text-gray-400 mb-2">Divisez votre équipe en sous-groupes, organisez des défis en compétition ou en coopération. Remise des prix à la fin.</p>
-            <div class="text-blue-400 font-semibold">Tarif sur devis — contactez-nous</div>
-          </div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-8 flex flex-col md:flex-row gap-6 items-start">
-          <div class="shrink-0 w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-2xl">🎪</div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Séminaire ou afterwork (20+ pers.)</h3>
-            <p class="text-gray-400 mb-2">Intégrez le VR Café dans votre programme de séminaire. Sessions à la demande, gestion des rotations par notre équipe.</p>
-            <div class="text-blue-400 font-semibold">Tarif sur devis — contactez-nous</div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   </section>
 
   <!-- Logistique -->
-  <section class="bg-gray-800 py-16 px-4">
+  <section class="bg-[var(--color-surface-elevated)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-3xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">Tout est prévu pour votre équipe</h2>
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="flex items-start gap-3">
-          <span class="text-green-400 text-xl mt-1">✓</span>
-          <div>
-            <h3 class="text-white font-semibold">Accueil privatisé possible</h3>
-            <p class="text-gray-400 text-sm">Réservez toute la salle pour votre groupe et profitez d'une expérience 100% dédiée.</p>
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">Tout est prévu pour votre équipe</h2>
+      <div class="reveal grid md:grid-cols-2 gap-x-8 gap-y-6">
+        {[
+          { title: "Accueil privatisé possible", text: "Réservez toute la salle pour votre groupe et profitez d'une expérience 100% dédiée." },
+          { title: "Espace bar & terrasse", text: "Profitez de notre espace détente avant ou après les sessions pour prolonger le moment." },
+          { title: "Parking gratuit", text: "Stationnement aisé pour toute votre équipe à Canet-en-Roussillon." },
+          { title: "Facturation entreprise", text: "Devis et facture au nom de votre société. Nous prenons en charge la logistique administrative." },
+        ].map((l) => (
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 shrink-0 mt-0.5 text-[var(--color-brand-300)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <div>
+              <h3 class="text-white font-semibold">{l.title}</h3>
+              <p class="text-white/70 text-sm leading-relaxed mt-0.5">{l.text}</p>
+            </div>
           </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="text-green-400 text-xl mt-1">✓</span>
-          <div>
-            <h3 class="text-white font-semibold">Espace bar & terrasse</h3>
-            <p class="text-gray-400 text-sm">Profitez de notre espace détente avant ou après les sessions pour prolonger le moment.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="text-green-400 text-xl mt-1">✓</span>
-          <div>
-            <h3 class="text-white font-semibold">Parking gratuit</h3>
-            <p class="text-gray-400 text-sm">Stationnement aisé pour toute votre équipe à Canet-en-Roussillon.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="text-green-400 text-xl mt-1">✓</span>
-          <div>
-            <h3 class="text-white font-semibold">Facturation entreprise</h3>
-            <p class="text-gray-400 text-sm">Devis et facture au nom de votre société. Nous prenons en charge la logistique administrative.</p>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section class="bg-linear-to-r from-blue-600 to-cyan-600 py-16 px-4">
-    <div class="max-w-3xl mx-auto text-center text-white">
-      <h2 class="text-3xl md:text-4xl font-bold mb-4">
-        Organisez votre team building VR
+  <section class="bg-[var(--color-surface)] py-16 px-4">
+    <div class="reveal relative max-w-4xl mx-auto rounded-[var(--radius-card)] overflow-hidden mesh-bg ring-1 ring-white/10 px-6 py-14 text-center">
+      <h2 class="font-display text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-4">
+        Organisez votre <span class="text-shimmer">team building VR</span>
       </h2>
-      <p class="text-blue-100 text-lg mb-8">
+      <p class="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
         Contactez-nous pour un devis personnalisé ou réservez directement en ligne pour les petits groupes.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a
-          href="/contact"
-          class="px-8 py-4 bg-white text-blue-700 font-bold rounded-full hover:bg-gray-100 transition-colors"
-        >
-          Demander un devis
-        </a>
-        <a
-          href="tel:+33671410695"
-          class="px-8 py-4 border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-blue-700 transition-colors"
-        >
-          Appeler le 06 71 41 06 95
-        </a>
+        <Button href="/contact" variant="primary" size="lg">Demander un devis</Button>
+        <Button href="tel:+33671410695" variant="secondary" size="lg">Appeler le 06 71 41 06 95</Button>
       </div>
     </div>
   </section>

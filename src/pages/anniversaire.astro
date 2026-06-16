@@ -5,6 +5,8 @@ import { loadQuery } from "../sanity/lib/load-query";
 import { TARIF_ANNIVERSAIRE_QUERY } from "../sanity/lib/queries";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, service } from "../lib/seo";
+import PageHeader from "../components/PageHeader.astro";
+import Button from "../components/Button.astro";
 
 type Tarif = {
   _id: string;
@@ -41,143 +43,111 @@ const schema = graph([
 >
   <JsonLd schema={schema} />
   <!-- Hero -->
-  <section class="bg-gray-900 text-white py-20 px-4">
-    <div class="max-w-4xl mx-auto text-center">
-      <div class="text-6xl mb-6">🎂</div>
-      <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
-        Anniversaire VR à <span class="text-pink-400">Perpignan</span>
-      </h1>
-      <p class="text-xl md:text-2xl text-gray-300 mb-4">
-        L'anniversaire dont tout le monde va parler
-      </p>
-      <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-        Fêtez votre anniversaire ou celui de vos proches en réalité virtuelle au VR Café de Canet-en-Roussillon. Une expérience unique, pour tous les âges, à 10 minutes de Perpignan.
-      </p>
-      <a
-        href="/reservation-anniversaire"
-        class="inline-block px-10 py-4 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold text-lg rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300"
+  <section class="bg-[var(--color-surface)]">
+    <div class="flex flex-col items-center">
+      <PageHeader
+        eyebrow="Anniversaire"
+        title="L'anniversaire dont tout le monde va parler"
+        highlight="tout le monde"
+        subtitle="Fêtez votre anniversaire ou celui de vos proches en réalité virtuelle à Canet-en-Roussillon. Une expérience unique, pour tous les âges, à 10 min de Perpignan."
       >
-        Réserver mon anniversaire
-      </a>
+        <Button href="/reservation-anniversaire" variant="primary" size="lg">Réserver mon anniversaire</Button>
+      </PageHeader>
     </div>
   </section>
 
   <!-- Pourquoi VR Café -->
-  <section class="bg-gray-800 py-16 px-4">
+  <section class="bg-[var(--color-surface-elevated)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-5xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">
-        Pourquoi fêter son anniversaire au VR Café ?
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">
+        Pourquoi fêter son anniversaire au <span class="text-shimmer">VR Café</span> ?
       </h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-4">🎮</div>
-          <h3 class="text-xl font-bold text-white mb-3">Des expériences pour tous</h3>
-          <p class="text-gray-400">
-            Enfants, ados ou adultes — nos jeux VR conviennent à tous les âges. Escape games, jeux d'action, aventures multijoueurs.
-          </p>
-        </div>
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-4">👥</div>
-          <h3 class="text-xl font-bold text-white mb-3">Groupes jusqu'à 10 personnes</h3>
-          <p class="text-gray-400">
-            Nous accueillons vos groupes et organisons les sessions pour que tout le monde joue ensemble ou en rotation.
-          </p>
-        </div>
-        <div class="bg-gray-700 rounded-xl p-6 text-center">
-          <div class="text-4xl mb-4">⭐</div>
-          <h3 class="text-xl font-bold text-white mb-3">4,9/5 sur TripAdvisor</h3>
-          <p class="text-gray-400">
-            56 avis clients enthousiastes. Nos visiteurs repartent avec des souvenirs plein les yeux — et reviennent !
-          </p>
-        </div>
+      <div class="reveal reveal-stagger grid md:grid-cols-3 gap-6">
+        {[
+          { emoji: "🎮", accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]", title: "Des expériences pour tous", text: "Enfants, ados ou adultes — nos jeux VR conviennent à tous les âges. Escape games, jeux d'action, aventures multijoueurs." },
+          { emoji: "👥", accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]", title: "Groupes jusqu'à 10 personnes", text: "Nous accueillons vos groupes et organisons les sessions pour que tout le monde joue ensemble ou en rotation." },
+          { emoji: "⭐", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "4,9/5 sur TripAdvisor", text: "56 avis clients enthousiastes. Nos visiteurs repartent avec des souvenirs plein les yeux — et reviennent !" },
+        ].map((c) => (
+          <article class="card-glow group p-7 text-center transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
+            <div class={`mx-auto mb-5 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${c.accent} text-2xl shadow-lg transition-transform duration-[var(--dur-base)] group-hover:scale-110`}>{c.emoji}</div>
+            <h3 class="text-lg font-bold text-white mb-2">{c.title}</h3>
+            <p class="text-white/70 text-sm leading-relaxed">{c.text}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
 
   <!-- Formules -->
-  <section class="bg-gray-900 py-16 px-4">
+  <section class="bg-[var(--color-surface)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-4xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">
-        Formules anniversaire
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">
+        Formule anniversaire
       </h2>
-      <div class="flex justify-center">
-        <div class="bg-gray-800 border-2 border-purple-500 rounded-xl p-8 w-full max-w-md">
+      <div class="reveal flex justify-center">
+        <div class="card-glow ring-2 ring-[var(--color-brand-500)]/40 p-8 w-full max-w-md">
           <h3 class="text-2xl font-bold text-white mb-2">{tarifAnniversaire?.name ?? "Anniversaire"}</h3>
-          <div class="text-3xl font-extrabold text-purple-400 mb-4">
-            {tarifAnniversaire?.prix ?? 25} €<span class="text-base font-normal text-gray-400">/pers.</span>
+          <div class="mb-5">
+            <span class="text-4xl font-extrabold text-[var(--color-brand-300)]">{tarifAnniversaire?.prix ?? 25} €</span>
+            <span class="text-base font-normal text-white/55">/pers.</span>
           </div>
-          <ul class="text-gray-400 space-y-2 mb-6">
+          <ul class="text-white/75 space-y-2.5 mb-7">
             {(tarifAnniversaire?.features ?? [
               "60 minutes de VR",
               "Accès à toutes les expériences",
               "Escape game ou jeux au choix",
               "Minimum 5 enfants",
               "Tables et bancs mis à disposition pour le gâteau",
-            ]).map((f) => <li>✓ {f}</li>)}
+            ]).map((f) => (
+              <li class="flex items-start gap-2.5">
+                <svg class="w-5 h-5 shrink-0 mt-0.5 text-[var(--color-brand-300)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                {f}
+              </li>
+            ))}
           </ul>
-          <a href="/reservation-anniversaire" class="block text-center py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-shadow">
-            Réserver
-          </a>
+          <Button href="/reservation-anniversaire" variant="primary" size="md" class="w-full">Réserver</Button>
         </div>
       </div>
-      <p class="text-gray-500 text-sm text-center mt-6">
+      <p class="reveal text-white/55 text-sm text-center mt-6">
         Pour les groupes de plus de 6 personnes, contactez-nous pour une organisation sur-mesure.
       </p>
     </div>
   </section>
 
   <!-- Âges -->
-  <section class="bg-gray-800 py-16 px-4">
+  <section class="bg-[var(--color-surface-elevated)] pt-10 pb-16 lg:pt-14 lg:pb-20 px-4">
     <div class="max-w-3xl mx-auto">
-      <h2 class="text-3xl font-bold text-white text-center mb-12">
+      <h2 class="reveal font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white text-center mb-12">
         Pour quel âge ?
       </h2>
-      <div class="space-y-4">
-        <div class="flex items-start gap-4 bg-gray-700 rounded-xl p-5">
-          <span class="text-2xl">👶</span>
-          <div>
-            <h3 class="text-white font-bold">Enfants (7–12 ans)</h3>
-            <p class="text-gray-400">Jeux adaptés, casques ajustables, accompagnement par notre équipe. La VR est accessible dès 7 ans.</p>
+      <div class="reveal reveal-stagger space-y-4">
+        {[
+          { emoji: "👶", accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]", title: "Enfants (7–12 ans)", text: "Jeux adaptés, casques ajustables, accompagnement par notre équipe. La VR est accessible dès 7 ans." },
+          { emoji: "🧑", accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]", title: "Adolescents (13–17 ans)", text: "Escape games, jeux de tir, aventures multijoueurs. La formule parfaite pour un anniversaire entre potes." },
+          { emoji: "🧑‍🦱", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "Adultes", text: "Des expériences immersives pour les 18 ans, 30 ans, 40 ans… L'anniversaire qui sort de l'ordinaire." },
+        ].map((c) => (
+          <div class="card-glow group flex items-start gap-4 p-5 transition-transform duration-[var(--dur-base)] hover:-translate-y-0.5">
+            <div class={`shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${c.accent} text-xl shadow-lg`}>{c.emoji}</div>
+            <div>
+              <h3 class="text-white font-bold">{c.title}</h3>
+              <p class="text-white/70 text-sm leading-relaxed mt-0.5">{c.text}</p>
+            </div>
           </div>
-        </div>
-        <div class="flex items-start gap-4 bg-gray-700 rounded-xl p-5">
-          <span class="text-2xl">🧑</span>
-          <div>
-            <h3 class="text-white font-bold">Adolescents (13–17 ans)</h3>
-            <p class="text-gray-400">Escape games, jeux de tir, aventures multijoueurs. La formule parfaite pour un anniversaire entre potes.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 bg-gray-700 rounded-xl p-5">
-          <span class="text-2xl">👨</span>
-          <div>
-            <h3 class="text-white font-bold">Adultes</h3>
-            <p class="text-gray-400">Des expériences immersives pour les 18 ans, 30 ans, 40 ans… L'anniversaire qui sort de l'ordinaire.</p>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   </section>
 
   <!-- CTA final -->
-  <section class="bg-linear-to-r from-pink-600 to-purple-700 py-16 px-4">
-    <div class="max-w-3xl mx-auto text-center text-white">
-      <h2 class="text-3xl md:text-4xl font-bold mb-4">Prêt à organiser l'anniversaire parfait ?</h2>
-      <p class="text-pink-100 text-lg mb-8">
+  <section class="bg-[var(--color-surface)] py-16 px-4">
+    <div class="reveal relative max-w-4xl mx-auto rounded-[var(--radius-card)] overflow-hidden mesh-bg ring-1 ring-white/10 px-6 py-14 text-center">
+      <h2 class="font-display text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-4">Prêt à organiser <span class="text-shimmer">l'anniversaire parfait</span> ?</h2>
+      <p class="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
         Réservez en ligne en quelques clics ou contactez-nous pour un devis groupe.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a
-          href="/reservation-anniversaire"
-          class="px-8 py-4 bg-white text-purple-700 font-bold rounded-full hover:bg-gray-100 transition-colors"
-        >
-          Réserver en ligne
-        </a>
-        <a
-          href="/contact"
-          class="px-8 py-4 border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-purple-700 transition-colors"
-        >
-          Nous contacter
-        </a>
+        <Button href="/reservation-anniversaire" variant="primary" size="lg">Réserver en ligne</Button>
+        <Button href="/contact" variant="secondary" size="lg">Nous contacter</Button>
       </div>
     </div>
   </section>

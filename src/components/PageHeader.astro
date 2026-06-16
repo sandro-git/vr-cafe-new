@@ -55,4 +55,9 @@ const alignClass = align === "center" ? "text-center mx-auto items-center" : "te
       {subtitle}
     </p>
   )}
+  {Astro.slots.has("default") && (
+    <div class:list={["mt-4 flex flex-col sm:flex-row gap-4", align === "center" ? "justify-center" : "justify-start"]}>
+      <slot />
+    </div>
+  )}
 </header>

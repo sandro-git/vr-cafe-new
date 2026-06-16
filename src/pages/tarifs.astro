@@ -2,6 +2,8 @@
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { sanityClient } from "sanity:client";
+import PageHeader from "../components/PageHeader.astro";
+import Button from "../components/Button.astro";
 
 type Tarif = {
   _id: string;
@@ -70,36 +72,39 @@ const tarifs1h = tarifs.filter((t) => t.type === "session_1h");
       }
     ]
   })} />
-  <section class="pt-[calc(var(--navHeight)+2rem)] pb-16 px-4">
-    <div class="max-w-screen-xl mx-auto">
-      <h1 class="my-16 text-center text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
-        Nos Tarifs
-      </h1>
-      <p class="text-center text-lg text-gray-600 dark:text-gray-400 mb-16 max-w-2xl mx-auto">
-        Des formules adaptées à toutes les envies — solo, duo ou groupe. Réservez en ligne en quelques clics.
-      </p>
+  <section class="bg-[var(--color-surface)] pb-20 lg:pb-28">
+    <div class="flex flex-col items-center">
+      <PageHeader
+        eyebrow="Tarifs"
+        title="Des prix pour toutes les envies"
+        highlight="toutes les envies"
+        subtitle="Solo, duo ou groupe — réservez en ligne en quelques clics. Dès 18 € par personne."
+      />
+    </div>
 
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Session 30 min -->
       {tarif30min && (
-        <div class="mb-16">
-          <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-8">Session 30 minutes</h2>
+        <div class="reveal mb-14">
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white text-center mb-8">Session 30 minutes</h2>
           <div class="flex justify-center">
-            <div class="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div class="text-center mb-6">
-                <span class="text-6xl font-extrabold text-gray-900 dark:text-white">{tarif30min.prix}</span>
-                <span class="text-3xl font-semibold text-gray-900 dark:text-white">€</span>
-                <span class="text-xl text-gray-500 dark:text-gray-400 ml-1">/personne</span>
+            <div class="card-glow w-full max-w-sm p-8 text-center transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
+              <div class="mb-6">
+                <span class="text-6xl font-extrabold text-white">{tarif30min.prix}</span>
+                <span class="text-3xl font-semibold text-white">€</span>
+                <span class="text-lg text-white/55 ml-1">/personne</span>
               </div>
               {tarif30min.features && (
-                <ul class="space-y-3 text-gray-600 dark:text-gray-300 mb-8">
+                <ul class="space-y-3 text-white/75 mb-8 text-left">
                   {tarif30min.features.map((f) => (
-                    <li class="flex items-center gap-2"><span class="text-green-500">✓</span> {f}</li>
+                    <li class="flex items-start gap-2.5">
+                      <svg class="w-5 h-5 shrink-0 mt-0.5 text-[var(--color-brand-300)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      {f}
+                    </li>
                   ))}
                 </ul>
               )}
-              <a href="/reservation" class="block text-center w-full py-3 px-5 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-colors">
-                Réserver
-              </a>
+              <Button href="/reservation" variant="primary" size="md" class="w-full">Réserver</Button>
             </div>
           </div>
         </div>
@@ -107,45 +112,41 @@ const tarifs1h = tarifs.filter((t) => t.type === "session_1h");
 
       <!-- Session 1 heure -->
       {tarifs1h.length > 0 && (
-        <div class="mb-16">
-          <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-4">Session 1 Heure</h2>
-          <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Le prix varie selon le nombre de joueurs</p>
-          <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="reveal mb-14">
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white text-center mb-3">Session 1 heure</h2>
+          <p class="text-center text-white/55 mb-10">Le prix varie selon le nombre de joueurs</p>
+          <div class="reveal-stagger grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {tarifs1h.map((tarif) => {
               const hasGroupBadge = tarif.badge && tarif.badge.length > 0;
               return (
-                <div class={`rounded-2xl shadow-lg p-8 transition-all duration-300 relative ${
-                  hasGroupBadge
-                    ? "bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-500 md:scale-105 hover:scale-110"
-                    : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-105"
-                }`}>
+                <div class:list={[
+                  "card-glow relative p-8 text-center transition-transform duration-[var(--dur-base)] hover:-translate-y-1",
+                  hasGroupBadge && "ring-2 ring-[var(--color-brand-500)]/40",
+                ]}>
                   {hasGroupBadge && (
-                    <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <span class="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow whitespace-nowrap">
+                    <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                      <span class="bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-glow-pink)] text-white text-xs font-bold px-4 py-1.5 rounded-full shadow whitespace-nowrap">
                         {tarif.badge}
                       </span>
                     </div>
                   )}
-                  <h3 class="text-center text-lg font-bold text-gray-700 dark:text-gray-300 mb-4">{tarif.name}</h3>
-                  <div class="text-center mb-6">
-                    <span class="text-5xl font-extrabold text-blue-600 dark:text-blue-400">{tarif.prix}</span>
-                    <span class="text-2xl font-semibold text-blue-600 dark:text-blue-400">€</span>
-                    <span class="text-base text-gray-500 dark:text-gray-400 ml-1">/pers.</span>
+                  <h3 class="text-base font-bold text-white/70 mb-4">{tarif.name}</h3>
+                  <div class="mb-6">
+                    <span class="text-5xl font-extrabold text-[var(--color-brand-300)]">{tarif.prix}</span>
+                    <span class="text-2xl font-semibold text-[var(--color-brand-300)]">€</span>
+                    <span class="text-base text-white/55 ml-1">/pers.</span>
                   </div>
                   {tarif.features && (
-                    <ul class="space-y-2 text-gray-600 dark:text-gray-300 text-sm mb-6">
+                    <ul class="space-y-2 text-white/75 text-sm mb-6 text-left">
                       {tarif.features.map((f) => (
-                        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> {f}</li>
+                        <li class="flex items-start gap-2.5">
+                          <svg class="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-brand-300)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          {f}
+                        </li>
                       ))}
                     </ul>
                   )}
-                  <a href="/reservation" class={`block text-center w-full py-3 px-5 font-bold rounded-lg transition-colors text-sm text-white ${
-                    hasGroupBadge
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                      : "bg-blue-700 hover:bg-blue-800"
-                  }`}>
-                    Réserver
-                  </a>
+                  <Button href="/reservation" variant={hasGroupBadge ? "primary" : "secondary"} size="sm" class="w-full">Réserver</Button>
                 </div>
               );
             })}
@@ -153,16 +154,11 @@ const tarifs1h = tarifs.filter((t) => t.type === "session_1h");
         </div>
       )}
 
-      <div class="text-center">
-        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">
-          Pour les groupes de plus de 10 personnes ou les événements d'entreprise, <a href="/contact" class="text-blue-600 dark:text-blue-400 hover:underline">contactez-nous</a>.
+      <div class="reveal text-center">
+        <p class="text-white/55 text-sm mb-6">
+          Pour les groupes de plus de 10 personnes ou les événements d'entreprise, <a href="/contact" class="text-[var(--color-brand-300)] hover:underline">contactez-nous</a>.
         </p>
-        <a
-          href="/reservation"
-          class="inline-block rounded-full bg-blue-700 px-8 py-4 text-white font-semibold text-lg hover:bg-blue-800 transition-colors"
-        >
-          Réserver maintenant
-        </a>
+        <Button href="/reservation" variant="primary" size="lg">Réserver maintenant</Button>
       </div>
     </div>
   </section>
