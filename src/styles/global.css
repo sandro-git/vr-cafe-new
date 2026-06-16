@@ -120,6 +120,11 @@ h1, h2, h3, .font-display {
   100% { background-position: 200% 0; }
 }
 
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.98); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
 /* ─────────────────────────────────────────────────────────────
    Utilities
    ───────────────────────────────────────────────────────────── */
@@ -205,6 +210,12 @@ h1, h2, h3, .font-display {
   opacity: 0.55;
   animation: orb-float 14s var(--ease-out-soft) infinite;
   pointer-events: none;
+}
+
+/* Dropdown / panel entrance */
+@utility dropdown-anim {
+  animation: dropdown-in var(--dur-base) var(--ease-out-soft);
+  transform-origin: top center;
 }
 
 /* Shimmer text */
