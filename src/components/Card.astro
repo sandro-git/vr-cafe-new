@@ -1,19 +1,14 @@
 ---
-// src/components/Card.astro - VERSION MISE À JOUR
+// src/components/Card.astro
 import CardImage from "./CardImage.astro";
-import CardLink from "./CardLink.astro";
 
 const { game, slug } = Astro.props;
-// Plus besoin d'urlForImage ici, on passe l'objet image directement
 ---
 
 <div
-  class="w-full h-full bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800 dark:border-gray-700 flex flex-col"
+  class="card-glow group w-full h-full flex flex-col overflow-hidden transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-soft)] hover:-translate-y-1"
 >
   <div class="flex-none">
     <CardImage image={game.image} alt={game.image.alt} slug={slug} title={game.name} />
   </div>
-  <!-- <div class="border rounded-lg grow">
-    <CardLink slug={slug} />
-  </div> -->
 </div>

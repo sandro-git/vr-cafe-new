@@ -5,18 +5,18 @@ import Play from "./Play.astro";
 const { image, alt, slug, title } = Astro.props;
 ---
 
-<a href={"/" + slug} class="block w-full relative group overflow-hidden rounded-lg">
+<a href={"/" + slug} class="block w-full relative overflow-hidden rounded-[var(--radius-card)]">
   <SanityPicture
     image={image}
     alt={alt}
-    className="w-full transition-all hover:shadow-xl"
+    className="w-full transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] group-hover:scale-105"
   />
   <!-- Dégradé sombre en bas pour améliorer la lisibilité -->
-  <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+  <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent pointer-events-none"></div>
 
-  <div class="absolute bottom-4 left-4 text-white z-10">
-    <h3 class="text-xl font-semibold drop-shadow-lg">{title || alt}</h3>
-    <p class="text-sm opacity-90 drop-shadow-md">Découvrir la vidéo</p>
+  <div class="absolute bottom-4 left-4 z-10">
+    <h3 class="text-xl font-semibold text-white drop-shadow-lg">{title || alt}</h3>
+    <p class="text-sm text-white/85 drop-shadow-md">Découvrir la vidéo</p>
   </div>
   <div class="absolute bottom-4 right-4 z-10">
     <Play class="transition-transform group-hover:scale-110 drop-shadow-lg" />
