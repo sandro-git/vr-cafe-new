@@ -9,6 +9,14 @@ const { game, slug } = Astro.props;
   class="card-glow group w-full h-full flex flex-col overflow-hidden transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-soft)] hover:-translate-y-1"
 >
   <div class="flex-none">
-    <CardImage image={game.image} alt={game.image.alt} slug={slug} title={game.name} />
+    <CardImage
+      image={game.image}
+      alt={game.image.alt}
+      slug={slug}
+      title={game.name}
+      category={game.tag?.title}
+      players={game.players}
+      duration={game.duration}
+    />
   </div>
 </div>

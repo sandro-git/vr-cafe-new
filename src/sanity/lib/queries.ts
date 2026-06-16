@@ -45,6 +45,8 @@ export const JEUX_VR_QUERY = defineQuery(`*[_type == "games" && tag->title == "j
     alt,
     asset->{url}
   },
-  tag->{name},
+  tag->{name, title},
+  players,
+  duration,
   slug
 }`);

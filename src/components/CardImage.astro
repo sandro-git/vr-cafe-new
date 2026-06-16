@@ -1,24 +1,71 @@
 ---
-// src/components/CardImage.astro - VERSION MISE À JOUR
+// src/components/CardImage.astro
 import SanityPicture from "./SanityPicture.astro";
 import Play from "./Play.astro";
-const { image, alt, slug, title } = Astro.props;
+
+const { image, alt, slug, title, category, players, duration } = Astro.props;
+
+// Mappe le slug de catégorie vers un label lisible
+const CATEGORY_LABELS: Record<string, string> = {
+  jeuxVR: "Jeu VR",
+  escapeGame: "Escape Game",
+  freeroaming: "VR Sans Fil",
+  escapeFreeroaming: "Escape Sans Fil",
+};
+const categoryLabel = category ? CATEGORY_LABELS[category] ?? category : null;
+
+// Construit la ligne méta (joueurs · durée), chaque partie conditionnelle
+// Normalise une durée purement numérique en "<n> min"
+const durationLabel = duration
+  ? /^\d+$/.test(String(duration).trim())
+    ? `${String(duration).trim()} min`
+    : String(duration)
+  : null;
+
+const metaParts: string[] = [];
+if (players) metaParts.push(`${players} joueurs`);
+if (durationLabel) metaParts.push(durationLabel);
+const meta = metaParts.join(" · ");
 ---
 
-<a href={"/" + slug} class="block w-full relative overflow-hidden rounded-[var(--radius-card)]">
+<a
+  href={"/" + slug}
+  class="block w-full relative overflow-hidden rounded-[var(--radius-card)]"
+>
   <SanityPicture
     image={image}
     alt={alt}
-    className="w-full transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] group-hover:scale-105"
+    className="!rounded-none transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] group-hover:scale-105"
   />
-  <!-- Dégradé sombre en bas pour améliorer la lisibilité -->
-  <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent pointer-events-none"></div>
 
-  <div class="absolute bottom-4 left-4 z-10">
-    <h3 class="text-xl font-semibold text-white drop-shadow-lg">{title || alt}</h3>
-    <p class="text-sm text-white/85 drop-shadow-md">Découvrir la vidéo</p>
-  </div>
-  <div class="absolute bottom-4 right-4 z-10">
-    <Play class="transition-transform group-hover:scale-110 drop-shadow-lg" />
+  <!-- Dégradé : sombre en bas, léger voile en haut pour le badge -->
+  <div
+    class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/30 pointer-events-none"
+  ></div>
+
+  <!-- Badge catégorie -->
+  {categoryLabel && (
+    <span
+      class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-black/40 backdrop-blur-md ring-1 ring-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white"
+    >
+      {categoryLabel}
+    </span>
+  )}
+
+  <!-- Bas : titre + méta + play -->
+  <div class="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 p-4">
+    <div class="min-w-0">
+      <h3 class="text-lg font-semibold text-white drop-shadow-lg leading-tight truncate">
+        {title || alt}
+      </h3>
+      {meta && (
+        <p class="mt-0.5 text-sm text-white/80 drop-shadow-md truncate">{meta}</p>
+      )}
+    </div>
+    <span
+      class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/25 backdrop-blur-md text-white transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-soft)] group-hover:scale-110"
+    >
+      <Play class="drop-shadow-lg" />
+    </span>
   </div>
 </a>
