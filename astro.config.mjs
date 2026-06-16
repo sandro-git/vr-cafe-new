@@ -49,5 +49,9 @@ export default defineConfig({
   output: "server",
   adapter: netlify({
     imageCDN: false  // Désactive l'optimisation d'images Netlify en dev
-  })
+  }),
+
+  devToolbar: {
+    enabled: false  // Cache la barre debug Astro (gêne sur mobile)
+  }
 });
