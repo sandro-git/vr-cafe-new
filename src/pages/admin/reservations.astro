@@ -11,8 +11,8 @@ import DatePicker from "../../components/DatePicker.astro";
       <div class="flex flex-col gap-4 mb-8">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-white">Réservations</h1>
-            <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
+            <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Réservations</h1>
+            <p class="text-white/55 text-sm mt-0.5">VR Café · Back-office</p>
           </div>
           <!-- Date : navigation jour + datepicker -->
           <div class="flex items-center gap-2 sm:order-last flex-wrap">
@@ -20,18 +20,18 @@ import DatePicker from "../../components/DatePicker.astro";
               id="btn-prev"
               type="button"
               aria-label="Jour précédent"
-              class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+              class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
             >‹</button>
             <button
               id="btn-today"
               type="button"
-              class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl border border-gray-600 transition-colors"
+              class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl border border-white/10 transition-colors"
             >Aujourd'hui</button>
             <button
               id="btn-next"
               type="button"
               aria-label="Jour suivant"
-              class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+              class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
             >›</button>
             <div class="ml-1 w-60">
               <DatePicker id="dp-reservations" />
@@ -42,19 +42,19 @@ import DatePicker from "../../components/DatePicker.astro";
         <div class="grid grid-cols-2 sm:flex sm:justify-end gap-3">
           <button
             id="btn-block-reservations"
-            class="flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+            class="flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1 bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
           >
             <span id="btn-block-label">⏳ Chargement…</span>
           </button>
           <a
             href="/admin/planning"
-            class="flex items-center justify-center px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl transition-colors border border-gray-600"
+            class="flex items-center justify-center px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl transition-colors border border-white/10"
           >
             📅 Planning
           </a>
           <a
             href="/admin/clients"
-            class="flex items-center justify-center px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl transition-colors border border-gray-600"
+            class="flex items-center justify-center px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl transition-colors border border-white/10"
           >
             👤 Clients
           </a>
@@ -63,42 +63,42 @@ import DatePicker from "../../components/DatePicker.astro";
 
       <!-- Statistiques du jour -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
-          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Total</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Total</p>
           <p id="stat-total" class="text-2xl font-bold text-white">—</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
-          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Confirmées</p>
-          <p id="stat-confirmed" class="text-2xl font-bold text-green-400">—</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Confirmées</p>
+          <p id="stat-confirmed" class="text-2xl font-bold text-green-300">—</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
-          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Annulées</p>
-          <p id="stat-cancelled" class="text-2xl font-bold text-red-400">—</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Annulées</p>
+          <p id="stat-cancelled" class="text-2xl font-bold text-red-300">—</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4">
-          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">Joueurs</p>
-          <p id="stat-players" class="text-2xl font-bold text-blue-400">—</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Joueurs</p>
+          <p id="stat-players" class="text-2xl font-bold text-[var(--color-brand-300)]">—</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-4 col-span-2 sm:col-span-1">
-          <p class="text-gray-400 text-xs mb-1 uppercase tracking-wide">CA théorique</p>
-          <p id="stat-revenue" class="text-2xl font-bold text-purple-400">—</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4 col-span-2 sm:col-span-1">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">CA théorique</p>
+          <p id="stat-revenue" class="text-2xl font-bold text-[var(--color-accent-400)]">—</p>
         </div>
       </div>
 
       <!-- Erreur -->
-      <div id="admin-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+      <div id="admin-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
 
       <!-- Chargement -->
       <div id="admin-loading" class="py-16 text-center">
-        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-400">Chargement...</p>
+        <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+        <p class="text-white/55">Chargement...</p>
       </div>
 
       <!-- Vide -->
       <div id="admin-empty" class="hidden py-16 text-center">
         <p class="text-4xl mb-3">📅</p>
         <p class="text-white font-medium">Aucune réservation ce jour</p>
-        <p class="text-gray-400 text-sm mt-1">Profitez-en pour vous reposer !</p>
+        <p class="text-white/55 text-sm mt-1">Profitez-en pour vous reposer !</p>
       </div>
 
       <!-- Tableau -->
@@ -108,10 +108,10 @@ import DatePicker from "../../components/DatePicker.astro";
         <div id="admin-cards" class="lg:hidden space-y-3"></div>
 
         <!-- Vue desktop : tableau -->
-        <div class="hidden lg:block overflow-x-auto rounded-2xl border border-gray-700">
+        <div class="hidden lg:block overflow-x-auto rounded-2xl border border-white/10">
           <table class="w-full text-sm">
-            <thead class="bg-gray-800">
-              <tr class="text-left text-gray-400 text-xs uppercase tracking-wide">
+            <thead class="bg-white/5">
+              <tr class="text-left text-white/55 text-xs uppercase tracking-wide">
                 <th class="px-5 py-3 font-medium">Horaire</th>
                 <th class="px-5 py-3 font-medium">Client</th>
                 <th class="px-5 py-3 font-medium">Contact</th>
@@ -121,7 +121,7 @@ import DatePicker from "../../components/DatePicker.astro";
                 <th class="px-5 py-3 font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody id="reservations-body" class="divide-y divide-gray-700"></tbody>
+            <tbody id="reservations-body" class="divide-y divide-white/5"></tbody>
           </table>
         </div>
 
@@ -213,36 +213,36 @@ import DatePicker from "../../components/DatePicker.astro";
       const { h1, h2, boxNames, badge } = resDisplay(res);
 
       const tr = document.createElement('tr');
-      tr.className = `text-gray-300 transition-colors ${res.type_reservation === 'anniversaire' ? 'bg-pink-950/30 hover:bg-pink-950/50' : res.type_reservation === 'mdj' ? 'bg-violet-950/30 hover:bg-violet-950/50' : 'hover:bg-gray-700/30'}`;
+      tr.className = `text-white/70 transition-colors ${res.type_reservation === 'anniversaire' ? 'bg-pink-500/5 hover:bg-pink-500/10' : res.type_reservation === 'mdj' ? 'bg-violet-500/5 hover:bg-violet-500/10' : 'hover:bg-white/5'}`;
       tr.dataset.id = res.id;
       tr.innerHTML = `
         <td class="px-5 py-4">
           <span class="font-semibold text-white">${h1}</span>
-          <span class="text-gray-500"> → ${h2}</span>
+          <span class="text-white/40"> → ${h2}</span>
         </td>
         <td class="px-5 py-4">
           <p class="font-medium text-white">
-            ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-pink-900/60 text-pink-300 border border-pink-700">🎂 Anniv.</span>' : res.type_reservation === 'mdj' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-violet-900/60 text-violet-300 border border-violet-700">🏠 MDJ</span>' : ''}${esc(res.client_nom)}
+            ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-pink-500/15 text-pink-300 border border-pink-500/30">🎂 Anniv.</span>' : res.type_reservation === 'mdj' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">🏠 MDJ</span>' : ''}${esc(res.client_nom)}
           </p>
-          ${res.notes ? `<p class="text-gray-500 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
+          ${res.notes ? `<p class="text-white/40 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
         </td>
         <td class="px-5 py-4">
           <p>${esc(res.client_email)}</p>
-          <p class="text-gray-500 text-xs mt-0.5">${esc(res.client_telephone)}</p>
+          <p class="text-white/40 text-xs mt-0.5">${esc(res.client_telephone)}</p>
         </td>
         <td class="px-5 py-4">
           <p>${res.duree_minutes} min</p>
-          <p class="text-gray-500 text-xs mt-0.5">${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</p>
+          <p class="text-white/40 text-xs mt-0.5">${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</p>
         </td>
-        <td class="px-5 py-4 text-gray-400 text-xs">${esc(boxNames)}</td>
+        <td class="px-5 py-4 text-white/55 text-xs">${esc(boxNames)}</td>
         <td class="px-5 py-4">
           <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
         </td>
         <td class="px-5 py-4">
           ${res.statut === 'confirmée'
-            ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors" data-id="${res.id}">Annuler</button>`
+            ? `<button class="btn-cancel text-xs text-red-300 hover:text-red-200 transition-colors" data-id="${res.id}">Annuler</button>`
             : res.statut === 'annulée'
-              ? `<button class="btn-noshow text-xs text-gray-500 hover:text-yellow-400 transition-colors" data-id="${res.id}">No-show</button>`
+              ? `<button class="btn-noshow text-xs text-white/40 hover:text-yellow-300 transition-colors" data-id="${res.id}">No-show</button>`
               : ''
           }
         </td>
@@ -260,31 +260,31 @@ import DatePicker from "../../components/DatePicker.astro";
       const { h1, h2, boxNames, badge } = resDisplay(res);
 
       const card = document.createElement('div');
-      card.className = `rounded-2xl p-5 border ${res.type_reservation === 'anniversaire' ? 'bg-pink-950/40 border-pink-800/60' : res.type_reservation === 'mdj' ? 'bg-violet-950/40 border-violet-800/60' : 'bg-gray-700/40 border-gray-600'}`;
+      card.className = `rounded-2xl p-5 border ${res.type_reservation === 'anniversaire' ? 'bg-pink-500/10 border-pink-500/30' : res.type_reservation === 'mdj' ? 'bg-violet-500/10 border-violet-500/30' : 'bg-[var(--color-surface-card)] border-white/10'}`;
       card.dataset.id = res.id;
       card.innerHTML = `
         <div class="flex items-start justify-between mb-3">
           <div>
             <span class="text-white font-bold text-lg">${h1}</span>
-            <span class="text-gray-400"> → ${h2}</span>
+            <span class="text-white/55"> → ${h2}</span>
           </div>
           <span class="px-2 py-1 rounded-lg border text-xs font-medium ${badge}">${res.statut}</span>
         </div>
-        ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-semibold bg-pink-900/60 text-pink-300 border border-pink-700">🎂 Anniversaire</span>' : res.type_reservation === 'mdj' ? '<span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-semibold bg-violet-900/60 text-violet-300 border border-violet-700">🏠 MDJ</span>' : ''}
+        ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-semibold bg-pink-500/15 text-pink-300 border border-pink-500/30">🎂 Anniversaire</span>' : res.type_reservation === 'mdj' ? '<span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">🏠 MDJ</span>' : ''}
         <p class="font-medium text-white mb-1">${esc(res.client_nom)}</p>
-        <p class="text-gray-400 text-sm">${esc(res.client_email)}</p>
-        <p class="text-gray-400 text-sm">${esc(res.client_telephone)}</p>
-        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-600">
-          <div class="text-xs text-gray-500">
+        <p class="text-white/55 text-sm">${esc(res.client_email)}</p>
+        <p class="text-white/55 text-sm">${esc(res.client_telephone)}</p>
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+          <div class="text-xs text-white/40">
             ${res.duree_minutes} min · ${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''} · ${esc(boxNames)}
           </div>
           <div class="flex gap-3">
             ${res.statut === 'confirmée'
-              ? `<button class="btn-cancel text-xs text-red-400 hover:text-red-300 transition-colors font-medium" data-id="${res.id}">Annuler</button>`
+              ? `<button class="btn-cancel text-xs text-red-300 hover:text-red-200 transition-colors font-medium" data-id="${res.id}">Annuler</button>`
               : ''
             }
             ${res.statut === 'annulée'
-              ? `<button class="btn-noshow text-xs text-yellow-500 hover:text-yellow-300 transition-colors font-medium" data-id="${res.id}">No-show</button>`
+              ? `<button class="btn-noshow text-xs text-yellow-300 hover:text-yellow-200 transition-colors font-medium" data-id="${res.id}">No-show</button>`
               : ''
             }
           </div>
@@ -307,11 +307,11 @@ import DatePicker from "../../components/DatePicker.astro";
       })
       .join(', ') ?? '—';
     const badges = {
-      'confirmée': 'bg-green-900/50 text-green-400 border-green-800',
-      'annulée': 'bg-red-900/50 text-red-400 border-red-800',
-      'no_show': 'bg-yellow-900/50 text-yellow-400 border-yellow-800',
+      'confirmée': 'bg-green-500/15 text-green-300 border-green-500/30',
+      'annulée': 'bg-red-500/15 text-red-300 border-red-500/30',
+      'no_show': 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
     };
-    const badge = badges[res.statut] ?? 'bg-gray-700 text-gray-400 border-gray-600';
+    const badge = badges[res.statut] ?? 'bg-white/5 text-white/55 border-white/10';
     return { h1, h2, boxNames, badge };
   }
 
@@ -520,10 +520,10 @@ import DatePicker from "../../components/DatePicker.astro";
   function updateBlockBtn(btn, label, bloque) {
     const base = 'flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1';
     if (bloque) {
-      btn.className = `${base} bg-red-900/60 border-red-700 text-red-300 hover:bg-red-900`;
+      btn.className = `${base} bg-red-500/15 border-red-500/30 text-red-300 hover:bg-red-500/25`;
       label.textContent = '🔴 Réservations bloquées — Débloquer';
     } else {
-      btn.className = `${base} bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600`;
+      btn.className = `${base} bg-white/5 border-white/10 text-white/70 hover:bg-white/10`;
       label.textContent = '🚫 Bloquer les réservations du jour';
     }
   }
