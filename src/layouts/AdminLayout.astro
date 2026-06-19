@@ -1,22 +1,75 @@
 ---
 import BaseHead from "./BaseHead.astro";
 const PUBLIC_VAPID_KEY = import.meta.env.PUBLIC_VAPID_KEY ?? "";
+
+const pathname = Astro.url.pathname;
+const navLinks = [
+  { href: "/admin/reservations", label: "Réservations" },
+  { href: "/admin/planning", label: "Planning" },
+  { href: "/admin/clients", label: "Clients" },
+  { href: "/admin/marketing", label: "Marketing" },
+];
+const isActive = (href: string) =>
+  pathname === href || pathname.startsWith(href + "/");
 ---
 
 <html lang="fr" class="smooth scroll-smooth dark">
   <BaseHead />
-  <body class="dark:bg-gray-800">
-    <div class="fixed top-0 inset-x-0 z-50 h-12 bg-gray-900/90 backdrop-blur border-b border-gray-700 flex items-center justify-center">
-      <a
-        href="/admin/reservation"
-        class="px-6 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors text-sm"
-      >
-        + Réserver
-      </a>
-    </div>
-    <div class="pt-12">
+  <body class="bg-[var(--color-surface)] text-[var(--color-text-base)] min-h-screen">
+    <header
+      class="fixed top-0 inset-x-0 z-50 h-14 bg-[var(--color-surface-elevated)]/90 backdrop-blur-xl border-b border-white/10"
+    >
+      <div class="h-full max-w-7xl mx-auto px-3 sm:px-4 flex items-center gap-2 sm:gap-4">
+        <a
+          href="/admin/reservations"
+          class="hidden sm:flex items-center gap-2 shrink-0 font-display font-bold tracking-tight"
+        >
+          <span class="text-[var(--color-brand-400)]">VR Café</span>
+          <span class="text-white/30 font-normal">·</span>
+          <span class="text-white/60 font-normal text-sm">Admin</span>
+        </a>
+
+        <nav class="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {
+            navLinks.map((link) => (
+              <a
+                href={link.href}
+                class:list={[
+                  "shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive(link.href)
+                    ? "bg-white/10 text-white"
+                    : "text-white/55 hover:text-white hover:bg-white/5",
+                ]}
+              >
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <a
+          href="/admin/reservation"
+          class="shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white font-semibold rounded-lg text-sm transition-colors"
+        >
+          <span class="text-base leading-none">+</span>
+          <span>Réserver</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="pt-14">
       <slot />
-    </div>
+    </main>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
   </body>
 </html>
 
