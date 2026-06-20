@@ -4,8 +4,12 @@ dist/
 # generated types
 .astro/
 
-# dependencies
+# dependencies (dossier + symlink de worktree)
 node_modules/
+node_modules
+
+# captures d'écran temporaires (debug refonte)
+.tmp-screenshots/
 
 # logs
 npm-debug.log*
