@@ -9,14 +9,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       <!-- En-tête -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 class="text-2xl font-bold text-white">Clients</h1>
-          <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
+          <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Clients</h1>
+          <p class="text-white/55 text-sm mt-0.5">VR Café · Back-office</p>
         </div>
         <div class="flex gap-2">
-          <a href="/admin/marketing" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+          <a href="/admin/marketing" class="text-sm text-white/55 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20">
             📊 Marketing
           </a>
-          <a href="/admin/reservations" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+          <a href="/admin/reservations" class="text-sm text-white/55 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20">
             ← Réservations
           </a>
         </div>
@@ -39,25 +39,25 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             type="text"
             placeholder="Rechercher par nom, email ou téléphone..."
             autocomplete="off"
-            class="w-full bg-gray-800 text-white border border-gray-600 rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">🔍</span>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-lg">🔍</span>
         </div>
 
         <!-- Erreur -->
-        <div id="search-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+        <div id="search-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
 
         <!-- Chargement initial -->
         <div id="state-loading" class="py-16 text-center">
-          <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-          <p class="text-gray-400">Chargement des clients...</p>
+          <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+          <p class="text-white/55">Chargement des clients...</p>
         </div>
 
         <!-- Vide -->
         <div id="state-empty" class="hidden py-16 text-center">
           <p class="text-4xl mb-3">🔍</p>
           <p class="text-white font-medium">Aucun client trouvé</p>
-          <p class="text-gray-400 text-sm mt-1">Essayez un autre terme ou filtre</p>
+          <p class="text-white/55 text-sm mt-1">Essayez un autre terme ou filtre</p>
         </div>
 
         <!-- Liste clients -->
@@ -68,20 +68,20 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       <!-- Vue détail client -->
       <div id="view-detail" class="hidden">
         <div class="flex items-center justify-between gap-3 mb-6">
-          <button id="btn-back" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <button id="btn-back" class="flex items-center gap-2 text-sm text-white/55 hover:text-white transition-colors">
             ← Retour aux clients
           </button>
           <div class="flex gap-2">
-            <button id="btn-edit" class="text-sm text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+            <button id="btn-edit" class="text-sm text-white/70 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20">
               ✏️ Modifier
             </button>
-            <button id="btn-delete" class="text-sm text-red-400 hover:text-red-300 transition-colors border border-red-800 rounded-xl px-4 py-2 hover:border-red-600">
+            <button id="btn-delete" class="text-sm text-red-300 hover:text-red-200 transition-colors border border-red-500/30 rounded-xl px-4 py-2 hover:border-red-500/60">
               🗑️ Supprimer
             </button>
           </div>
         </div>
-        <div id="detail-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
-        <div id="client-header" class="bg-gray-700/40 border border-gray-600 rounded-2xl p-6 mb-6"></div>
+        <div id="detail-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
+        <div id="client-header" class="bg-[var(--color-surface-card)] border border-white/10 rounded-2xl p-6 mb-6"></div>
         <h2 class="text-lg font-semibold text-white mb-4">Historique des réservations</h2>
         <div id="client-reservations" class="space-y-3"></div>
       </div>
@@ -90,32 +90,32 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   </main>
 
   <!-- Modale de modification client -->
-  <div id="modal-edit" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-black/60">
-    <div class="bg-gray-800 border border-gray-600 rounded-2xl p-6 w-full max-w-md">
+  <div id="modal-edit" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-2xl p-6 w-full max-w-md">
       <h3 class="text-lg font-bold text-white mb-5">Modifier le client</h3>
-      <div id="modal-error" class="hidden mb-4 p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+      <div id="modal-error" class="hidden mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm text-gray-400 mb-1.5" for="edit-nom">Nom</label>
+          <label class="block text-sm text-white/55 mb-1.5" for="edit-nom">Nom</label>
           <input id="edit-nom" type="text" autocomplete="off"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35" />
         </div>
         <div>
-          <label class="block text-sm text-gray-400 mb-1.5" for="edit-email">Email</label>
+          <label class="block text-sm text-white/55 mb-1.5" for="edit-email">Email</label>
           <input id="edit-email" type="email" autocomplete="off"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35" />
         </div>
         <div>
-          <label class="block text-sm text-gray-400 mb-1.5" for="edit-telephone">Téléphone</label>
+          <label class="block text-sm text-white/55 mb-1.5" for="edit-telephone">Téléphone</label>
           <input id="edit-telephone" type="tel" autocomplete="off"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" />
+            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35" />
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button id="modal-cancel" class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500">
+        <button id="modal-cancel" class="text-sm text-white/55 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20">
           Annuler
         </button>
-        <button id="modal-save" class="text-sm text-white bg-blue-600 hover:bg-blue-500 transition-colors rounded-xl px-4 py-2 disabled:opacity-50">
+        <button id="modal-save" class="text-sm text-white bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] transition-colors rounded-xl px-4 py-2 disabled:opacity-50">
           Enregistrer
         </button>
       </div>
@@ -125,18 +125,18 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
 <style>
   .chip-btn {
-    background: rgb(55 65 81 / 0.4);
-    border-color: rgb(75 85 99);
-    color: rgb(156 163 175);
+    background: rgb(255 255 255 / 0.05);
+    border-color: rgb(255 255 255 / 0.1);
+    color: rgb(255 255 255 / 0.7);
   }
   .chip-btn:hover {
-    border-color: rgb(107 114 128);
+    border-color: rgb(255 255 255 / 0.2);
     color: white;
   }
   .chip-active {
-    background: rgb(37 99 235 / 0.2);
-    border-color: rgb(37 99 235 / 0.6);
-    color: rgb(147 197 253);
+    background: rgb(124 58 237 / 0.2);
+    border-color: rgb(139 92 246 / 0.6);
+    color: rgb(196 181 253);
   }
 </style>
 
@@ -249,8 +249,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     container.innerHTML = '';
     clients.forEach(c => {
       const badges = [
-        c.isFidele  ? '<span class="px-2 py-0.5 rounded-lg bg-yellow-900/40 border border-yellow-700/50 text-yellow-400 text-xs font-medium">🏆 Fidèle</span>' : '',
-        c.isInactif ? '<span class="px-2 py-0.5 rounded-lg bg-orange-900/40 border border-orange-700/50 text-orange-400 text-xs font-medium">💤 Inactif</span>' : '',
+        c.isFidele  ? '<span class="px-2 py-0.5 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 text-xs font-medium">🏆 Fidèle</span>' : '',
+        c.isInactif ? '<span class="px-2 py-0.5 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-medium">💤 Inactif</span>' : '',
       ].filter(Boolean).join('');
 
       const derniereResaFmt = c.derniereResa
@@ -258,17 +258,17 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         : '—';
 
       const card = document.createElement('div');
-      card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5 flex items-center justify-between hover:border-gray-500 transition-colors cursor-pointer';
+      card.className = 'bg-[var(--color-surface-card)] border border-white/10 rounded-2xl p-5 flex items-center justify-between hover:border-white/20 transition-colors cursor-pointer';
       card.innerHTML = `
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-0.5">
             <p class="font-semibold text-white truncate">${esc(c.nom)}</p>
             ${badges}
           </div>
-          <p class="text-gray-400 text-sm truncate">${esc(c.email || '—')}</p>
-          <p class="text-gray-500 text-xs mt-0.5">${esc(c.telephone || '—')} · ${c.nbConfirmees} rés. · Dernière : ${derniereResaFmt}</p>
+          <p class="text-white/55 text-sm truncate">${esc(c.email || '—')}</p>
+          <p class="text-white/40 text-xs mt-0.5">${esc(c.telephone || '—')} · ${c.nbConfirmees} rés. · Dernière : ${derniereResaFmt}</p>
         </div>
-        <span class="text-gray-500 text-lg ml-3 shrink-0">›</span>
+        <span class="text-white/40 text-lg ml-3 shrink-0">›</span>
       `;
       card.addEventListener('click', () => openClient(c));
       container.appendChild(card);
@@ -282,13 +282,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('view-detail').classList.remove('hidden');
 
     const badges = [
-      client.isFidele  ? '<span class="px-2 py-1 rounded-lg bg-yellow-900/40 border border-yellow-700/50 text-yellow-400 text-sm font-medium">🏆 Fidèle</span>' : '',
-      client.isInactif ? '<span class="px-2 py-1 rounded-lg bg-orange-900/40 border border-orange-700/50 text-orange-400 text-sm font-medium">💤 Inactif</span>' : '',
+      client.isFidele  ? '<span class="px-2 py-1 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 text-sm font-medium">🏆 Fidèle</span>' : '',
+      client.isInactif ? '<span class="px-2 py-1 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-300 text-sm font-medium">💤 Inactif</span>' : '',
     ].filter(Boolean).join('');
 
     document.getElementById('client-header').innerHTML = `
       <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-full bg-blue-700/40 border border-blue-600 flex items-center justify-center text-xl shrink-0">
+        <div class="w-12 h-12 rounded-full bg-[var(--color-brand-600)]/30 border border-[var(--color-brand-500)]/40 flex items-center justify-center text-xl shrink-0">
           ${esc(client.nom?.charAt(0)?.toUpperCase() ?? '?')}
         </div>
         <div class="flex-1 min-w-0">
@@ -296,14 +296,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             <h2 class="text-xl font-bold text-white">${esc(client.nom)}</h2>
             ${badges}
           </div>
-          ${client.email ? `<a href="mailto:${esc(client.email)}" class="text-blue-400 hover:text-blue-300 text-sm block">${esc(client.email)}</a>` : ''}
-          ${client.telephone ? `<a href="tel:${esc(client.telephone)}" class="text-gray-400 hover:text-white text-sm transition-colors">${esc(client.telephone)}</a>` : ''}
+          ${client.email ? `<a href="mailto:${esc(client.email)}" class="text-[var(--color-brand-300)] hover:text-[var(--color-brand-200)] text-sm block">${esc(client.email)}</a>` : ''}
+          ${client.telephone ? `<a href="tel:${esc(client.telephone)}" class="text-white/55 hover:text-white text-sm transition-colors">${esc(client.telephone)}</a>` : ''}
         </div>
       </div>
     `;
 
     const resContainer = document.getElementById('client-reservations');
-    resContainer.innerHTML = '<p class="text-gray-400 text-sm">Chargement...</p>';
+    resContainer.innerHTML = '<p class="text-white/55 text-sm">Chargement...</p>';
 
     const q = supabase
       .from('reservations')
@@ -317,7 +317,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const { data, error } = await q;
 
     if (error || !data?.length) {
-      resContainer.innerHTML = '<p class="text-gray-400 text-sm">Aucune réservation trouvée.</p>';
+      resContainer.innerHTML = '<p class="text-white/55 text-sm">Aucune réservation trouvée.</p>';
       return;
     }
 
@@ -326,17 +326,17 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     resContainer.innerHTML = `
       <div class="grid grid-cols-3 gap-3 mb-6">
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-3 text-center">
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-3 text-center">
           <p class="text-2xl font-bold text-white">${data.length}</p>
-          <p class="text-gray-400 text-xs mt-0.5">Réservations</p>
+          <p class="text-white/55 text-xs mt-0.5">Réservations</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-3 text-center">
-          <p class="text-2xl font-bold text-green-400">${confirmed.length}</p>
-          <p class="text-gray-400 text-xs mt-0.5">Confirmées</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-3 text-center">
+          <p class="text-2xl font-bold text-green-300">${confirmed.length}</p>
+          <p class="text-white/55 text-xs mt-0.5">Confirmées</p>
         </div>
-        <div class="bg-gray-700/40 border border-gray-600 rounded-xl p-3 text-center">
-          <p class="text-2xl font-bold text-blue-400">${Math.round(totalMin / 60 * 10) / 10}h</p>
-          <p class="text-gray-400 text-xs mt-0.5">Temps total</p>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-3 text-center">
+          <p class="text-2xl font-bold text-[var(--color-brand-300)]">${Math.round(totalMin / 60 * 10) / 10}h</p>
+          <p class="text-white/55 text-xs mt-0.5">Temps total</p>
         </div>
       </div>
     `;
@@ -351,16 +351,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         const prefix = rb.boxes?.type === 'sans_fil' ? '📡 ' : '🔌 ';
         return prefix + (rb.boxes?.nom ?? `Box ${rb.box_id}`);
       }).join(', ') ?? '—';
-      const badgeCls = { 'confirmée': 'bg-green-900/50 text-green-400 border-green-800', 'annulée': 'bg-red-900/50 text-red-400 border-red-800', 'no_show': 'bg-yellow-900/50 text-yellow-400 border-yellow-800' };
-      const cls = badgeCls[res.statut] ?? 'bg-gray-700 text-gray-400 border-gray-600';
+      const badgeCls = { 'confirmée': 'bg-green-500/15 text-green-300 border-green-500/30', 'annulée': 'bg-red-500/15 text-red-300 border-red-500/30', 'no_show': 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' };
+      const cls = badgeCls[res.statut] ?? 'bg-white/5 text-white/55 border-white/10';
       const card = document.createElement('div');
-      card.className = 'bg-gray-700/40 border border-gray-600 rounded-2xl p-5';
+      card.className = 'bg-[var(--color-surface-card)] border border-white/10 rounded-2xl p-5';
       card.innerHTML = `
         <div class="flex items-start justify-between mb-2">
-          <div><p class="text-white font-medium capitalize">${esc(dateFmt)}</p><p class="text-gray-400 text-sm">${h1} → ${h2}</p></div>
+          <div><p class="text-white font-medium capitalize">${esc(dateFmt)}</p><p class="text-white/55 text-sm">${h1} → ${h2}</p></div>
           <span class="px-2 py-1 rounded-lg border text-xs font-medium ${cls}">${res.statut}</span>
         </div>
-        <div class="text-xs text-gray-500 mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        <div class="text-xs text-white/40 mt-2 flex flex-wrap gap-x-4 gap-y-1">
           <span>${res.duree_minutes} min</span>
           <span>${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</span>
           <span>${esc(boxNames)}</span>

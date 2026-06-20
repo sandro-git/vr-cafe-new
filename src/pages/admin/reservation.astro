@@ -13,22 +13,22 @@ const isStandard = !isAnniversaire && !isMDJ;
 <AdminLayout>
   <!-- Onglets Standard / Anniversaire / MDJ -->
   <div class="max-w-xl mx-auto px-4 pt-8 pb-0">
-    <div class="flex gap-2 bg-gray-800 rounded-2xl p-1 border border-gray-700">
+    <div class="flex gap-2 bg-[var(--color-surface-card)] rounded-2xl p-1 border border-white/10">
       <a
         href="/admin/reservation?type=standard"
-        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`}
+        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-[var(--color-brand-600)] text-white' : 'text-white/55 hover:text-white'}`}
       >
         🎮 Standard
       </a>
       <a
         href="/admin/reservation?type=anniversaire"
-        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isAnniversaire ? 'bg-pink-700 text-white' : 'text-gray-400 hover:text-white'}`}
+        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isAnniversaire ? 'bg-pink-600 text-white' : 'text-white/55 hover:text-white'}`}
       >
         🎂 Anniversaire
       </a>
       <a
         href="/admin/reservation?type=mdj"
-        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-violet-700 text-white' : 'text-gray-400 hover:text-white'}`}
+        class={`flex-1 text-center py-2.5 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-violet-600 text-white' : 'text-white/55 hover:text-white'}`}
       >
         🏠 MDJ
       </a>
