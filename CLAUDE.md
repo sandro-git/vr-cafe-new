@@ -275,7 +275,7 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 
 ## Design System (refonte 2026)
 
-Refonte visuelle complète appliquée à **tout le site public** (mergée sur `master`). **L'admin (`/admin/*`) n'est PAS encore refait** — voir « Reste à faire » plus bas.
+Refonte visuelle complète appliquée à **tout le site public** (mergée sur `master`) **et au back-office `/admin/*`** (branche `redesign`, voir « Back-office » plus bas).
 
 **Tokens** — définis dans `src/styles/global.css` via `@theme` (Tailwind v4) :
 - Couleurs : `brand-50…900` (violet, base #8b5cf6), `accent-300/400/500` (jaune), `glow-pink/blue/cyan`, surfaces `surface` (#0b0b14) / `surface-elevated` (#14141f) / `surface-card` (#1c1c2b) / `surface-border`, textes `text-strong/base/muted/faded`.
@@ -312,7 +312,10 @@ Refonte visuelle complète appliquée à **tout le site public** (mergée sur `m
 - `devToolbar` désactivée (astro.config.mjs) pour le confort mobile.
 - Le bouton WhatsApp flottant (`FloatingActions`) est **commenté** dans `BaseLayout.astro` (à replacer ailleurs plus tard).
 
-**Reste à faire — refonte backend/admin** :
-- `src/layouts/AdminLayout.astro` + pages `src/pages/admin/*` (login, reservations, planning, clients, marketing, reservation) sont **encore sur l'ancienne palette** (`bg-gray-*`, `text-blue-*`). À aligner sur le design system ci-dessus.
-- Les composants de réservation admin (`ReservationForm` mode admin, MDJ, Anniversaire) sont **déjà refaits** — réutilisables tels quels.
-- Vérifier si `AdminLayout` doit inclure le script reveal / `ClientRouter` (il n'utilise pas `BaseLayout`).
+**Back-office `/admin/*` (refonte faite, branche `redesign`)** :
+- `AdminLayout.astro` : fond `surface` + **topbar unifiée persistante** (wordmark « VR Café · Admin » ≥ sm, nav Réservations/Planning/Clients/Marketing avec onglet actif détecté via `Astro.url.pathname`, CTA « + Réserver » brand, liens scrollables sur mobile via `.no-scrollbar`). Le `<slot>` est dans un `<div class="pt-14">` (PAS un `<main>` : chaque page admin a déjà son propre `<main>`). Script service worker / push conservé.
+- Pages refaites en palette design system **sobre & dense** (pas de shimmer/reveal/orbs) : `login`, `reservations`, `clients`, `marketing`, `planning`, `reservation`. Stats cards `bg-[var(--color-surface-card)] border-white/10`, champs `bg-white/5 ring-1 ring-white/10 focus:ring-[var(--color-brand-400)]`, modales `bg-black/60 backdrop-blur-sm` + panneau surface-card, spinners `border-t-[var(--color-brand-400)]`.
+- **Couleurs sémantiques conservées** (elles portent du sens métier, ne pas “brandifier”) : badges de statut (confirmée vert / annulée rouge / no_show jaune) en `*-500/15` + `text-*-300` + `border-*-500/30` ; types de résa (anniversaire rose, MDJ violet) ; **couleurs inline des blocs du planning** (`statusClass` ligne ~455 : sans-fil vert / filaire>30 bleu / filaire≤30 violet / anniv rose) + la légende correspondante.
+- **Logique métier intouchée** : middleware/cookie `admin_session`, scripts Supabase + RPC `get_boxes_disponibles`, `/api/admin/db` (+ `/api/reservation-annulation`), `calcMontant`, DatePicker, autocomplete, auto-refresh planning, layout JS anti-overlap. Seules les classes Tailwind ont changé.
+- ⚠️ Tailwind v4 : toujours `var()` dans l'arbitraire (`text-[var(--color-brand-300)]`, jamais `text-[--color-brand-300]`). Les pages admin n'utilisent **pas** `reveal` (back-office = rapidité, pas d'animation au scroll).
+- Les formulaires de réservation admin (`ReservationForm` mode admin, MDJ, Anniversaire) étaient déjà au design system — réutilisés tels quels.
