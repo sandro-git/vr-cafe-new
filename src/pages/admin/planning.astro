@@ -10,12 +10,12 @@ import DatePicker from "../../components/DatePicker.astro";
       <!-- En-tête -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-white">Planning</h1>
-          <p class="text-gray-400 text-sm mt-0.5">VR Café · Back-office</p>
+          <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Planning</h1>
+          <p class="text-white/55 text-sm mt-0.5">VR Café · Back-office</p>
         </div>
         <a
           href="/admin/reservations"
-          class="text-sm text-gray-400 hover:text-white transition-colors border border-gray-600 rounded-xl px-4 py-2 hover:border-gray-500"
+          class="text-sm text-white/55 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20"
         >
           ← Réservations
         </a>
@@ -27,15 +27,15 @@ import DatePicker from "../../components/DatePicker.astro";
         <div class="flex items-center gap-2">
           <button
             id="btn-prev"
-            class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+            class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
           >‹</button>
           <button
             id="btn-today"
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-xl border border-gray-600 transition-colors"
+            class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl border border-white/10 transition-colors"
           >Aujourd'hui</button>
           <button
             id="btn-next"
-            class="w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl border border-gray-600 transition-colors text-lg"
+            class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
           >›</button>
           <span id="date-label" class="text-white font-medium ml-2 text-sm sm:text-base"></span>
           <div class="ml-1 w-60">
@@ -46,15 +46,15 @@ import DatePicker from "../../components/DatePicker.astro";
 
       <!-- Loader -->
       <div id="plan-loading" class="py-16 text-center">
-        <div class="inline-block w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-400">Chargement...</p>
+        <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+        <p class="text-white/55">Chargement...</p>
       </div>
 
       <!-- Erreur -->
-      <div id="plan-error" class="hidden mb-4 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
+      <div id="plan-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
 
       <!-- Légende couleurs -->
-      <div class="flex items-center gap-4 mb-3 text-xs text-gray-500 flex-wrap">
+      <div class="flex items-center gap-4 mb-3 text-xs text-white/40 flex-wrap">
         <span class="flex items-center gap-1.5">
           <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(4,120,87,0.6);border:1px solid #10b981;"></span>
           VR sans-fil
@@ -79,94 +79,94 @@ import DatePicker from "../../components/DatePicker.astro";
       </div>
 
       <!-- ===== Périodes de vacances ===== -->
-      <div class="mt-10 border-t border-gray-700 pt-8">
+      <div class="mt-10 border-t border-white/10 pt-8">
         <h2 class="text-lg font-semibold text-white mb-1">Périodes de vacances scolaires</h2>
-        <p class="text-gray-400 text-sm mb-5">Pendant ces périodes, le café est ouvert tous les jours. Hors vacances : mercredi, vendredi, samedi et dimanche uniquement.</p>
+        <p class="text-white/55 text-sm mb-5">Pendant ces périodes, le café est ouvert tous les jours. Hors vacances : mercredi, vendredi, samedi et dimanche uniquement.</p>
 
         <!-- Formulaire ajout -->
         <form id="form-ajout-vacances" class="flex flex-wrap gap-3 items-end mb-6">
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Du *</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Du *</label>
             <input
               id="vacances-debut"
               type="date"
               required
-              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 scheme-dark"
+              class="bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] scheme-dark"
             />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Au *</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Au *</label>
             <input
               id="vacances-fin"
               type="date"
               required
-              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 scheme-dark"
+              class="bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] scheme-dark"
             />
           </div>
           <div class="flex-1 min-w-[180px]">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Label (optionnel)</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Label (optionnel)</label>
             <input
               id="vacances-label"
               type="text"
               placeholder="Vacances de Pâques..."
-              class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
             />
           </div>
           <button
             type="submit"
             id="btn-ajout-vacances"
-            class="px-4 py-2.5 bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+            class="px-4 py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             Ajouter
           </button>
         </form>
-        <p id="vacances-error" class="hidden mb-4 text-sm text-red-400"></p>
+        <p id="vacances-error" class="hidden mb-4 text-sm text-red-300"></p>
 
         <!-- Liste périodes -->
-        <div id="vacances-loading" class="text-gray-500 text-sm py-4">Chargement...</div>
+        <div id="vacances-loading" class="text-white/40 text-sm py-4">Chargement...</div>
         <div id="vacances-liste" class="hidden space-y-2"></div>
-        <p id="vacances-vide" class="hidden text-gray-500 text-sm py-4">Aucune période de vacances configurée.</p>
+        <p id="vacances-vide" class="hidden text-white/40 text-sm py-4">Aucune période de vacances configurée.</p>
       </div>
 
       <!-- ===== Jours de fermeture ===== -->
-      <div class="mt-10 border-t border-gray-700 pt-8">
+      <div class="mt-10 border-t border-white/10 pt-8">
         <h2 class="text-lg font-semibold text-white mb-1">Jours de fermeture</h2>
-        <p class="text-gray-400 text-sm mb-5">Les clients ne pourront pas réserver ces jours-là.</p>
+        <p class="text-white/55 text-sm mb-5">Les clients ne pourront pas réserver ces jours-là.</p>
 
         <!-- Formulaire ajout -->
         <form id="form-ajout-fermeture" class="flex flex-wrap gap-3 items-end mb-6">
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Date *</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Date *</label>
             <input
               id="fermeture-date"
               type="date"
               required
-              class="bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 scheme-dark"
+              class="bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] scheme-dark"
             />
           </div>
           <div class="flex-1 min-w-[180px]">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Motif (optionnel)</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Motif (optionnel)</label>
             <input
               id="fermeture-motif"
               type="text"
               placeholder="Jour férié, congés..."
-              class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
             />
           </div>
           <button
             type="submit"
             id="btn-ajout-fermeture"
-            class="px-4 py-2.5 bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+            class="px-4 py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             Ajouter
           </button>
         </form>
-        <p id="fermeture-error" class="hidden mb-4 text-sm text-red-400"></p>
+        <p id="fermeture-error" class="hidden mb-4 text-sm text-red-300"></p>
 
         <!-- Liste jours fermés -->
-        <div id="fermeture-loading" class="text-gray-500 text-sm py-4">Chargement...</div>
+        <div id="fermeture-loading" class="text-white/40 text-sm py-4">Chargement...</div>
         <div id="fermeture-liste" class="hidden space-y-2"></div>
-        <p id="fermeture-vide" class="hidden text-gray-500 text-sm py-4">Aucun jour de fermeture planifié.</p>
+        <p id="fermeture-vide" class="hidden text-white/40 text-sm py-4">Aucun jour de fermeture planifié.</p>
       </div>
 
     </div>
@@ -175,20 +175,20 @@ import DatePicker from "../../components/DatePicker.astro";
   <!-- ── Modal réservation ─────────────────────────────────────────────────── -->
   <div id="res-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div id="res-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="relative bg-gray-800 border border-gray-600 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+    <div class="relative bg-[var(--color-surface-card)] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
 
       <!-- Vue détail -->
       <div id="modal-detail">
         <div class="p-6">
-          <button id="modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+          <button id="modal-close" class="absolute top-4 right-4 text-white/55 hover:text-white transition-colors text-xl leading-none">✕</button>
           <h3 id="modal-title" class="text-lg font-bold text-white mb-4 pr-8"></h3>
           <div id="modal-body" class="space-y-0 text-sm"></div>
         </div>
         <div class="px-6 pb-6 flex gap-2">
-          <button id="modal-btn-edit" type="button" class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-xl text-sm font-medium transition-colors">
+          <button id="modal-btn-edit" type="button" class="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-sm font-medium transition-colors">
             Modifier
           </button>
-          <button id="modal-btn-cancel" type="button" class="flex-1 py-2.5 bg-red-900/50 hover:bg-red-900/80 text-red-400 hover:text-red-300 border border-red-800 rounded-xl text-sm font-medium transition-colors">
+          <button id="modal-btn-cancel" type="button" class="flex-1 py-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 hover:text-red-200 border border-red-500/30 rounded-xl text-sm font-medium transition-colors">
             Annuler
           </button>
         </div>
@@ -198,83 +198,83 @@ import DatePicker from "../../components/DatePicker.astro";
       <div id="modal-edit" class="hidden p-6">
 
         <!-- Onglets Standard / Anniversaire / MDJ -->
-        <div class="flex gap-1.5 bg-gray-900/80 rounded-2xl p-1 border border-gray-700 mb-5">
-          <button type="button" id="edit-tab-standard" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors bg-blue-700 text-white">
+        <div class="flex gap-1.5 bg-[var(--color-surface)]/80 rounded-2xl p-1 border border-white/10 mb-5">
+          <button type="button" id="edit-tab-standard" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors bg-[var(--color-brand-600)] text-white">
             🎮 Standard
           </button>
-          <button type="button" id="edit-tab-anniversaire" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-gray-400 hover:text-white">
+          <button type="button" id="edit-tab-anniversaire" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-white/55 hover:text-white">
             🎂 Anniversaire
           </button>
-          <button type="button" id="edit-tab-mdj" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-gray-400 hover:text-white">
+          <button type="button" id="edit-tab-mdj" class="flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors text-white/55 hover:text-white">
             🏠 MDJ
           </button>
         </div>
 
         <div class="flex items-center gap-3 mb-4">
-          <button id="modal-btn-back" type="button" class="text-gray-400 hover:text-white transition-colors text-sm">← Retour</button>
+          <button id="modal-btn-back" type="button" class="text-white/55 hover:text-white transition-colors text-sm">← Retour</button>
           <h3 class="text-lg font-bold text-white">Modifier</h3>
         </div>
 
         <form id="modal-edit-form" class="space-y-4">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1.5">Date</label>
-              <input id="edit-date" type="date" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 scheme-dark" />
+              <label class="block text-xs font-medium text-white/55 mb-1.5">Date</label>
+              <input id="edit-date" type="date" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] scheme-dark" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1.5">Heure de début</label>
-              <select id="edit-heure" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+              <label class="block text-xs font-medium text-white/55 mb-1.5">Heure de début</label>
+              <select id="edit-heure" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]"></select>
             </div>
           </div>
           <div class="relative">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Nom complet</label>
-            <input id="edit-nom" type="text" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <ul id="edit-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Nom complet</label>
+            <input id="edit-nom" type="text" autocomplete="off" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]" />
+            <ul id="edit-nom-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
           <div class="relative">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
-            <input id="edit-email" type="email" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <ul id="edit-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Email</label>
+            <input id="edit-email" type="email" autocomplete="off" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]" />
+            <ul id="edit-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
           <div class="relative">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Téléphone</label>
-            <input id="edit-telephone" type="tel" autocomplete="off" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <ul id="edit-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Téléphone</label>
+            <input id="edit-telephone" type="tel" autocomplete="off" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]" />
+            <ul id="edit-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Nombre de joueurs</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Nombre de joueurs</label>
             <div id="edit-nb-grid" class="grid grid-cols-6 gap-2"></div>
           </div>
 
           <!-- Durée : standard = sélection, anniversaire = fixe 1h -->
           <div id="edit-duree-section">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Durée</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Durée</label>
             <div id="edit-duree-grid" class="grid grid-cols-2 gap-3"></div>
           </div>
-          <div id="edit-duree-fixed" class="hidden px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm text-gray-300 flex items-center gap-3">
-            <svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div id="edit-duree-fixed" class="hidden px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white/70 flex items-center gap-3">
+            <svg class="w-4 h-4 text-pink-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-gray-500">(fixe pour les anniversaires)</span>
+            Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-white/40">(fixe pour les anniversaires)</span>
           </div>
 
           <div id="edit-vr-section">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Type VR</label>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Type VR</label>
             <div id="edit-vr-type-grid" class="grid grid-cols-2 gap-3"></div>
-            <div id="edit-vr-type-auto" class="hidden mt-3 px-4 py-3 bg-blue-900/30 border border-blue-800 rounded-xl text-sm text-blue-200">
+            <div id="edit-vr-type-auto" class="hidden mt-3 px-4 py-3 bg-[var(--color-brand-600)]/15 border border-[var(--color-brand-500)]/30 rounded-xl text-sm text-[var(--color-brand-100)]">
               🎉 Pour les groupes de plus de 6 personnes, nous réservons automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
             </div>
           </div>
-          <div id="edit-mdj-info" class="hidden px-4 py-3 bg-violet-900/30 border border-violet-800 rounded-xl text-sm text-violet-200">
+          <div id="edit-mdj-info" class="hidden px-4 py-3 bg-violet-500/15 border border-violet-500/30 rounded-xl text-sm text-violet-200">
             🏠 La réservation MDJ bloque automatiquement <strong>les deux espaces VR</strong> (Filaire + Sans Fil).
             <div id="edit-mdj-repartition" class="mt-2 text-violet-100/80 text-xs"></div>
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
-            <textarea id="edit-notes" rows="2" class="w-full bg-gray-700 text-white border border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+            <label class="block text-xs font-medium text-white/55 mb-1.5">Notes</label>
+            <textarea id="edit-notes" rows="2" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] resize-none"></textarea>
           </div>
-          <p id="modal-edit-error" class="hidden text-red-400 text-xs"></p>
-          <button type="submit" id="modal-btn-save" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors">
+          <p id="modal-edit-error" class="hidden text-red-300 text-xs"></p>
+          <button type="submit" id="modal-btn-save" class="w-full py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white rounded-xl text-sm font-medium transition-colors">
             Enregistrer
           </button>
         </form>
@@ -535,14 +535,14 @@ import DatePicker from "../../components/DatePicker.astro";
     grid.innerHTML = '';
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'relative border border-gray-700 rounded-2xl overflow-hidden';
+    wrapper.className = 'relative border border-white/10 rounded-2xl overflow-hidden';
 
     const gridEl = document.createElement('div');
     gridEl.style.display = 'grid';
     gridEl.style.gridTemplateColumns = '3rem repeat(7, minmax(90px, 1fr))';
 
     const headerSpacer = document.createElement('div');
-    headerSpacer.className = 'bg-gray-800 border-b border-r border-gray-700 h-10';
+    headerSpacer.className = 'bg-white/5 border-b border-r border-white/10 h-10';
     gridEl.appendChild(headerSpacer);
 
     const today = stripTime(new Date());
@@ -563,11 +563,11 @@ import DatePicker from "../../components/DatePicker.astro";
       const isToday = isSameDay(day, today);
       const count = byDay[d]?.length ?? 0;
       const badge = count > 0
-        ? `<span style="background:#1d4ed8;color:#fff;border-radius:9999px;font-size:10px;padding:1px 6px;margin-left:5px;">${count}</span>`
+        ? `<span style="background:#7c3aed;color:#fff;border-radius:9999px;font-size:10px;padding:1px 6px;margin-left:5px;">${count}</span>`
         : '';
       const hCell = document.createElement('div');
-      hCell.className = `bg-gray-800 border-b border-gray-700 h-10 flex items-center justify-center text-xs font-medium ${d < 6 ? 'border-r' : ''}`;
-      hCell.innerHTML = `<span class="${isToday ? 'text-blue-400 font-bold' : 'text-gray-400'}" style="display:flex;align-items:center;">${DAY_NAMES[d]} ${day.getDate()}${badge}</span>`;
+      hCell.className = `bg-white/5 border-b border-white/10 h-10 flex items-center justify-center text-xs font-medium ${d < 6 ? 'border-r' : ''}`;
+      hCell.innerHTML = `<span class="${isToday ? 'text-[var(--color-brand-300)] font-bold' : 'text-white/55'}" style="display:flex;align-items:center;">${DAY_NAMES[d]} ${day.getDate()}${badge}</span>`;
       gridEl.appendChild(hCell);
     }
 
@@ -575,16 +575,16 @@ import DatePicker from "../../components/DatePicker.astro";
       const hour = OPEN_HOUR + Math.floor(row / 2);
       const isHalfHour = row % 2 !== 0;
       const timeCell = document.createElement('div');
-      timeCell.className = `bg-gray-800/50 border-r border-gray-700 flex items-start justify-end pr-1 pt-0.5 ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50`;
+      timeCell.className = `bg-white/[0.03] border-r border-white/10 flex items-start justify-end pr-1 pt-0.5 ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-white/5`;
       timeCell.style.height = ROW_H + 'px';
-      if (!isHalfHour) timeCell.innerHTML = `<span class="text-gray-500 text-xs">${hour}h</span>`;
+      if (!isHalfHour) timeCell.innerHTML = `<span class="text-white/40 text-xs">${hour}h</span>`;
       gridEl.appendChild(timeCell);
       for (let d = 0; d < 7; d++) {
         const cell = document.createElement('div');
-        cell.className = `relative ${d < 6 ? 'border-r' : ''} ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-gray-700/50 ${isHalfHour ? 'border-dashed' : ''}`;
+        cell.className = `relative ${d < 6 ? 'border-r' : ''} ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-white/5 ${isHalfHour ? 'border-dashed' : ''}`;
         cell.style.height = ROW_H + 'px';
         if (isSameDay(addDays(currentWeekStart, d), today)) {
-          cell.style.background = 'rgba(30,64,175,0.10)';
+          cell.style.background = 'rgba(124,58,237,0.10)';
         }
         gridEl.appendChild(cell);
       }
@@ -633,7 +633,7 @@ import DatePicker from "../../components/DatePicker.astro";
         if (bufMin > 0) {
           const buf = document.createElement('div');
           buf.style.cssText = `position:absolute;top:${top + height + 4}px;left:${left};width:${width};height:${(bufMin / 30) * ROW_H - 2}px;pointer-events:none;`;
-          buf.className = 'rounded-sm border border-dashed border-gray-500/50 bg-gray-700/20';
+          buf.className = 'rounded-sm border border-dashed border-white/15 bg-white/5';
           colEls[Number(d)].appendChild(buf);
         }
       });
@@ -706,14 +706,14 @@ import DatePicker from "../../components/DatePicker.astro";
 
     document.getElementById('modal-title').textContent = res.client_nom ?? '—';
     document.getElementById('modal-body').innerHTML = `
-      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Date</span><span class="text-white text-right">${dateFmt}</span></div>
-      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Horaire</span><span class="text-white">${formatTime(debut)} → ${formatTime(fin)}</span></div>
-      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Durée</span><span class="text-white">${res.duree_minutes} min</span></div>
-      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Joueurs</span><span class="text-white">${res.nb_personnes}</span></div>
-      <div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Boxes</span><span class="text-white">${esc(boxNames)}</span></div>
-      ${res.client_email ? `<div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Email</span><a href="mailto:${esc(res.client_email)}" class="text-blue-400 hover:text-blue-300 truncate ml-4">${esc(res.client_email)}</a></div>` : ''}
-      ${res.client_telephone ? `<div class="flex justify-between py-2 border-b border-gray-700"><span class="text-gray-400">Téléphone</span><a href="tel:${esc(res.client_telephone)}" class="text-blue-400 hover:text-blue-300">${esc(res.client_telephone)}</a></div>` : ''}
-      ${res.notes ? `<div class="py-2"><span class="text-gray-400 block mb-1">Notes</span><span class="text-gray-300">${esc(res.notes)}</span></div>` : ''}
+      <div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Date</span><span class="text-white text-right">${dateFmt}</span></div>
+      <div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Horaire</span><span class="text-white">${formatTime(debut)} → ${formatTime(fin)}</span></div>
+      <div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Durée</span><span class="text-white">${res.duree_minutes} min</span></div>
+      <div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Joueurs</span><span class="text-white">${res.nb_personnes}</span></div>
+      <div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Boxes</span><span class="text-white">${esc(boxNames)}</span></div>
+      ${res.client_email ? `<div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Email</span><a href="mailto:${esc(res.client_email)}" class="text-[var(--color-brand-300)] hover:text-[var(--color-brand-200)] truncate ml-4">${esc(res.client_email)}</a></div>` : ''}
+      ${res.client_telephone ? `<div class="flex justify-between py-2 border-b border-white/10"><span class="text-white/55">Téléphone</span><a href="tel:${esc(res.client_telephone)}" class="text-[var(--color-brand-300)] hover:text-[var(--color-brand-200)]">${esc(res.client_telephone)}</a></div>` : ''}
+      ${res.notes ? `<div class="py-2"><span class="text-white/55 block mb-1">Notes</span><span class="text-white/70">${esc(res.notes)}</span></div>` : ''}
     `;
 
     // Pré-remplir le formulaire d'édition
@@ -752,14 +752,14 @@ import DatePicker from "../../components/DatePicker.astro";
 
   function vrTypeBtnClass(active) {
     return active
-      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center transition-all cursor-pointer'
-      : 'py-3 rounded-xl border-2 border-gray-600 text-white text-center transition-all hover:border-blue-400 cursor-pointer';
+      ? 'py-3 rounded-xl border-2 border-[var(--color-brand-500)] bg-[var(--color-brand-600)]/20 text-white text-center transition-all cursor-pointer'
+      : 'py-3 rounded-xl border-2 border-white/10 text-white text-center transition-all hover:border-[var(--color-brand-400)] cursor-pointer';
   }
 
   function dureeBtnClass(active) {
     return active
-      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white text-center text-sm font-medium transition-all cursor-pointer'
-      : 'py-3 rounded-xl border-2 border-gray-600 text-white text-center text-sm transition-all hover:border-blue-400 cursor-pointer';
+      ? 'py-3 rounded-xl border-2 border-[var(--color-brand-500)] bg-[var(--color-brand-600)]/20 text-white text-center text-sm font-medium transition-all cursor-pointer'
+      : 'py-3 rounded-xl border-2 border-white/10 text-white text-center text-sm transition-all hover:border-[var(--color-brand-400)] cursor-pointer';
   }
 
   function setupEditDuree(currentMinutes) {
@@ -825,8 +825,8 @@ import DatePicker from "../../components/DatePicker.astro";
     if (!suggestions.length) { ul.classList.add('hidden'); return; }
     suggestions.forEach(s => {
       const li = document.createElement('li');
-      li.className = 'px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0';
-      li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-gray-500 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
+      li.className = 'px-3 py-2.5 text-sm text-white/70 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-0';
+      li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-white/40 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
       li.addEventListener('mousedown', e => { e.preventDefault(); fillEditClient(s); });
       ul.appendChild(li);
     });
@@ -880,8 +880,8 @@ import DatePicker from "../../components/DatePicker.astro";
 
   function nbEditBtnClass(active) {
     return active
-      ? 'py-3 rounded-xl border-2 border-blue-500 bg-blue-700/30 text-white font-bold text-lg transition-all'
-      : 'py-3 rounded-xl border-2 border-gray-600 text-white font-bold text-lg transition-all hover:border-blue-400';
+      ? 'py-3 rounded-xl border-2 border-[var(--color-brand-500)] bg-[var(--color-brand-600)]/20 text-white font-bold text-lg transition-all'
+      : 'py-3 rounded-xl border-2 border-white/10 text-white font-bold text-lg transition-all hover:border-[var(--color-brand-400)]';
   }
 
   function updateEditVrTypeForNb(nb, isAnniv) {
@@ -960,11 +960,11 @@ import DatePicker from "../../components/DatePicker.astro";
     const isStandard = !isAnniv && !isMDJ;
 
     document.getElementById('edit-tab-standard').className =
-      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-blue-700 text-white' : 'text-gray-400 hover:text-white'}`;
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isStandard ? 'bg-[var(--color-brand-600)] text-white' : 'text-white/55 hover:text-white'}`;
     document.getElementById('edit-tab-anniversaire').className =
-      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isAnniv ? 'bg-pink-700 text-white' : 'text-gray-400 hover:text-white'}`;
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isAnniv ? 'bg-pink-600 text-white' : 'text-white/55 hover:text-white'}`;
     document.getElementById('edit-tab-mdj').className =
-      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-violet-700 text-white' : 'text-gray-400 hover:text-white'}`;
+      `flex-1 text-center py-2 rounded-xl text-sm font-medium transition-colors ${isMDJ ? 'bg-violet-600 text-white' : 'text-white/55 hover:text-white'}`;
 
     // Durée : standard + MDJ = sélection 30/60 · anniversaire = fixe 1 h
     document.getElementById('edit-duree-section').classList.toggle('hidden', isAnniv);
@@ -1336,13 +1336,13 @@ import DatePicker from "../../components/DatePicker.astro";
       const d1 = new Date(p.date_debut + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
       const d2 = new Date(p.date_fin + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-gray-700/40 border border-gray-600 rounded-xl text-sm';
+      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-[var(--color-surface-card)] border border-white/10 rounded-xl text-sm';
       item.innerHTML = `
         <div>
           <span class="text-white font-medium">Du ${esc(d1)} au ${esc(d2)}</span>
-          ${p.label ? `<span class="text-gray-400 ml-2">— ${esc(p.label)}</span>` : ''}
+          ${p.label ? `<span class="text-white/55 ml-2">— ${esc(p.label)}</span>` : ''}
         </div>
-        <button data-id="${p.id}" class="btn-suppr-vacances px-3 py-1.5 text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 rounded-lg text-xs transition-colors">
+        <button data-id="${p.id}" class="btn-suppr-vacances px-3 py-1.5 text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-500/60 rounded-lg text-xs transition-colors">
           Supprimer
         </button>
       `;
@@ -1443,13 +1443,13 @@ import DatePicker from "../../components/DatePicker.astro";
       const d = new Date(jour.date + 'T12:00:00');
       const dateFmt = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-gray-700/40 border border-gray-600 rounded-xl text-sm';
+      item.className = 'flex items-center justify-between gap-3 px-4 py-3 bg-[var(--color-surface-card)] border border-white/10 rounded-xl text-sm';
       item.innerHTML = `
         <div>
           <span class="text-white font-medium capitalize">${esc(dateFmt)}</span>
-          ${jour.motif ? `<span class="text-gray-400 ml-2">— ${esc(jour.motif)}</span>` : ''}
+          ${jour.motif ? `<span class="text-white/55 ml-2">— ${esc(jour.motif)}</span>` : ''}
         </div>
-        <button data-id="${jour.id}" class="btn-suppr-fermeture px-3 py-1.5 text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 rounded-lg text-xs transition-colors">
+        <button data-id="${jour.id}" class="btn-suppr-fermeture px-3 py-1.5 text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-500/60 rounded-lg text-xs transition-colors">
           Supprimer
         </button>
       `;
