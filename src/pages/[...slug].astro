@@ -26,7 +26,7 @@ const { params } = Astro;
 
 const { data: game } = await loadQuery<GAME_BY_SLUG_QUERY_RESULT>({
   query: GAME_BY_SLUG_QUERY,
-  params: { slug: params.slug ?? '' },
+  params: { slug: params.slug! },
 });
 
 if (!game) {
