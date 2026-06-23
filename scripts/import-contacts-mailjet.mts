@@ -5,10 +5,9 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
-import { resolve } from "path";
 
 // ── Charger le .env manuellement ─────────────────────────────────────────────
-const envPath = resolve(import.meta.dir, "../.env");
+const envPath = new URL("../.env", import.meta.url).pathname;
 const envVars: Record<string, string> = {};
 for (const line of readFileSync(envPath, "utf-8").split("\n")) {
   const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);

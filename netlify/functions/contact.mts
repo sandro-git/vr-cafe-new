@@ -29,7 +29,7 @@ async function verifyCsrf(token: string, secret: string): Promise<boolean> {
   return false;
 }
 
-export default async (req: Request, context: Context) => {
+export default async (req: Request, _context: Context) => {
   // Vérifier que c'est une requête POST
   if (req.method !== "POST") {
     return new Response(

@@ -3,7 +3,7 @@
 // Utilise les transformations d'images Sanity (compatibles Netlify)
 import { urlForImage } from "../sanity/lib/url-for-image";
 
-const { image, alt, className, sizes = "100vw" } = Astro.props;
+const { image, alt, className } = Astro.props;
 
 // Définir l'interface pour l'image Sanity
 interface SanityImage {

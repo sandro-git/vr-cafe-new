@@ -20,7 +20,7 @@ function escHtml(str: string | null | undefined): string {
     .replace(/'/g, "&#x27;");
 }
 
-export default async (req: Request, context: Context) => {
+export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),

@@ -17,7 +17,7 @@ const { size = 59, class: className } = Astro.props;
   <!-- Le reste du SVG -->
   <foreignObject x="-4" y="-4" width="66.8726" height="66.8727"
     ><div
-      xmlns="http://www.w3.org/1999/xhtml"
+      {...({"xmlns": "http://www.w3.org/1999/xhtml"} as Record<string, string>)}
       style="backdrop-filter:blur(2px);clip-path:url(#bgblur_0_61_71_clip_path);height:100%;width:100%"
     >
     </div></foreignObject

@@ -117,13 +117,15 @@ const TOOLS = [
 // ── Tool handlers ────────────────────────────────────────────────────────────
 
 async function toolListGames(args: Record<string, unknown>) {
-  const sanity = makeSanity();
+  const sanityRaw = makeSanity() as unknown as { fetch(q: string, p?: Record<string, unknown>): Promise<Record<string, unknown>[]> };
   const tag = args.tag as string | undefined;
-  const query = tag
-    ? `*[_type == "games" && $tag in tags[]->title] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`
-    : `*[_type == "games"] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`;
 
-  const games = await sanity.fetch(query, tag ? { tag } : {});
+  const games = await sanityRaw.fetch(
+    tag
+      ? `*[_type == "games" && $tag in tags[]->title] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`
+      : `*[_type == "games"] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`,
+    tag ? { tag } : undefined
+  );
   if (!games.length) return text("Aucun jeu trouvé.");
 
   const lines = games.map(
