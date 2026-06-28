@@ -22,25 +22,29 @@ import DatePicker from "../../components/DatePicker.astro";
       </div>
 
       <!-- Contrôles -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-        <!-- Navigation date -->
+      <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4 mb-6">
+        <!-- Navigation semaine -->
         <div class="flex items-center gap-2">
           <button
             id="btn-prev"
-            class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
+            class="w-9 h-9 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
           >‹</button>
           <button
             id="btn-today"
-            class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl border border-white/10 transition-colors"
+            class="px-4 py-2 shrink-0 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl border border-white/10 transition-colors"
           >Aujourd'hui</button>
           <button
             id="btn-next"
-            class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
+            class="w-9 h-9 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 rounded-xl border border-white/10 transition-colors text-lg"
           >›</button>
-          <span id="date-label" class="text-white font-medium ml-2 text-sm sm:text-base"></span>
-          <div class="ml-1 w-60">
-            <DatePicker id="dp-planning" />
-          </div>
+        </div>
+
+        <!-- Plage de la semaine -->
+        <span id="date-label" class="text-white font-medium text-sm sm:text-base sm:ml-2"></span>
+
+        <!-- Sélecteur de date -->
+        <div class="w-full max-w-xs sm:w-60 sm:max-w-none">
+          <DatePicker id="dp-planning" />
         </div>
       </div>
 
@@ -75,7 +79,7 @@ import DatePicker from "../../components/DatePicker.astro";
 
       <!-- Vue Semaine -->
       <div id="view-week" class="hidden overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 220px)">
-        <div id="week-grid" class="min-w-[700px]"></div>
+        <div id="week-grid" class="sm:min-w-[700px]"></div>
       </div>
 
       <!-- ===== Périodes de vacances ===== -->
@@ -534,15 +538,30 @@ import DatePicker from "../../components/DatePicker.astro";
     const grid = document.getElementById('week-grid');
     grid.innerHTML = '';
 
+    const isMobile = window.innerWidth < 640;
+
     const wrapper = document.createElement('div');
-    wrapper.className = 'relative border border-white/10 rounded-2xl overflow-hidden';
+    wrapper.className = isMobile
+      ? 'relative border border-white/10'
+      : 'relative border border-white/10 rounded-2xl overflow-hidden';
 
     const gridEl = document.createElement('div');
     gridEl.style.display = 'grid';
-    gridEl.style.gridTemplateColumns = '3rem repeat(7, minmax(90px, 1fr))';
+    let dayColWidth = 0;
+    if (isMobile) {
+      // px-4 (16px × 2) + bordure wrapper (2px × 2) + colonne temps (48px)
+      dayColWidth = window.innerWidth - 84;
+      gridEl.style.gridTemplateColumns = `3rem repeat(7, ${dayColWidth}px)`;
+      wrapper.style.width = (48 + 7 * dayColWidth) + 'px';
+    } else {
+      gridEl.style.gridTemplateColumns = '3rem repeat(7, minmax(90px, 1fr))';
+    }
 
     const headerSpacer = document.createElement('div');
     headerSpacer.className = 'bg-white/5 border-b border-r border-white/10 h-10';
+    if (isMobile) {
+      headerSpacer.style.cssText = 'position:sticky;left:0;z-index:30;background:var(--color-surface-elevated);';
+    }
     gridEl.appendChild(headerSpacer);
 
     const today = stripTime(new Date());
@@ -577,6 +596,12 @@ import DatePicker from "../../components/DatePicker.astro";
       const timeCell = document.createElement('div');
       timeCell.className = `bg-white/[0.03] border-r border-white/10 flex items-start justify-end pr-1 pt-0.5 ${row < TOTAL_ROWS - 1 ? 'border-b' : ''} border-white/5`;
       timeCell.style.height = ROW_H + 'px';
+      if (isMobile) {
+        timeCell.style.position = 'sticky';
+        timeCell.style.left = '0';
+        timeCell.style.zIndex = '20';
+        timeCell.style.background = 'var(--color-surface)';
+      }
       if (!isHalfHour) timeCell.innerHTML = `<span class="text-white/40 text-xs">${hour}h</span>`;
       gridEl.appendChild(timeCell);
       for (let d = 0; d < 7; d++) {
@@ -593,7 +618,10 @@ import DatePicker from "../../components/DatePicker.astro";
     wrapper.appendChild(gridEl);
 
     const overlay = document.createElement('div');
-    overlay.style.cssText = `position:absolute;top:40px;left:3rem;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));pointer-events:none;`;
+    const overlayColTemplate = isMobile
+      ? `repeat(7,${window.innerWidth - 84}px)`
+      : 'repeat(7,minmax(90px,1fr))';
+    overlay.style.cssText = `position:absolute;top:40px;left:3rem;right:0;bottom:0;display:grid;grid-template-columns:${overlayColTemplate};pointer-events:none;`;
 
     const colEls = Array.from({ length: 7 }).map((_, d) => {
       const col = document.createElement('div');
