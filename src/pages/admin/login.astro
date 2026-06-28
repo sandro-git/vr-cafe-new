@@ -17,7 +17,7 @@ if (Astro.request.method === "POST") {
   if (submitted === password) {
     Astro.cookies.set("admin_session", submitted, {
       httpOnly: true,
-      secure: true,
+      secure: import.meta.env.PROD,
       sameSite: "strict",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
