@@ -330,6 +330,7 @@ import DatePicker from "../../components/DatePicker.astro";
 
   // ── État ──────────────────────────────────────────────────────────────────
   let currentWeekStart = getMonday(new Date());
+  let pendingScrollDay = null; // jour (0=Lun…6=Dim) à scroller après le prochain renderWeek
   let boxes = [];
   let modalRes = null; // réservation couramment affichée dans le modal
   let editSelectedVrType = null; // type VR sélectionné dans le formulaire d'édition
@@ -443,6 +444,22 @@ import DatePicker from "../../components/DatePicker.astro";
     if (!container) return;
     const visibleH = container.clientHeight;
     container.scrollTo({ top: Math.max(0, 40 + top - visibleH / 2), behavior: 'smooth' });
+  }
+
+  function scrollToDayColumn(dayIdx, smooth = false) {
+    const container = document.getElementById('view-week');
+    if (!container) return;
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      // colonne jour = window.innerWidth - 84 ; on aligne son bord gauche
+      // juste après la colonne d'horaires figée (gutter 48px sticky)
+      const colWidth = window.innerWidth - 84;
+      container.scrollTo({ left: dayIdx * colWidth, behavior: smooth ? 'smooth' : 'auto' });
+    } else {
+      const colWidth = Math.max(90, (container.clientWidth - 48) / 7);
+      const colLeft = 48 + dayIdx * colWidth;
+      container.scrollTo({ left: Math.max(0, colLeft - container.clientWidth / 2 + colWidth / 2), behavior: smooth ? 'smooth' : 'auto' });
+    }
   }
 
   // ── Couleurs statut + durée ───────────────────────────────────────────────
@@ -679,15 +696,14 @@ import DatePicker from "../../components/DatePicker.astro";
     showView();
     updateDateLabel();
     updateNowLine();
-    const isWeekContainsToday = stripTime(new Date()) >= currentWeekStart && stripTime(new Date()) <= addDays(currentWeekStart, 6);
-    if (isWeekContainsToday) {
-      scrollToNow();
-      const todayIdx = (stripTime(new Date()).getDay() + 6) % 7; // 0=Lun … 6=Dim
-      const container = document.getElementById('view-week');
-      if (container) {
-        const colWidth = Math.max(90, (container.clientWidth - 48) / 7);
-        const colLeft = 48 + todayIdx * colWidth;
-        container.scrollLeft = Math.max(0, colLeft - container.clientWidth / 2 + colWidth / 2);
+    if (pendingScrollDay !== null) {
+      scrollToDayColumn(pendingScrollDay);
+      pendingScrollDay = null;
+    } else {
+      const todayStripped = stripTime(new Date());
+      if (todayStripped >= currentWeekStart && todayStripped <= addDays(currentWeekStart, 6)) {
+        scrollToNow();
+        scrollToDayColumn((todayStripped.getDay() + 6) % 7);
       }
     }
   }
@@ -1322,12 +1338,19 @@ import DatePicker from "../../components/DatePicker.astro";
     syncDatePicker();
   });
 
-  // Sélection depuis le datepicker → saute à la semaine contenant cette date
+  // Sélection depuis le datepicker → saute à la semaine et scrolle sur le jour
   document.addEventListener('datepicker:select', e => {
     if (e.detail.id !== DP_ID) return;
     const [y, m, d] = e.detail.date.split('-').map(Number);
-    const newMonday = getMonday(new Date(y, m - 1, d));
-    if (localDateStr(newMonday) === localDateStr(currentWeekStart)) return;
+    const picked = new Date(y, m - 1, d);
+    const newMonday = getMonday(picked);
+    const dayIdx = (picked.getDay() + 6) % 7; // 0=Lun … 6=Dim
+
+    if (localDateStr(newMonday) === localDateStr(currentWeekStart)) {
+      scrollToDayColumn(dayIdx, true); // même semaine : juste scroller (animé)
+      return;
+    }
+    pendingScrollDay = dayIdx;          // semaine différente : scroll après re-render
     currentWeekStart = newMonday;
     renderWeek();
   });
