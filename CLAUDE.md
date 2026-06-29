@@ -4,7 +4,7 @@ Ce fichier fournit des instructions à Claude Code (claude.ai/code) pour travail
 
 ## Vue d'ensemble du projet
 
-Site web complet d'un VR Café (vr-cafe.fr) construit avec Astro 6 + Sanity CMS + Supabase. Inclut un catalogue de jeux VR, un système de réservation en ligne 4 étapes, un panneau d'administration complet, des notifications push et des emails transactionnels via Mailjet.
+Site web complet d'un VR Café (vr-cafe.fr) construit avec Astro 7 + Sanity CMS + Supabase. Inclut un catalogue de jeux VR, un système de réservation en ligne 4 étapes, un panneau d'administration complet, des notifications push et des emails transactionnels via Mailjet.
 
 ## Commandes de développement
 
@@ -21,7 +21,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 
 ### Framework & Intégrations
 
-- **Astro 6** en mode SSR (`output: "server"`)
+- **Astro 7** en mode SSR (`output: "server"`)
 - **Adaptateur Netlify** pour le déploiement (fonctions Netlify dans `netlify/functions/`)
 - **Sanity CMS** (headless) :
   - Project ID : `0oshw5tf` / Dataset : `production`
