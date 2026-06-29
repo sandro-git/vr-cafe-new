@@ -1,84 +1,43 @@
 ---
 // src/components/SanityPicture.astro
-// Utilise les transformations d'images Sanity (compatibles Netlify)
+// Image Sanity responsive : un seul <img srcset> multi-largeurs, la
+// négociation de format (AVIF/WebP selon le navigateur) étant déléguée au
+// CDN Sanity via auto=format. Crop carré conservé (aspect-square).
 import { urlForImage } from "../sanity/lib/url-for-image";
 
-const { image, alt, className } = Astro.props;
-
-// Définir l'interface pour l'image Sanity
-interface SanityImage {
-  asset: {
-    _ref: string;
-    _type: string;
-  };
+interface Props {
+  image: any;
+  alt?: string | null;
+  className?: string;
+  sizes?: string;
+  loading?: "lazy" | "eager";
 }
 
-// Génère les URLs avec les transformations Sanity
-function generateSanityUrls(image: SanityImage) {
-  const baseUrl = urlForImage(image);
+const {
+  image,
+  alt,
+  className,
+  sizes = "(min-width: 1280px) 400px, (min-width: 768px) 33vw, 100vw",
+  loading = "lazy",
+} = Astro.props;
 
-  return {
-    webp: {
-      mobile: baseUrl.width(400).height(400).format("webp").url(),
-      tablet: baseUrl.width(600).height(600).format("webp").url(),
-      desktop: baseUrl.width(800).height(800).format("webp").url(),
-    },
-    jpeg: {
-      mobile: baseUrl.width(400).height(400).format("jpg").url(),
-      tablet: baseUrl.width(600).height(600).format("jpg").url(),
-      desktop: baseUrl.width(800).height(800).format("jpg").url(),
-      fallback: baseUrl.width(600).height(600).format("jpg").url(),
-    },
-  };
-}
-
-const urls = generateSanityUrls(image);
+const base = urlForImage(image).auto("format");
+const widths = [400, 600, 800, 1200, 1600];
+const srcset = widths
+  .map((w) => `${base.width(w).height(w).url()} ${w}w`)
+  .join(", ");
 ---
 
 <div class={`aspect-square overflow-hidden rounded-lg ${className || ""}`}>
-  <picture>
-    <!-- WebP pour différentes tailles d'écran -->
-    <source
-      media="(min-width: 1024px)"
-      srcset={`${urls.webp.desktop} 1x, ${urlForImage(image).width(1600).height(1600).format("webp").url()} 2x`}
-      type="image/webp"
-    />
-    <source
-      media="(min-width: 768px)"
-      srcset={`${urls.webp.tablet} 1x, ${urlForImage(image).width(1200).height(1200).format("webp").url()} 2x`}
-      type="image/webp"
-    />
-    <source
-      media="(max-width: 767px)"
-      srcset={`${urls.webp.mobile} 1x, ${urlForImage(image).width(800).height(800).format("webp").url()} 2x`}
-      type="image/webp"
-    />
-
-    <!-- JPEG fallback pour différentes tailles -->
-    <source
-      media="(min-width: 1024px)"
-      srcset={`${urls.jpeg.desktop} 1x, ${urlForImage(image).width(1600).height(1600).format("jpg").url()} 2x`}
-      type="image/jpeg"
-    />
-    <source
-      media="(min-width: 768px)"
-      srcset={`${urls.jpeg.tablet} 1x, ${urlForImage(image).width(1200).height(1200).format("jpg").url()} 2x`}
-      type="image/jpeg"
-    />
-    <source
-      media="(max-width: 767px)"
-      srcset={`${urls.jpeg.mobile} 1x, ${urlForImage(image).width(800).height(800).format("jpg").url()} 2x`}
-      type="image/jpeg"
-    />
-
-    <!-- Image de fallback -->
-    <img
-      src={urls.jpeg.fallback}
-      alt={alt || image.alt || "Image"}
-      width={600}
-      height={600}
-      class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-      loading="lazy"
-    />
-  </picture>
+  <img
+    src={base.width(800).height(800).url()}
+    srcset={srcset}
+    sizes={sizes}
+    alt={alt || image?.alt || "Image"}
+    width={800}
+    height={800}
+    class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+    loading={loading}
+    decoding="async"
+  />
 </div>
