@@ -12,6 +12,11 @@ import netlify from '@astrojs/netlify';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://vr-cafe.fr',
+
+  // Astro 7 : le défaut est passé à `'jsx'` (espaces retirés entre éléments inline),
+  // ce qui collait les mots stylés (`text-shimmer`/`highlight`) à leur texte voisin
+  // dans les titres. On conserve le comportement v6 sur tout le site.
+  compressHTML: true,
   integrations: [sanity(
     {
       projectId: '0oshw5tf',
