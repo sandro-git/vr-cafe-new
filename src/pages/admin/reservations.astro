@@ -133,12 +133,8 @@ import DatePicker from "../../components/DatePicker.astro";
 
 <script>
   // @ts-nocheck
-  import { createClient } from '@supabase/supabase-js';
-
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+  import { supabase } from '../../lib/supabase.js';
+  import { calcMontant } from '../../lib/pricing';
 
   let currentDate = localDateStr(new Date());
   let reservationsCache = [];
@@ -185,17 +181,11 @@ import DatePicker from "../../components/DatePicker.astro";
   }
 
   // ── Stats ─────────────────────────────────────────────────────────────────
-  function calcMontant(duree, nb) {
-    if (duree === 30) return 18 * nb;
-    if (duree === 60) return (nb <= 2 ? 29 : nb <= 4 ? 27 : 25) * nb;
-    return 0;
-  }
-
   function updateStats(reservations) {
     const confirmed = reservations.filter(r => r.statut === 'confirmée');
     const cancelled = reservations.filter(r => r.statut === 'annulée');
     const players = confirmed.reduce((sum, r) => sum + (r.nb_personnes || 0), 0);
-    const revenue = confirmed.reduce((sum, r) => sum + calcMontant(r.duree_minutes, r.nb_personnes || 0), 0);
+    const revenue = confirmed.reduce((sum, r) => sum + (calcMontant(r.duree_minutes, r.nb_personnes || 0) ?? 0), 0);
 
     document.getElementById('stat-total').textContent = String(reservations.length);
     document.getElementById('stat-confirmed').textContent = String(confirmed.length);

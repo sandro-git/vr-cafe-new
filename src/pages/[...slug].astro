@@ -5,6 +5,8 @@ import YoutubePlayer from "../components/YoutubePlayer.astro";
 import SanityPicture from "../components/SanityPicture.astro";
 import Play from "../components/Play.astro";
 import Button from "../components/Button.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, breadcrumb } from "../lib/seo";
 
 export const prerender = true;
 
@@ -39,24 +41,14 @@ if (!game) {
   description={game.description ? game.description.slice(0, 155) + (game.description.length > 155 ? '…' : '') : `Découvrez ${game.name} en réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan. Réservez en ligne !`}
   canonical={`https://vr-cafe.fr/${params.slug}/`}
 >
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Accueil",
-        "item": "https://vr-cafe.fr"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": game.name,
-        "item": `https://vr-cafe.fr/${params.slug}/`
-      }
-    ]
-  })} />
+  <JsonLd
+    schema={graph([
+      breadcrumb([
+        { name: "Accueil", path: "/" },
+        { name: game.name!, path: `/${params.slug}/` },
+      ]),
+    ])}
+  />
   <section class="bg-[var(--color-surface)]">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-20 max-w-7xl">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">

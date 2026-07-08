@@ -1,45 +1,23 @@
 ---
 import PageHeader from "../components/PageHeader.astro";
 
-// Récupérer l'URL actuelle pour déterminer la page courante
-const currentPath = Astro.url.pathname;
-const isEscapesPage =
-  currentPath === "/escapes" ||
-  currentPath === "/escapes/" ||
-  currentPath.includes("/escapes/");
-
-// Déterminer le titre + highlight + sous-titre en fonction de la page
-let pageTitle = "Escape Games VR";
-let highlight = "Escape Games";
-let subtitle = "Résolvez des énigmes immersives en équipe, dans des univers où chaque seconde compte.";
-
-if (currentPath.includes("/jeux")) {
-  pageTitle = "Jeux VR";
-  highlight = "Jeux";
-  subtitle = "Arcade, sport, action ou contemplatif : explorez notre catalogue de jeux en réalité virtuelle.";
-} else if (currentPath.includes("/freeroaming")) {
-  pageTitle = "VR Sans Fil";
-  highlight = "Sans Fil";
-  subtitle = "Liberté de mouvement totale : déplacez-vous réellement dans des mondes virtuels, sans aucun câble.";
-} else if (currentPath.includes("/escapesFreeroaming")) {
-  pageTitle = "Escapes VR Sans Fil";
-  highlight = "Sans Fil";
-  subtitle = "L'escape game nouvelle génération : marchez, explorez et collaborez en totale liberté.";
+interface Props {
+  title: string;
+  highlight: string;
+  subtitle: string;
+  filters?: { href: string; label: string }[];
 }
 
-const filters = [
-  { href: "/escapes", label: "Tout" },
-  { href: "/escapes/arvi", label: "ARVI VR" },
-  { href: "/escapes/ubisoft", label: "Ubisoft" },
-];
+const currentPath = Astro.url.pathname;
+const { title, highlight, subtitle, filters } = Astro.props;
 ---
 
 <section class="bg-[var(--color-surface)]">
   <div class="flex flex-col items-center">
-    <PageHeader eyebrow="Catalogue" title={pageTitle} highlight={highlight} subtitle={subtitle} />
+    <PageHeader eyebrow="Catalogue" title={title} highlight={highlight} subtitle={subtitle} />
   </div>
 
-  {isEscapesPage && (
+  {filters && filters.length > 0 && (
     <ul class="reveal flex flex-wrap gap-3 justify-center mb-10 px-4">
       {filters.map((f) => {
         const isActive = currentPath === f.href || currentPath === `${f.href}/`;

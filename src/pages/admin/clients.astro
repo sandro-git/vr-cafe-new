@@ -142,12 +142,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
 <script>
   // @ts-nocheck
-  import { createClient } from '@supabase/supabase-js';
-
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+  import { supabase } from '../../lib/supabase.js';
 
   // ── État ──────────────────────────────────────────────────────────────────
   let allClients = [];
@@ -158,21 +153,20 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   // ── Chargement initial de tous les clients ────────────────────────────────
   async function loadAllClients() {
-    // 1. Les clients (source de vérité)
-    const { data: clients, error: cErr } = await supabase
-      .from('clients')
-      .select('id, nom, email, telephone');
+    // Les clients (source de vérité) et les réservations (pour les stats) sont indépendants
+    const [
+      { data: clients, error: cErr },
+      { data: resas, error: rErr },
+    ] = await Promise.all([
+      supabase.from('clients').select('id, nom, email, telephone'),
+      supabase.from('reservations').select('client_id, statut, creneau_debut'),
+    ]);
 
     if (cErr) {
       document.getElementById('state-loading').classList.add('hidden');
       showError('Erreur de chargement : ' + cErr.message);
       return;
     }
-
-    // 2. Les réservations pour calculer les statistiques (par client_id)
-    const { data: resas, error: rErr } = await supabase
-      .from('reservations')
-      .select('client_id, statut, creneau_debut');
 
     if (rErr) {
       document.getElementById('state-loading').classList.add('hidden');
@@ -305,16 +299,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const resContainer = document.getElementById('client-reservations');
     resContainer.innerHTML = '<p class="text-white/55 text-sm">Chargement...</p>';
 
-    const q = supabase
+    const { data, error } = await supabase
       .from('reservations')
       .select('*, reservation_boxes(box_id, boxes(nom, type))')
+      .eq('client_id', client.id)
       .order('creneau_debut', { ascending: false });
-
-    if (client.id) q.eq('client_id', client.id);
-    else if (client.email) q.eq('client_email', client.email);
-    else { q.eq('client_nom', client.nom); if (client.telephone) q.eq('client_telephone', client.telephone); }
-
-    const { data, error } = await q;
 
     if (error || !data?.length) {
       resContainer.innerHTML = '<p class="text-white/55 text-sm">Aucune réservation trouvée.</p>';

@@ -4,24 +4,13 @@ import GameList from "../components/GameList.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-import { sanityClient } from "sanity:client";
+import { loadQuery } from "../sanity/lib/load-query";
+import { ESCAPE_GAME_QUERY } from "../sanity/lib/queries";
+import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
-const escapes =
-  await sanityClient.fetch(`*[_type == "games" && tag->title == "escapeGame"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name, title},
-  players,
-  duration,
-  slug
-}`);
-// This fetches all games with the tag "escapeGame" from Sanity
+const { data: escapes } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: ESCAPE_GAME_QUERY });
 
 const schema = graph([
   businessNode,
@@ -38,7 +27,16 @@ const schema = graph([
   description="Vivez les meilleurs escape games en réalité virtuelle à Canet-en-Roussillon, à 10 min de Perpignan. Dès 25€/pers. Réservation en ligne."
 >
   <JsonLd schema={schema} />
-  <GamesLayout>
+  <GamesLayout
+    title="Escape Games VR"
+    highlight="Escape Games"
+    subtitle="Résolvez des énigmes immersives en équipe, dans des univers où chaque seconde compte."
+    filters={[
+      { href: "/escapes", label: "Tout" },
+      { href: "/escapes/arvi", label: "ARVI VR" },
+      { href: "/escapes/ubisoft", label: "Ubisoft" },
+    ]}
+  >
     <GameList experiences={escapes} />
   </GamesLayout>
 </BaseLayout>

@@ -291,12 +291,7 @@ import DatePicker from "../../components/DatePicker.astro";
 
 <script>
   // @ts-nocheck
-  import { createClient } from '@supabase/supabase-js';
-
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+  import { supabase } from '../../lib/supabase.js';
 
   // Helper : toutes les écritures admin passent par la fonction serveur
   async function adminDb(action, params = {}) {
@@ -1161,8 +1156,18 @@ import DatePicker from "../../components/DatePicker.astro";
       let filaireBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'filaire').map(rb => ({ box_id: rb.box_id })) ?? [];
       let sansFillBoxes = modalRes.reservation_boxes?.filter(rb => rb.boxes?.type === 'sans_fil').map(rb => ({ box_id: rb.box_id })) ?? [];
 
+      // Les deux disponibilités sont indépendantes : on les vérifie en parallèle
+      const [filaireResult, sansFilResult] = await Promise.all([
+        needFilaire
+          ? supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'filaire' })
+          : Promise.resolve(null),
+        needSansFil
+          ? supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'sans_fil' })
+          : Promise.resolve(null),
+      ]);
+
       if (needFilaire) {
-        const { data, error } = await supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'filaire' });
+        const { data, error } = filaireResult;
         if (error || (data?.length ?? 0) < 6) {
           const errEl = document.getElementById('modal-edit-error');
           errEl.textContent = 'L\'espace VR Filaire n\'est pas disponible sur ce créneau.';
@@ -1173,7 +1178,7 @@ import DatePicker from "../../components/DatePicker.astro";
         filaireBoxes = data;
       }
       if (needSansFil) {
-        const { data, error } = await supabase.rpc('get_boxes_disponibles', { p_debut: newDebut.toISOString(), p_fin_blocage: newFinBlocage.toISOString(), p_vr_type: 'sans_fil' });
+        const { data, error } = sansFilResult;
         if (error || !(data?.length > 0)) {
           const errEl = document.getElementById('modal-edit-error');
           errEl.textContent = 'L\'espace VR Sans Fil n\'est pas disponible sur ce créneau.';

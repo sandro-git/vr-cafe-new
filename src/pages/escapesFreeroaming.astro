@@ -7,24 +7,13 @@ import GameList from "../components/GameList.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GamesLayout from "../layouts/GamesLayout.astro";
 
-import { sanityClient } from "sanity:client";
+import { loadQuery } from "../sanity/lib/load-query";
+import { ESCAPE_FREEROAMING_QUERY } from "../sanity/lib/queries";
+import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
-const escapeFreeroaming =
-  await sanityClient.fetch(`*[_type == "games" && tag->title == "escapeFreeroaming"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name, title},
-  players,
-  duration,
-  slug
-}`);
-// This fetches all games with the tag "jeuxVR" from Sanity
+const { data: escapeFreeroaming } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: ESCAPE_FREEROAMING_QUERY });
 
 const schema = graph([
   businessNode,
@@ -41,7 +30,11 @@ const schema = graph([
   description="Vivez des escape games en réalité virtuelle sans fil à Canet-en-Roussillon. Liberté totale, immersion maximale. Réservez près de Perpignan !"
 >
   <JsonLd schema={schema} />
-  <GamesLayout>
+  <GamesLayout
+    title="Escapes VR Sans Fil"
+    highlight="Sans Fil"
+    subtitle="L'escape game nouvelle génération : marchez, explorez et collaborez en totale liberté."
+  >
     <GameList experiences={escapeFreeroaming} />
   </GamesLayout>
 </BaseLayout>

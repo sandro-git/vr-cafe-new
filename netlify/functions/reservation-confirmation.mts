@@ -1,6 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
+import { calcMontant } from "../../src/lib/pricing.ts";
 
 const ALLOWED_ORIGINS = [
   "https://vr-cafe.fr",
@@ -112,11 +113,7 @@ export default async (req: Request, _context: Context) => {
   const heureFinFmt = fin.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
   const vrIcon = vr_type === "sans_fil" ? "📡" : "🔌";
   const vrLabel = vr_type === "sans_fil" ? "VR Sans Fil" : "VR Filaire";
-  const montant = duree_minutes === 30
-    ? 18 * nb_personnes
-    : duree_minutes === 60
-      ? (nb_personnes <= 2 ? 29 : nb_personnes <= 4 ? 27 : 25) * nb_personnes
-      : null;
+  const montant = calcMontant(duree_minutes, nb_personnes);
   const montantFmt = montant !== null ? `${montant} €` : null;
 
   const clientHtml = `

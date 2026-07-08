@@ -30,7 +30,11 @@ const schema = graph([
   description="Explorez notre catalogue de jeux VR : escape games, free roaming, multijoueur. Salle VR à Canet-en-Roussillon près de Perpignan."
 >
   <JsonLd schema={schema} />
-  <GamesLayout>
+  <GamesLayout
+    title="Jeux VR"
+    highlight="Jeux"
+    subtitle="Arcade, sport, action ou contemplatif : explorez notre catalogue de jeux en réalité virtuelle."
+  >
     <GameList experiences={jeux} />
   </GamesLayout>
 </BaseLayout>

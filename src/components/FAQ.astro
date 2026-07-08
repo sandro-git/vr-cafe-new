@@ -1,5 +1,6 @@
 ---
-import { sanityClient } from "sanity:client";
+import { loadQuery } from "../sanity/lib/load-query";
+import { FAQS_QUERY } from "../sanity/lib/queries";
 import JsonLd from "./JsonLd.astro";
 import { faqPage } from "../lib/seo";
 import Button from "./Button.astro";
@@ -68,9 +69,9 @@ const {
 let faqs: FaqItem[] = propFaqs ?? [];
 
 if (faqs.length === 0) {
-  const data = await sanityClient.fetch<{ question: string; reponse: SanityBlock[] }[]>(
-    `*[_type == "faq"] | order(ordre asc) { question, reponse }`
-  );
+  const { data } = await loadQuery<{ question: string; reponse: SanityBlock[] }[]>({
+    query: FAQS_QUERY,
+  });
   if (data?.length > 0) {
     faqs = data.map((f) => ({ question: f.question, answer: extractText(f.reponse) }));
   } else {

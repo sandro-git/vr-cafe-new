@@ -104,12 +104,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
 <script>
   // @ts-nocheck
-  import { createClient } from '@supabase/supabase-js';
-
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+  import { supabase } from '../../lib/supabase.js';
 
   function esc(str) {
     return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
