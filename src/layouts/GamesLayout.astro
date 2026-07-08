@@ -2,6 +2,7 @@
 import PageHeader from "../components/PageHeader.astro";
 
 interface Props {
+  eyebrow?: string;
   title: string;
   highlight: string;
   subtitle: string;
@@ -9,12 +10,12 @@ interface Props {
 }
 
 const currentPath = Astro.url.pathname;
-const { title, highlight, subtitle, filters } = Astro.props;
+const { eyebrow = "Catalogue", title, highlight, subtitle, filters } = Astro.props;
 ---
 
 <section class="bg-[var(--color-surface)]">
   <div class="flex flex-col items-center">
-    <PageHeader eyebrow="Catalogue" title={title} highlight={highlight} subtitle={subtitle} />
+    <PageHeader eyebrow={eyebrow} title={title} highlight={highlight} subtitle={subtitle} />
   </div>
 
   {filters && filters.length > 0 && (

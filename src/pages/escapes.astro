@@ -5,12 +5,14 @@ import GamesLayout from "../layouts/GamesLayout.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 import { loadQuery } from "../sanity/lib/load-query";
-import { ESCAPE_GAME_QUERY } from "../sanity/lib/queries";
-import type { JEUX_VR_QUERY_RESULT } from "../../sanity.types";
+import { GAMES_BY_TAG_QUERY, type GameListItem } from "../sanity/lib/queries";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
 
-const { data: escapes } = await loadQuery<JEUX_VR_QUERY_RESULT>({ query: ESCAPE_GAME_QUERY });
+const { data: escapes } = await loadQuery<GameListItem[]>({
+  query: GAMES_BY_TAG_QUERY,
+  params: { tagTitle: "escapeGame" },
+});
 
 const schema = graph([
   businessNode,

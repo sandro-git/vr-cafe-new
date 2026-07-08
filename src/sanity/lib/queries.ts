@@ -34,46 +34,18 @@ export const CONFIG_QUERY = defineQuery(
   `*[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }`
 );
 
-export const JEUX_VR_QUERY = defineQuery(`*[_type == "games" && tag->title == "jeuxVR"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name, title},
-  players,
-  duration,
-  slug
-}`);
+/** Forme commune des 4 requêtes "jeux par tag" ci-dessous (jeuxVR/escapeGame/freeroaming/escapeFreeroaming). */
+export type GameListItem = {
+  name: string | null;
+  description: string | null;
+  image: { alt: string | null; asset: { url: string | null } | null } | null;
+  tag: { name: string | null; title: string | null } | null;
+  players: string | null;
+  duration: string | null;
+  slug: { current: string } | null;
+};
 
-export const ESCAPE_GAME_QUERY = defineQuery(`*[_type == "games" && tag->title == "escapeGame"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name, title},
-  players,
-  duration,
-  slug
-}`);
-
-export const FREEROAMING_QUERY = defineQuery(`*[_type == "games" && tag->title == "freeroaming"]{
-  name,
-  description,
-  image{
-    alt,
-    asset->{url}
-  },
-  tag->{name, title},
-  players,
-  duration,
-  slug
-}`);
-
-export const ESCAPE_FREEROAMING_QUERY = defineQuery(`*[_type == "games" && tag->title == "escapeFreeroaming"]{
+export const GAMES_BY_TAG_QUERY = defineQuery(`*[_type == "games" && tag->title == $tagTitle]{
   name,
   description,
   image{

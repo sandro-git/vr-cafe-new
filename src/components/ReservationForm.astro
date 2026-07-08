@@ -200,6 +200,8 @@ const {
 
 <script>
   // @ts-nocheck
+  import { calcMontant } from '../lib/pricing';
+
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
 
@@ -702,7 +704,7 @@ const {
         <span class="text-white">${esc(boxNames)}</span>
       </div>
       ${(() => {
-        const montant = calculateMontant(res.duree_minutes, res.nb_personnes);
+        const montant = calcMontant(res.duree_minutes, res.nb_personnes);
         return montant !== null
           ? `<div class="flex justify-between pt-3 border-t border-white/10 mt-1">
         <span class="text-white/55 font-medium">Montant total</span>
@@ -716,14 +718,6 @@ const {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  function calculateMontant(dureeMinutes, nbPersonnes) {
-    if (dureeMinutes === 30) return 18 * nbPersonnes;
-    if (dureeMinutes === 60) {
-      const ppp = nbPersonnes <= 2 ? 29 : nbPersonnes <= 4 ? 27 : 25;
-      return ppp * nbPersonnes;
-    }
-    return null;
-  }
   function isValidEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
   }

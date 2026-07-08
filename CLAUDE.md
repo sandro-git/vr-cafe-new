@@ -112,9 +112,8 @@ public/
 **Requêtes GROQ (`src/sanity/lib/queries.ts`) :**
 - `GAME_PATHS_QUERY` — slugs de tous les jeux (pour `getStaticPaths`)
 - `GAME_BY_SLUG_QUERY` — jeu complet par slug
-- `JEUX_VR_QUERY` — jeux filtrés par tag `jeuxVR`
+- `GAMES_BY_TAG_QUERY` — jeux filtrés par tag (paramètre `$tagTitle` : `jeuxVR`/`escapeGame`/`freeroaming`/`escapeFreeroaming`)
 - `FAQS_QUERY` — FAQ triée par `ordre`
-- `TARIFS_QUERY` — tarifs triés par `ordre`
 
 ### Composants principaux
 

@@ -246,13 +246,19 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       adminMode: (window.__anniversaireMode ?? 'client') === 'admin',
     }}));
 
-    document.addEventListener('datepicker:select', (e) => {
+    // `document` persiste entre navigations View Transitions : on retire l'ancien
+    // listener (d'une précédente exécution du script) avant d'en poser un nouveau.
+    if (window.__anniversaireDatepickerHandler) {
+      document.removeEventListener('datepicker:select', window.__anniversaireDatepickerHandler);
+    }
+    window.__anniversaireDatepickerHandler = (e) => {
       const detail = (e as CustomEvent).detail;
       if (detail.id !== 'dp') return;
       selectedDate = detail.date;
       document.getElementById('date-error').classList.add('hidden');
       checkStep1Valid();
-    });
+    };
+    document.addEventListener('datepicker:select', window.__anniversaireDatepickerHandler);
   }
 
   async function loadConfig() {
@@ -435,8 +441,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     const now = new Date();
     const slots = [];
 
-    // Réservations bloquées manuellement par l'admin pour aujourd'hui
-    if (selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
+    // Réservations bloquées manuellement par l'admin pour aujourd'hui (les admins peuvent outrepasser)
+    if (window.__anniversaireMode !== 'admin' && selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
       return [];
     }
 
@@ -452,27 +458,34 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     return slots;
   }
 
+  // Vérifie que les deux espaces VR (toutes les boxes filaires + 1 box sans-fil) sont libres simultanément.
+  // Partagé entre checkSlotAvailability (recherche) et handleSubmit (vérification anti-race condition finale).
+  async function checkBothSpacesAvailable(debutISO, finBlocageISO) {
+    const [filaireRes, sansFillRes] = await Promise.all([
+      supabase.rpc('get_boxes_disponibles', {
+        p_debut: debutISO,
+        p_fin_blocage: finBlocageISO,
+        p_vr_type: 'filaire',
+      }),
+      supabase.rpc('get_boxes_disponibles', {
+        p_debut: debutISO,
+        p_fin_blocage: finBlocageISO,
+        p_vr_type: 'sans_fil',
+      }),
+    ]);
+    if (filaireRes.error || sansFillRes.error) return null;
+    const filaireBoxes = filaireRes.data ?? [];
+    const sansFillBoxes = sansFillRes.data ?? [];
+    // Besoin de toutes les boxes filaires + la box sans-fil
+    if (filaireBoxes.length < appConfig.nb_boxes || sansFillBoxes.length === 0) return null;
+    return { filaireBoxes, sansFillBoxes: sansFillBoxes.slice(0, 1) };
+  }
+
   async function checkSlotAvailability(slot) {
     if (selectedVrType === 'both') {
-      // Les deux espaces doivent être libres simultanément
-      const [filaireRes, sansFillRes] = await Promise.all([
-        supabase.rpc('get_boxes_disponibles', {
-          p_debut: slot.debut.toISOString(),
-          p_fin_blocage: slot.finBlocage.toISOString(),
-          p_vr_type: 'filaire',
-        }),
-        supabase.rpc('get_boxes_disponibles', {
-          p_debut: slot.debut.toISOString(),
-          p_fin_blocage: slot.finBlocage.toISOString(),
-          p_vr_type: 'sans_fil',
-        }),
-      ]);
-      if (filaireRes.error || sansFillRes.error) return null;
-      const filaireBoxes = filaireRes.data ?? [];
-      const sansFillBoxes = sansFillRes.data ?? [];
-      // Besoin des 6 boxes filaires + la box sans-fil
-      if (filaireBoxes.length < 6 || sansFillBoxes.length === 0) return null;
-      return { ...slot, boxes: filaireBoxes, boxesSansFil: sansFillBoxes.slice(0, 1) };
+      const both = await checkBothSpacesAvailable(slot.debut.toISOString(), slot.finBlocage.toISOString());
+      if (!both) return null;
+      return { ...slot, boxes: both.filaireBoxes, boxesSansFil: both.sansFillBoxes };
     }
 
     const { data, error } = await supabase.rpc('get_boxes_disponibles', {
@@ -579,26 +592,15 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       let finalBoxes = [], finalBoxesSansFil = [];
 
       if (selectedVrType === 'both') {
-        const [fr, sfr] = await Promise.all([
-          supabase.rpc('get_boxes_disponibles', {
-            p_debut: selectedSlot.debut.toISOString(),
-            p_fin_blocage: selectedSlot.finBlocage.toISOString(),
-            p_vr_type: 'filaire',
-          }),
-          supabase.rpc('get_boxes_disponibles', {
-            p_debut: selectedSlot.debut.toISOString(),
-            p_fin_blocage: selectedSlot.finBlocage.toISOString(),
-            p_vr_type: 'sans_fil',
-          }),
-        ]);
-        if (fr.error || sfr.error || (fr.data?.length ?? 0) < 6 || !(sfr.data?.length > 0)) {
+        const both = await checkBothSpacesAvailable(selectedSlot.debut.toISOString(), selectedSlot.finBlocage.toISOString());
+        if (!both) {
           showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
           btn.disabled = false;
           btn.textContent = 'Confirmer la réservation';
           return;
         }
-        finalBoxes = fr.data;
-        finalBoxesSansFil = sfr.data.slice(0, 1);
+        finalBoxes = both.filaireBoxes;
+        finalBoxesSansFil = both.sansFillBoxes;
       } else {
         const { data: boxes, error: checkErr } = await supabase.rpc('get_boxes_disponibles', {
           p_debut: selectedSlot.debut.toISOString(),
@@ -865,5 +867,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
-  init();
+  // Se réexécute sur astro:page-load (couvre aussi le chargement initial) pour
+  // rester fonctionnel après une navigation View Transitions vers cette page.
+  document.addEventListener('astro:page-load', init);
 </script>

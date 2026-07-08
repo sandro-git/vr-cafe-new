@@ -45,7 +45,7 @@ if (!game) {
     schema={graph([
       breadcrumb([
         { name: "Accueil", path: "/" },
-        { name: game.name!, path: `/${params.slug}/` },
+        { name: game.name ?? params.slug!, path: `/${params.slug}/` },
       ]),
     ])}
   />

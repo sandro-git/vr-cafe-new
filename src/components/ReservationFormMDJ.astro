@@ -198,7 +198,6 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
   // ── Constantes MDJ ────────────────────────────────────────────────────────
   const CAPACITE_PAR_CRENEAU = 12; // 6 filaires + 6 sans-fil
-  const NB_FILAIRES_REQUIS = 6;
 
   // ── État ──────────────────────────────────────────────────────────────────
   let appConfig = { heure_ouverture: '10:00', heure_fermeture: '20:00', buffer_minutes: 30, nb_boxes: 6 };
@@ -252,8 +251,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     if ('heure_ouverture' in first) {
       appConfig.heure_ouverture = first.heure_ouverture ?? appConfig.heure_ouverture;
       appConfig.heure_fermeture = first.heure_fermeture ?? appConfig.heure_fermeture;
-      appConfig.buffer_minutes = first.buffer_minutes ?? appConfig.buffer_minutes;
-      appConfig.nb_boxes = first.nb_boxes ?? appConfig.nb_boxes;
+      appConfig.buffer_minutes = parseInt(String(first.buffer_minutes ?? appConfig.buffer_minutes)) || appConfig.buffer_minutes;
+      appConfig.nb_boxes = parseInt(String(first.nb_boxes ?? appConfig.nb_boxes)) || appConfig.nb_boxes;
       return;
     }
     data.forEach(row => {
@@ -420,7 +419,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     const now = new Date();
     const slots = [];
 
-    if (selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
+    // Réservations bloquées manuellement par l'admin pour aujourd'hui (les admins peuvent outrepasser)
+    if (window.__mdjMode !== 'admin' && selectedDate === todayStr && appConfig.reservations_bloquees_date === todayStr) {
       return [];
     }
 
@@ -438,24 +438,32 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     return slots;
   }
 
-  async function checkSlotAvailability(slot) {
+  // Vérifie que les deux espaces VR (boxes filaires requises + 1 box sans-fil) sont libres simultanément.
+  // Partagé entre checkSlotAvailability (recherche) et handleSubmit (vérification anti-race condition finale).
+  async function checkBothSpacesAvailable(debutISO, finBlocageISO) {
     const [filaireRes, sansFillRes] = await Promise.all([
       supabase.rpc('get_boxes_disponibles', {
-        p_debut: slot.debut.toISOString(),
-        p_fin_blocage: slot.finBlocage.toISOString(),
+        p_debut: debutISO,
+        p_fin_blocage: finBlocageISO,
         p_vr_type: 'filaire',
       }),
       supabase.rpc('get_boxes_disponibles', {
-        p_debut: slot.debut.toISOString(),
-        p_fin_blocage: slot.finBlocage.toISOString(),
+        p_debut: debutISO,
+        p_fin_blocage: finBlocageISO,
         p_vr_type: 'sans_fil',
       }),
     ]);
     if (filaireRes.error || sansFillRes.error) return null;
     const filaireBoxes = filaireRes.data ?? [];
     const sansFillBoxes = sansFillRes.data ?? [];
-    if (filaireBoxes.length < NB_FILAIRES_REQUIS || sansFillBoxes.length === 0) return null;
-    return { ...slot, boxes: filaireBoxes, boxesSansFil: sansFillBoxes.slice(0, 1) };
+    if (filaireBoxes.length < appConfig.nb_boxes || sansFillBoxes.length === 0) return null;
+    return { filaireBoxes, sansFillBoxes: sansFillBoxes.slice(0, 1) };
+  }
+
+  async function checkSlotAvailability(slot) {
+    const both = await checkBothSpacesAvailable(slot.debut.toISOString(), slot.finBlocage.toISOString());
+    if (!both) return null;
+    return { ...slot, boxes: both.filaireBoxes, boxesSansFil: both.sansFillBoxes };
   }
 
   function renderSlots(slots) {
@@ -528,26 +536,15 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     btn.textContent = 'Réservation en cours...';
 
     try {
-      const [fr, sfr] = await Promise.all([
-        supabase.rpc('get_boxes_disponibles', {
-          p_debut: selectedSlot.debut.toISOString(),
-          p_fin_blocage: selectedSlot.finBlocage.toISOString(),
-          p_vr_type: 'filaire',
-        }),
-        supabase.rpc('get_boxes_disponibles', {
-          p_debut: selectedSlot.debut.toISOString(),
-          p_fin_blocage: selectedSlot.finBlocage.toISOString(),
-          p_vr_type: 'sans_fil',
-        }),
-      ]);
-      if (fr.error || sfr.error || (fr.data?.length ?? 0) < NB_FILAIRES_REQUIS || !(sfr.data?.length > 0)) {
+      const both = await checkBothSpacesAvailable(selectedSlot.debut.toISOString(), selectedSlot.finBlocage.toISOString());
+      if (!both) {
         showError('form-error', 'Ce créneau vient d\'être réservé. Veuillez choisir un autre créneau.');
         btn.disabled = false;
         btn.textContent = 'Confirmer la réservation';
         return;
       }
-      const finalBoxes = fr.data;
-      const finalBoxesSansFil = sfr.data.slice(0, 1);
+      const finalBoxes = both.filaireBoxes;
+      const finalBoxesSansFil = both.sansFillBoxes;
 
       const { data: res, error: resErr } = await supabase
         .from('reservations')
@@ -556,6 +553,9 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           client_email: email,
           client_telephone: tel,
           nb_personnes: selectedNb,
+          // Durée totale bloquée (peut dépasser 60 min si plusieurs sessions enchaînées) : planning.astro
+          // s'en sert pour la hauteur des blocs. Les groupes MDJ sont facturés hors plateforme (devis manuel),
+          // donc calcMontant renvoie null pour ces durées et n'affiche pas de prix — c'est voulu.
           duree_minutes: selectedSlot.dureeBlocage,
           creneau_debut: selectedSlot.debut.toISOString(),
           creneau_fin: selectedSlot.fin.toISOString(),
