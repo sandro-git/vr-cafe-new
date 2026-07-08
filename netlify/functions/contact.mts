@@ -5,6 +5,7 @@ const ALLOWED_ORIGINS = [
   "https://vr-cafe.fr",
   "https://www.vr-cafe.fr",
   "http://localhost:4321",
+  "http://localhost:8888",
 ];
 
 function escHtml(str: string): string {

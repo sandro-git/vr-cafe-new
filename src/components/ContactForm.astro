@@ -174,11 +174,17 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
               id="message"
               name="message"
               class={`${fieldClass} resize-none grow min-h-50`}
-              placeholder="Décrivez votre demande..."></textarea>
+              placeholder="Décrivez votre demande..."
+              required></textarea>
+          </div>
+
+          <!-- Message d'erreur (caché par défaut) -->
+          <div id="contact-error" class="hidden rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-300" role="alert">
+            Une erreur est survenue. Veuillez réessayer ou nous contacter directement par email.
           </div>
 
           <!-- Submit Button -->
-          <Button type="submit" variant="primary" size="lg" class="w-full">
+          <Button type="submit" variant="primary" size="lg" class="w-full" id="contact-submit">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
             </svg>
@@ -189,3 +195,43 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
     </div>
   </div>
 </section>
+
+<script>
+  function initContactForm() {
+    const form = document.querySelector<HTMLFormElement>('form[name="contact"]');
+    if (!form || form.dataset.fetchBound) return;
+    form.dataset.fetchBound = "true";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const btn = form.querySelector<HTMLButtonElement>("#contact-submit");
+      const errorEl = form.querySelector<HTMLElement>("#contact-error");
+
+      if (errorEl) errorEl.classList.add("hidden");
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          redirect: "manual",
+        });
+
+        // 303 = succès, la fonction redirige vers /contact/merci
+        if (res.status === 303 || res.ok) {
+          window.location.href = "/contact/merci";
+          return;
+        }
+
+        throw new Error(`HTTP ${res.status}`);
+      } catch {
+        if (errorEl) errorEl.classList.remove("hidden");
+        if (btn) btn.disabled = false;
+      }
+    });
+  }
+
+  initContactForm();
+  document.addEventListener("astro:page-load", initContactForm);
+</script>
