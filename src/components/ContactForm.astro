@@ -8,7 +8,7 @@ const {
 } = Astro.props;
 
 // Génération du token CSRF (HMAC-SHA256, fenêtre de 5 minutes)
-const secret = import.meta.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
+const secret = process.env.ADMIN_PASSWORD || import.meta.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
 const window5m = Math.floor(Date.now() / 300000);
 const enc = new TextEncoder();
 const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
