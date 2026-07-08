@@ -218,8 +218,8 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
           redirect: "manual",
         });
 
-        // 303 = succès, la fonction redirige vers /contact/merci
-        if (res.status === 303 || res.ok) {
+        // opaqueredirect = le serveur a répondu 303 (redirect manuel intercepté par le browser)
+        if (res.type === "opaqueredirect" || res.ok) {
           window.location.href = "/contact/merci";
           return;
         }

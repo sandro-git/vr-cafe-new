@@ -5,6 +5,7 @@
   "packageManager": "bun@1.3.2",
   "scripts": {
     "dev": "astro dev",
+    "dev:netlify": "astro dev; astro dev logs --follow",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
