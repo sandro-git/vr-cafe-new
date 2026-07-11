@@ -6,10 +6,12 @@ const FAKE_EMAIL_DOMAINS = [
   "example.net",
   "test.com",
   "test.fr",
+  "mdj.fr",
 ];
 
-// Le placeholder affiché dans les champs téléphone des formulaires ("06 12 34 56 78").
-const FAKE_PHONE_NUMBERS = ["0612345678"];
+// Le placeholder affiché dans les champs téléphone des formulaires ("06 12 34 56 78")
+// et une variante à un chiffre près, déjà vues sur des réservations bidons.
+const FAKE_PHONE_NUMBERS = ["0612345678", "0612346878"];
 
 export function isValidEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());

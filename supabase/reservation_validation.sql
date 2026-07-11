@@ -25,7 +25,7 @@ BEGIN
   v_email_domain := lower(split_part(NEW.client_email, '@', 2));
   IF v_email_domain = ANY (ARRAY[
     'exemple.com', 'exemple.fr', 'example.com', 'example.org', 'example.net',
-    'test.com', 'test.fr'
+    'test.com', 'test.fr', 'mdj.fr'
   ]) THEN
     RAISE EXCEPTION 'Merci de renseigner une vraie adresse email.';
   END IF;
@@ -41,7 +41,7 @@ BEGIN
   v_phone_digits := regexp_replace(NEW.client_telephone, '[\s.-]', '', 'g');
   v_phone_digits := regexp_replace(v_phone_digits, '^(?:\+33|0033)', '0');
 
-  IF v_phone_digits = '0612345678' THEN
+  IF v_phone_digits IN ('0612345678', '0612346878') THEN
     RAISE EXCEPTION 'Merci de renseigner votre vrai numéro de téléphone.';
   END IF;
 
