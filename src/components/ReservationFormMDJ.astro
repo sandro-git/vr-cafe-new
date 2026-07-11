@@ -120,9 +120,9 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         </div>
 
         <div class="relative">
-          <label for="client-email" class="block text-sm font-medium text-white/70 mb-1.5">Adresse email *</label>
+          <label for="client-email" class="block text-sm font-medium text-white/70 mb-1.5">Adresse email {mode === 'admin' ? '(optionnel)' : '*'}</label>
           <input
-            type="email" id="client-email" required placeholder="jean@exemple.fr"
+            type="email" id="client-email" required={mode !== 'admin'} placeholder="jean@exemple.fr"
             autocomplete={mode === 'admin' ? 'off' : 'email'}
             class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
           />
@@ -513,11 +513,11 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     const telCountry = (document.getElementById('client-tel-country') as HTMLSelectElement).value;
     const notes = (document.getElementById('client-notes') as HTMLTextAreaElement).value.trim();
 
-    if (!nom || !email || !tel) {
+    if (!nom || !tel || (mode !== 'admin' && !email)) {
       showError('form-error', 'Veuillez remplir tous les champs obligatoires.');
       return;
     }
-    const contactError = validateClientInfo(email, tel, telCountry);
+    const contactError = validateClientInfo(email, tel, telCountry, { requireEmail: mode !== 'admin' });
     if (contactError) {
       showError('form-error', contactError);
       return;
@@ -543,7 +543,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         .from('reservations')
         .insert({
           client_nom: nom,
-          client_email: email,
+          client_email: email || null,
           client_telephone: telFormatted,
           nb_personnes: selectedNb,
           // Durée totale bloquée (peut dépasser 60 min si plusieurs sessions enchaînées) : planning.astro

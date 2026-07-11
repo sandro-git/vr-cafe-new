@@ -27,18 +27,20 @@ DECLARE
   v_descending boolean;
   i int;
 BEGIN
-  -- Email : format
-  IF NEW.client_email IS NULL OR NEW.client_email !~* '^[^\s@]+@[^\s@]+\.[^\s@]{2,}$' THEN
-    RAISE EXCEPTION 'Adresse email invalide.';
-  END IF;
+  -- Email : optionnel (réservations admin saisies par téléphone, sans email connu).
+  -- S'il est fourni, il doit avoir un format valide et un domaine non-bidon.
+  IF NEW.client_email IS NOT NULL AND NEW.client_email <> '' THEN
+    IF NEW.client_email !~* '^[^\s@]+@[^\s@]+\.[^\s@]{2,}$' THEN
+      RAISE EXCEPTION 'Adresse email invalide.';
+    END IF;
 
-  -- Email : domaines bidons connus
-  v_email_domain := lower(split_part(NEW.client_email, '@', 2));
-  IF v_email_domain = ANY (ARRAY[
-    'exemple.com', 'exemple.fr', 'example.com', 'example.org', 'example.net',
-    'test.com', 'test.fr', 'mdj.fr'
-  ]) THEN
-    RAISE EXCEPTION 'Merci de renseigner une vraie adresse email.';
+    v_email_domain := lower(split_part(NEW.client_email, '@', 2));
+    IF v_email_domain = ANY (ARRAY[
+      'exemple.com', 'exemple.fr', 'example.com', 'example.org', 'example.net',
+      'test.com', 'test.fr', 'mdj.fr'
+    ]) THEN
+      RAISE EXCEPTION 'Merci de renseigner une vraie adresse email.';
+    END IF;
   END IF;
 
   -- Téléphone : format plausible — soit français historique (0X XX XX XX XX,

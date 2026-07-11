@@ -38,7 +38,7 @@ export default async (req: Request, _context: Context) => {
 
   let body: {
     client_nom: string;
-    client_email: string;
+    client_email: string | null;
     client_telephone: string;
     nb_personnes: number;
     duree_minutes: number;
@@ -73,10 +73,10 @@ export default async (req: Request, _context: Context) => {
     notes,
   } = body;
 
-  // Validation des champs obligatoires
+  // Validation des champs obligatoires (l'email est optionnel — réservations admin par téléphone)
   if (
     !client_nom || typeof client_nom !== "string" || client_nom.length > 200 ||
-    !client_email || !isValidEmail(client_email) || isFakeEmail(client_email) || client_email.length > 254 ||
+    (client_email && (!isValidEmail(client_email) || isFakeEmail(client_email) || client_email.length > 254)) ||
     !client_telephone || typeof client_telephone !== "string" || !isValidPhone(client_telephone) || isFakePhone(client_telephone) ||
     !ref || typeof ref !== "string" || ref.length > 100 ||
     !creneau_debut || !creneau_fin ||
@@ -170,7 +170,7 @@ export default async (req: Request, _context: Context) => {
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 16px; color: #1e293b;">Client</h3>
         <p style="margin: 4px 0;"><strong>Nom :</strong> ${escHtml(client_nom)}</p>
-        <p style="margin: 4px 0;"><strong>Email :</strong> <a href="mailto:${escHtml(client_email)}">${escHtml(client_email)}</a></p>
+        <p style="margin: 4px 0;"><strong>Email :</strong> ${client_email ? `<a href="mailto:${escHtml(client_email)}">${escHtml(client_email)}</a>` : "— (non renseigné)"}</p>
         <p style="margin: 4px 0;"><strong>Téléphone :</strong> ${escHtml(client_telephone)}</p>
       </div>
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
@@ -192,46 +192,49 @@ export default async (req: Request, _context: Context) => {
   try {
     const mailjet = new Mailjet({ apiKey, apiSecret });
 
-    await mailjet.post("send", { version: "v3.1" }).request({
-      Messages: [
-        {
-          From: { Email: senderEmail, Name: "VR Café" },
-          To: [{ Email: client_email, Name: client_nom }],
-          Subject: `Confirmation de réservation VR Café - #${ref}`,
-          HTMLPart: clientHtml,
-        },
-        {
-          From: { Email: senderEmail, Name: "VR Café" },
-          To: [{ Email: "sandro@vr-cafe.fr", Name: "VR Café Admin" }],
-          Subject: adminSubject,
-          HTMLPart: adminHtml,
-          ReplyTo: { Email: client_email, Name: client_nom },
-        },
-      ],
+    const messages = [];
+    if (client_email) {
+      messages.push({
+        From: { Email: senderEmail, Name: "VR Café" },
+        To: [{ Email: client_email, Name: client_nom }],
+        Subject: `Confirmation de réservation VR Café - #${ref}`,
+        HTMLPart: clientHtml,
+      });
+    }
+    messages.push({
+      From: { Email: senderEmail, Name: "VR Café" },
+      To: [{ Email: "sandro@vr-cafe.fr", Name: "VR Café Admin" }],
+      Subject: adminSubject,
+      HTMLPart: adminHtml,
+      ...(client_email ? { ReplyTo: { Email: client_email, Name: client_nom } } : {}),
     });
 
-    console.log(`Reservation emails sent for ref ${ref} to ${client_email}`);
+    await mailjet.post("send", { version: "v3.1" }).request({ Messages: messages });
+
+    console.log(`Reservation emails sent for ref ${ref}${client_email ? ` to ${client_email}` : " (pas d'email client)"}`);
   } catch (error) {
     console.error("Failed to send reservation emails:", error);
     // Ne pas bloquer la confirmation — l'email est secondaire
   }
 
-  // Sync Mailjet contacts (fire-and-forget)
-  (async () => {
-    try {
-      await syncClientToMailjet({
-        nom: client_nom,
-        email: client_email,
-        telephone: client_telephone,
-        vrType: vr_type,
-        creneauDebut: creneau_debut,
-        apiKey: apiKey!,
-        apiSecret: apiSecret!,
-      });
-    } catch (e) {
-      console.error("Mailjet contacts sync error:", e);
-    }
-  })();
+  // Sync Mailjet contacts (fire-and-forget) — nécessite un email, la clé de contact Mailjet
+  if (client_email) {
+    (async () => {
+      try {
+        await syncClientToMailjet({
+          nom: client_nom,
+          email: client_email,
+          telephone: client_telephone,
+          vrType: vr_type,
+          creneauDebut: creneau_debut,
+          apiKey: apiKey!,
+          apiSecret: apiSecret!,
+        });
+      } catch (e) {
+        console.error("Mailjet contacts sync error:", e);
+      }
+    })();
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

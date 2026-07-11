@@ -92,9 +92,19 @@ export function isFakePhone(v: string, country?: PhoneCountryCode): boolean {
   return false;
 }
 
-export function validateClientInfo(email: string, telephone: string, country?: PhoneCountryCode): string | null {
-  if (!isValidEmail(email)) return "Adresse email invalide.";
-  if (isFakeEmail(email)) return "Merci de renseigner une vraie adresse email.";
+export function validateClientInfo(
+  email: string,
+  telephone: string,
+  country?: PhoneCountryCode,
+  options?: { requireEmail?: boolean }
+): string | null {
+  const requireEmail = options?.requireEmail ?? true;
+  if (email) {
+    if (!isValidEmail(email)) return "Adresse email invalide.";
+    if (isFakeEmail(email)) return "Merci de renseigner une vraie adresse email.";
+  } else if (requireEmail) {
+    return "Adresse email invalide.";
+  }
   if (!isValidPhone(telephone, country)) return "Numéro de téléphone invalide pour le pays sélectionné.";
   if (isFakePhone(telephone, country)) return "Merci de renseigner votre vrai numéro de téléphone.";
   return null;

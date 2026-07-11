@@ -48,6 +48,7 @@ export async function syncClientToMailjet(params: {
   apiSecret: string;
 }): Promise<void> {
   const { nom, email, telephone, vrType, creneauDebut, apiKey, apiSecret } = params;
+  if (!email) return; // Mailjet utilise l'email comme clé de contact — rien à synchroniser sans email
   const listId = getEnv("MAILJET_LIST_ID");
   const mailjet = new Mailjet({ apiKey, apiSecret });
 
