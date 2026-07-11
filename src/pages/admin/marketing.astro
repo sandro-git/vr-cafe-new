@@ -53,14 +53,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
               <h2 class="text-lg font-semibold text-white">🏆 Clients fidèles</h2>
               <p class="text-white/55 text-sm mt-0.5">5 réservations confirmées ou plus</p>
             </div>
-            <a
+            <button
+              type="button"
               id="btn-mailjet-fideles"
-              href="https://app.mailjet.com/campaigns/create"
-              target="_blank"
-              class="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-600)]/20 hover:bg-[var(--color-brand-600)]/35 border border-[var(--color-brand-500)]/50 text-[var(--color-brand-200)] text-sm rounded-xl transition-colors"
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-600)]/20 hover:bg-[var(--color-brand-600)]/35 border border-[var(--color-brand-500)]/50 text-[var(--color-brand-200)] text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Campagne Mailjet ↗
-            </a>
+              <span class="btn-label">Campagne Mailjet ↗</span>
+            </button>
           </div>
           <div id="list-fideles" class="space-y-2"></div>
           <p id="empty-fideles" class="hidden text-white/40 text-sm py-4">Aucun client fidèle pour l'instant.</p>
@@ -73,13 +72,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
               <h2 class="text-lg font-semibold text-white">💤 Clients inactifs</h2>
               <p class="text-white/55 text-sm mt-0.5">Aucune réservation depuis plus de 3 mois</p>
             </div>
-            <a
-              href="https://app.mailjet.com/campaigns/create"
-              target="_blank"
-              class="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-600)]/20 hover:bg-[var(--color-brand-600)]/35 border border-[var(--color-brand-500)]/50 text-[var(--color-brand-200)] text-sm rounded-xl transition-colors"
+            <button
+              type="button"
+              id="btn-mailjet-inactifs"
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-600)]/20 hover:bg-[var(--color-brand-600)]/35 border border-[var(--color-brand-500)]/50 text-[var(--color-brand-200)] text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Campagne Mailjet ↗
-            </a>
+              <span class="btn-label">Campagne Mailjet ↗</span>
+            </button>
           </div>
           <div id="list-inactifs" class="space-y-2"></div>
           <p id="empty-inactifs" class="hidden text-white/40 text-sm py-4">Aucun client inactif pour l'instant.</p>
@@ -137,6 +136,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     return div;
   }
 
+  let segmentData = { fideles: [], inactifs: [] };
+
   async function load() {
     const { data, error } = await supabase
       .from('reservations')
@@ -187,6 +188,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const inactifs = clients.filter(c => c.isInactif).sort((a, b) => (a.derniereResa ?? 0) - (b.derniereResa ?? 0));
     const nouveaux = clients.filter(c => c.isNouveau).sort((a, b) => b.premiereResa - a.premiereResa);
 
+    segmentData.fideles = fideles;
+    segmentData.inactifs = inactifs;
+
     // Compteurs
     document.getElementById('stat-total').textContent    = clients.length;
     document.getElementById('stat-fideles').textContent  = fideles.length;
@@ -226,6 +230,48 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('state-loading').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
   }
+
+  async function createCampaign(segment, btn) {
+    const clients = segmentData[segment];
+    if (!clients || !clients.length) {
+      alert('Aucun client dans ce segment pour le moment.');
+      return;
+    }
+    const label = btn.querySelector('.btn-label');
+    const originalText = label.textContent;
+    btn.disabled = true;
+    label.textContent = 'Création en cours...';
+
+    // Ouvrir l'onglet immédiatement (dans le geste utilisateur) pour éviter le blocage
+    // de pop-up des navigateurs — sa destination est fixée une fois la requête terminée.
+    const popup = window.open('', '_blank');
+
+    try {
+      const res = await fetch('/api/admin/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_campaign',
+          segment,
+          clients: clients.map(c => ({ nom: c.nom, email: c.email })),
+        }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || out.error) throw new Error(out.error || `Erreur ${res.status}`);
+
+      if (popup) popup.location.href = 'https://app.mailjet.com/campaigns';
+      alert(`Brouillon créé : liste "${out.listName}" (${out.contactsAdded} contact(s) ajouté(s)). Ouverture de Mailjet...`);
+    } catch (err) {
+      if (popup) popup.close();
+      alert('Échec de la création de la campagne : ' + err.message);
+    } finally {
+      btn.disabled = false;
+      label.textContent = originalText;
+    }
+  }
+
+  document.getElementById('btn-mailjet-fideles').addEventListener('click', (e) => createCampaign('fideles', e.currentTarget));
+  document.getElementById('btn-mailjet-inactifs').addEventListener('click', (e) => createCampaign('inactifs', e.currentTarget));
 
   load();
 </script>

@@ -1,6 +1,6 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
-import { updateClientInMailjet, deleteClientFromMailjet } from "../lib/mailjet-contacts.ts";
+import { updateClientInMailjet, deleteClientFromMailjet, createSegmentCampaign } from "../lib/mailjet-contacts.ts";
 
 function mailjetCreds(): { apiKey: string; apiSecret: string } | null {
   const apiKey = process.env.MAILJET_API_KEY;
@@ -21,6 +21,13 @@ function makeSupabase() {
     process.env.PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+// Instancié à la demande : certaines actions (ex. create_campaign) ne touchent pas Supabase
+// et ne doivent pas échouer si SUPABASE_SERVICE_ROLE_KEY est absente.
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  return (_supabase ??= makeSupabase());
 }
 
 function json(data: unknown, status = 200) {
@@ -46,7 +53,6 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const supabase = makeSupabase();
   const { action } = body;
 
   switch (action) {
@@ -54,7 +60,7 @@ export default async (req: Request, _context: Context) => {
     case "update_reservation": {
       const { id, fields } = body as { id: string; fields: Record<string, unknown> };
       if (!id || !fields) return json({ error: "Missing id or fields" }, 400);
-      const { error } = await supabase.from("reservations").update(fields).eq("id", id);
+      const { error } = await getSupabase().from("reservations").update(fields).eq("id", id);
       if (error) return json({ error: error.message }, 500);
       return json({ ok: true });
     }
@@ -69,7 +75,7 @@ export default async (req: Request, _context: Context) => {
         return json({ error: "Missing id or fields" }, 400);
 
       // 0. Récupérer la fiche actuelle (pour l'ancien email — clé Mailjet)
-      const { data: before, error: beforeErr } = await supabase
+      const { data: before, error: beforeErr } = await getSupabase()
         .from("clients")
         .select("nom, email, telephone")
         .eq("id", id)
@@ -77,7 +83,7 @@ export default async (req: Request, _context: Context) => {
       if (beforeErr) return json({ error: beforeErr.message }, 500);
 
       // 1. Mettre à jour la fiche client
-      const { error: cErr } = await supabase
+      const { error: cErr } = await getSupabase()
         .from("clients")
         .update({ ...fields, updated_at: new Date().toISOString() })
         .eq("id", id);
@@ -89,7 +95,7 @@ export default async (req: Request, _context: Context) => {
       if (fields.email !== undefined) resaFields.client_email = fields.email;
       if (fields.telephone !== undefined) resaFields.client_telephone = fields.telephone;
       if (Object.keys(resaFields).length) {
-        const { error: rErr } = await supabase
+        const { error: rErr } = await getSupabase()
           .from("reservations")
           .update(resaFields)
           .eq("client_id", id);
@@ -120,14 +126,14 @@ export default async (req: Request, _context: Context) => {
       if (!id) return json({ error: "Missing id" }, 400);
 
       // 0. Récupérer l'email du client (clé Mailjet) avant suppression
-      const { data: before } = await supabase
+      const { data: before } = await getSupabase()
         .from("clients")
         .select("email")
         .eq("id", id)
         .single();
 
       // 1. Récupérer les réservations du client
-      const { data: resas, error: selErr } = await supabase
+      const { data: resas, error: selErr } = await getSupabase()
         .from("reservations")
         .select("id")
         .eq("client_id", id);
@@ -137,7 +143,7 @@ export default async (req: Request, _context: Context) => {
 
       // 2. Supprimer explicitement les box associées (ne pas dépendre de la cascade)
       if (ids.length) {
-        const { error: boxErr } = await supabase
+        const { error: boxErr } = await getSupabase()
           .from("reservation_boxes")
           .delete()
           .in("reservation_id", ids);
@@ -145,7 +151,7 @@ export default async (req: Request, _context: Context) => {
       }
 
       // 3. Supprimer le client (cascade vers ses réservations via client_id)
-      const { error } = await supabase.from("clients").delete().eq("id", id);
+      const { error } = await getSupabase().from("clients").delete().eq("id", id);
       if (error) return json({ error: error.message }, 500);
 
       // 4. Suppression définitive (RGPD) du contact Mailjet (non bloquant)
@@ -167,7 +173,7 @@ export default async (req: Request, _context: Context) => {
         date_debut: string; date_fin: string; label?: string;
       };
       if (!date_debut || !date_fin) return json({ error: "Missing dates" }, 400);
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from("periodes_vacances")
         .insert({ date_debut, date_fin, label: label || null });
       if (error) return json({ error: error.message, code: error.code }, 500);
@@ -177,7 +183,7 @@ export default async (req: Request, _context: Context) => {
     case "delete_vacances": {
       const { id } = body as { id: string };
       if (!id) return json({ error: "Missing id" }, 400);
-      const { error } = await supabase.from("periodes_vacances").delete().eq("id", id);
+      const { error } = await getSupabase().from("periodes_vacances").delete().eq("id", id);
       if (error) return json({ error: error.message }, 500);
       return json({ ok: true });
     }
@@ -186,7 +192,7 @@ export default async (req: Request, _context: Context) => {
     case "insert_fermeture": {
       const { date, motif } = body as { date: string; motif?: string };
       if (!date) return json({ error: "Missing date" }, 400);
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from("jours_fermeture")
         .insert({ date, motif: motif || null });
       if (error) return json({ error: error.message, code: error.code }, 500);
@@ -196,7 +202,7 @@ export default async (req: Request, _context: Context) => {
     case "delete_fermeture": {
       const { id } = body as { id: string };
       if (!id) return json({ error: "Missing id" }, 400);
-      const { error } = await supabase.from("jours_fermeture").delete().eq("id", id);
+      const { error } = await getSupabase().from("jours_fermeture").delete().eq("id", id);
       if (error) return json({ error: error.message }, 500);
       return json({ ok: true });
     }
@@ -206,16 +212,45 @@ export default async (req: Request, _context: Context) => {
       const { reservation_id, box_ids } = body as { reservation_id: string; box_ids: string[] };
       if (!reservation_id || !Array.isArray(box_ids) || !box_ids.length)
         return json({ error: "Missing params" }, 400);
-      const { error: delErr } = await supabase
+      const { error: delErr } = await getSupabase()
         .from("reservation_boxes")
         .delete()
         .eq("reservation_id", reservation_id);
       if (delErr) return json({ error: delErr.message }, 500);
-      const { error: insErr } = await supabase
+      const { error: insErr } = await getSupabase()
         .from("reservation_boxes")
         .insert(box_ids.map(box_id => ({ reservation_id, box_id })));
       if (insErr) return json({ error: insErr.message }, 500);
       return json({ ok: true });
+    }
+
+    // ── Marketing / campagnes Mailjet ────────────────────────────────────────
+    case "create_campaign": {
+      const { segment, clients } = body as {
+        segment?: string;
+        clients?: { nom?: string; email?: string }[];
+      };
+      if (segment !== "fideles" && segment !== "inactifs")
+        return json({ error: "Segment invalide (attendu: fideles ou inactifs)" }, 400);
+      if (!Array.isArray(clients) || !clients.length)
+        return json({ error: "Aucun client fourni pour ce segment" }, 400);
+
+      const creds = mailjetCreds();
+      if (!creds) return json({ error: "Configuration Mailjet absente" }, 500);
+
+      const senderEmail = process.env.MAILJET_SENDER_EMAIL || "contact@vr-cafe.fr";
+      const normalizedClients = clients
+        .map((c) => ({ nom: String(c.nom ?? ""), email: String(c.email ?? "").trim() }))
+        .filter((c) => c.email);
+      if (!normalizedClients.length)
+        return json({ error: "Aucun client de ce segment n'a d'email valide" }, 400);
+
+      try {
+        const result = await createSegmentCampaign({ segment, clients: normalizedClients, senderEmail, ...creds });
+        return json({ ok: true, ...result });
+      } catch (e) {
+        return json({ error: e instanceof Error ? e.message : "Erreur Mailjet inconnue" }, 500);
+      }
     }
 
     // ── Config clé-valeur ────────────────────────────────────────────────────
@@ -223,10 +258,10 @@ export default async (req: Request, _context: Context) => {
       const { cle, valeur } = body as { cle: string; valeur: string | null };
       if (!cle) return json({ error: "Missing cle" }, 400);
       if (valeur === null) {
-        const { error } = await supabase.from("config").delete().eq("cle", cle);
+        const { error } = await getSupabase().from("config").delete().eq("cle", cle);
         if (error) return json({ error: error.message }, 500);
       } else {
-        const { error } = await supabase.from("config").upsert({ cle, valeur }, { onConflict: "cle" });
+        const { error } = await getSupabase().from("config").upsert({ cle, valeur }, { onConflict: "cle" });
         if (error) return json({ error: error.message }, 500);
       }
       return json({ ok: true });

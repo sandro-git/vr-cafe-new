@@ -201,3 +201,84 @@ export async function updateClientInMailjet(params: {
     }
   }
 }
+
+// ── Campagnes de relance par segment (marketing) ───────────────────────────
+
+export interface SegmentCampaignClient {
+  nom: string;
+  email: string;
+}
+
+export interface SegmentCampaignResult {
+  listId: number;
+  listName: string;
+  contactsAdded: number;
+  contactsSkipped: number;
+  campaignDraftId: number;
+}
+
+const SEGMENT_SUBJECTS: Record<"fideles" | "inactifs", { subject: string; title: string }> = {
+  fideles: { subject: "Merci pour votre fidélité 🎮", title: "Relance fidèles" },
+  inactifs: { subject: "On vous a manqué chez VR Café 👋", title: "Relance inactifs" },
+};
+
+/**
+ * Crée une liste de contacts Mailjet dédiée à un segment (fidèles/inactifs),
+ * y ajoute les clients fournis (email valide uniquement), puis crée un
+ * brouillon de campagne ciblant cette liste. Best-effort sur l'ajout des
+ * contacts individuels — un échec isolé n'interrompt pas le lot.
+ */
+export async function createSegmentCampaign(params: {
+  segment: "fideles" | "inactifs";
+  clients: SegmentCampaignClient[];
+  apiKey: string;
+  apiSecret: string;
+  senderEmail: string;
+}): Promise<SegmentCampaignResult> {
+  const { segment, clients, apiKey, apiSecret, senderEmail } = params;
+  const mailjet = new Mailjet({ apiKey, apiSecret });
+  const { subject, title } = SEGMENT_SUBJECTS[segment];
+
+  const validClients = clients.filter((c) => c.email && c.email.includes("@"));
+  const skipped = clients.length - validClients.length;
+
+  // 1. Créer la liste (nom unique : lisible + timestamp — Mailjet rejette les doublons de nom)
+  const dateLabel = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const listName = `${title} ${dateLabel} ${Date.now()}`;
+  const listRes: any = await mailjet.post("contactslist", { version: "v3" }).request({ Name: listName });
+  const listId = Number(listRes?.body?.Data?.[0]?.ID);
+  if (!listId) throw new Error("Échec de création de la liste Mailjet");
+
+  // 2. Ajouter les contacts un par un (best-effort)
+  let added = 0;
+  for (const c of validClients) {
+    try {
+      await (mailjet.post("contactslist", { version: "v3" }) as any)
+        .id(listId)
+        .action("managecontact")
+        .request({
+          Email: c.email,
+          Action: "addnoforce",
+          Properties: { firstname: (c.nom || "").split(" ")[0] || "" },
+        });
+      added++;
+    } catch {
+      // contact déjà membre ailleurs / erreur isolée — non bloquant
+    }
+  }
+  if (added === 0) throw new Error("Aucun contact n'a pu être ajouté à la liste Mailjet");
+
+  // 3. Créer le brouillon de campagne ciblant cette liste
+  const draftRes: any = await mailjet.post("campaigndraft", { version: "v3" }).request({
+    Locale: "fr_FR",
+    Sender: "VR Café",
+    SenderEmail: senderEmail,
+    Subject: subject,
+    Title: `${title} — ${dateLabel}`,
+    ContactsListID: listId,
+  });
+  const campaignDraftId = Number(draftRes?.body?.Data?.[0]?.ID);
+  if (!campaignDraftId) throw new Error("Échec de création du brouillon de campagne Mailjet");
+
+  return { listId, listName, contactsAdded: added, contactsSkipped: skipped, campaignDraftId };
+}
