@@ -1,5 +1,6 @@
 ---
 import DatePicker from "./DatePicker.astro";
+import PhoneCountryField from "./PhoneCountryField.astro";
 
 interface Props {
   mode: 'client' | 'admin';
@@ -143,15 +144,7 @@ const {
           {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
-        <div class="relative">
-          <label for="client-telephone" class="block text-sm font-medium text-white/70 mb-1.5">Téléphone *</label>
-          <input
-            type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
-            autocomplete={mode === 'admin' ? 'off' : 'tel'}
-            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
-          />
-          {mode === 'admin' && <ul id="client-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
-        </div>
+        <PhoneCountryField mode={mode} />
 
         <div>
           <label for="client-notes" class="block text-sm font-medium text-white/70 mb-1.5">Notes (optionnel)</label>
@@ -201,7 +194,7 @@ const {
 <script>
   // @ts-nocheck
   import { calcMontant } from '../lib/pricing';
-  import { validateClientInfo } from '../lib/reservation-validation';
+  import { validateClientInfo, formatPhoneForStorage } from '../lib/reservation-validation';
 
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
@@ -556,6 +549,7 @@ const {
 
     const nom = /** @type {HTMLInputElement} */ (document.getElementById('client-nom')).value.trim();
     const email = /** @type {HTMLInputElement} */ (document.getElementById('client-email')).value.trim();
+    const telCountry = /** @type {HTMLSelectElement} */ (document.getElementById('client-tel-country')).value;
     const tel = /** @type {HTMLInputElement} */ (document.getElementById('client-telephone')).value.trim();
     const notes = /** @type {HTMLTextAreaElement} */ (document.getElementById('client-notes')).value.trim();
 
@@ -563,11 +557,12 @@ const {
       showError('form-error', 'Veuillez remplir tous les champs obligatoires.');
       return;
     }
-    const contactError = validateClientInfo(email, tel);
+    const contactError = validateClientInfo(email, tel, telCountry);
     if (contactError) {
       showError('form-error', contactError);
       return;
     }
+    const telFormatted = formatPhoneForStorage(tel, telCountry);
 
     const btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-submit'));
     btn.disabled = true;
@@ -595,7 +590,7 @@ const {
         .insert({
           client_nom: nom,
           client_email: email,
-          client_telephone: tel,
+          client_telephone: telFormatted,
           nb_personnes: selectedNb,
           duree_minutes: selectedDuree.duree_minutes,
           creneau_debut: selectedSlot.debut.toISOString(),
