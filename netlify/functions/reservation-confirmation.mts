@@ -2,14 +2,13 @@ import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 import { calcMontant } from "../../src/lib/pricing.ts";
+import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
 
 const ALLOWED_ORIGINS = [
   "https://vr-cafe.fr",
   "https://www.vr-cafe.fr",
   "http://localhost:4321",
 ];
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function escHtml(str: string | null | undefined): string {
   if (!str) return "";
@@ -77,7 +76,8 @@ export default async (req: Request, _context: Context) => {
   // Validation des champs obligatoires
   if (
     !client_nom || typeof client_nom !== "string" || client_nom.length > 200 ||
-    !client_email || !EMAIL_REGEX.test(client_email) || client_email.length > 254 ||
+    !client_email || !isValidEmail(client_email) || isFakeEmail(client_email) || client_email.length > 254 ||
+    !client_telephone || typeof client_telephone !== "string" || !isValidPhone(client_telephone) || isFakePhone(client_telephone) ||
     !ref || typeof ref !== "string" || ref.length > 100 ||
     !creneau_debut || !creneau_fin ||
     typeof nb_personnes !== "number" || nb_personnes < 1 || nb_personnes > 50
