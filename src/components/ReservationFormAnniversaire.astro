@@ -854,7 +854,16 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
-  // Se réexécute sur astro:page-load (couvre aussi le chargement initial) pour
-  // rester fonctionnel après une navigation View Transitions vers cette page.
-  document.addEventListener('astro:page-load', init);
+  // DOMContentLoaded couvre le chargement initial (y compris en admin, où
+  // AdminLayout n'a pas de ClientRouter donc astro:page-load ne se déclenche
+  // jamais) ; astro:page-load couvre les navigations ultérieures via View
+  // Transitions sur les pages publiques (/reservation-anniversaire).
+  let anniversaireInitDone = false;
+  function initOnce() {
+    if (anniversaireInitDone) return;
+    anniversaireInitDone = true;
+    init();
+  }
+  document.addEventListener('DOMContentLoaded', initOnce);
+  document.addEventListener('astro:page-load', initOnce);
 </script>
