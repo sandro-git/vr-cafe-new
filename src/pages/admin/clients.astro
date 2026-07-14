@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import PhoneCountryField from "../../components/PhoneCountryField.astro";
 ---
 
 <AdminLayout>
@@ -105,11 +106,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           <input id="edit-email" type="email" autocomplete="off"
             class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35" />
         </div>
-        <div>
-          <label class="block text-sm text-white/55 mb-1.5" for="edit-telephone">Téléphone</label>
-          <input id="edit-telephone" type="tel" autocomplete="off"
-            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35" />
-        </div>
+        <PhoneCountryField
+          mode="admin"
+          countryId="edit-tel-country"
+          phoneId="edit-telephone"
+          label="Téléphone"
+        />
       </div>
       <div class="flex justify-end gap-2 mt-6">
         <button id="modal-cancel" class="text-sm text-white/55 hover:text-white transition-colors border border-white/10 rounded-xl px-4 py-2 hover:border-white/20">
@@ -143,6 +145,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
+  import { isValidEmail, isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
 
   // ── État ──────────────────────────────────────────────────────────────────
   let allClients = [];
@@ -407,6 +410,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('edit-nom').value = currentClient.nom ?? '';
     document.getElementById('edit-email').value = currentClient.email ?? '';
     document.getElementById('edit-telephone').value = currentClient.telephone ?? '';
+    document.getElementById('edit-tel-country').value = currentClient.telephone ? detectPhoneCountry(currentClient.telephone) : 'FR';
     document.getElementById('modal-error').classList.add('hidden');
     const modal = document.getElementById('modal-edit');
     modal.classList.remove('hidden');
@@ -436,8 +440,15 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     const nom = document.getElementById('edit-nom').value.trim();
     const email = document.getElementById('edit-email').value.trim();
     const telephone = document.getElementById('edit-telephone').value.trim();
+    const telCountry = document.getElementById('edit-tel-country').value;
 
     if (!nom) { showModalError('Le nom est obligatoire.'); return; }
+    if (email && !isValidEmail(email)) { showModalError('Adresse email invalide.'); return; }
+    if (telephone && !isValidPhone(telephone, telCountry)) {
+      showModalError('Numéro de téléphone invalide pour le pays sélectionné.');
+      return;
+    }
+    const telFormatted = telephone ? formatPhoneForStorage(telephone, telCountry) : '';
 
     const btn = document.getElementById('modal-save');
     btn.disabled = true;
@@ -449,7 +460,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         body: JSON.stringify({
           action: 'update_client',
           id: currentClient.id,
-          fields: { nom, email, telephone },
+          fields: { nom, email, telephone: telFormatted },
         }),
       });
       const out = await res.json().catch(() => ({}));

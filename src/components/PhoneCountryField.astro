@@ -3,15 +3,25 @@ import { COUNTRIES } from "../lib/reservation-validation";
 
 interface Props {
   mode: "client" | "admin";
+  countryId?: string;
+  phoneId?: string;
+  suggestionsId?: string;
+  label?: string;
 }
 
-const { mode } = Astro.props;
+const {
+  mode,
+  countryId = "client-tel-country",
+  phoneId = "client-telephone",
+  suggestionsId,
+  label = "Téléphone *",
+} = Astro.props;
 ---
-<div class="relative">
-  <label for="client-telephone" class="block text-sm font-medium text-white/70 mb-1.5">Téléphone *</label>
+<div class="relative" data-phone-field data-country-id={countryId} data-phone-id={phoneId}>
+  <label for={phoneId} class="block text-sm font-medium text-white/70 mb-1.5">{label}</label>
   <div class="flex gap-2">
     <select
-      id="client-tel-country"
+      id={countryId}
       class="shrink-0 w-[6.5rem] bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-2 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]"
     >
       {COUNTRIES.map((c) => (
@@ -21,37 +31,42 @@ const { mode } = Astro.props;
       ))}
     </select>
     <input
-      type="tel" id="client-telephone" required placeholder="06 12 34 56 78"
+      type="tel" id={phoneId} required placeholder="06 12 34 56 78"
       autocomplete={mode === 'admin' ? 'off' : 'tel'}
       class="flex-1 min-w-0 bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
     />
   </div>
-  {mode === 'admin' && <ul id="client-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
+  {mode === 'admin' && suggestionsId && <ul id={suggestionsId} class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
 </div>
 
 <script>
   import { AsYouType, type CountryCode } from 'libphonenumber-js/min';
 
-  function bind() {
-    const select = document.getElementById('client-tel-country') as HTMLSelectElement | null;
-    const input = document.getElementById('client-telephone') as HTMLInputElement | null;
-    if (!select || !input || select.dataset.bound) return;
-    select.dataset.bound = 'true';
+  function bindAll() {
+    document.querySelectorAll<HTMLElement>('[data-phone-field]').forEach((wrap) => {
+      const countryId = wrap.dataset.countryId;
+      const phoneId = wrap.dataset.phoneId;
+      if (!countryId || !phoneId) return;
+      const select = document.getElementById(countryId) as HTMLSelectElement | null;
+      const input = document.getElementById(phoneId) as HTMLInputElement | null;
+      if (!select || !input || select.dataset.bound) return;
+      select.dataset.bound = 'true';
 
-    const syncPlaceholder = () => {
-      const opt = select.selectedOptions[0];
-      input.placeholder = opt?.dataset.placeholder || '+33 6 12 34 56 78';
-    };
-    syncPlaceholder();
-    select.addEventListener('change', syncPlaceholder);
+      const syncPlaceholder = () => {
+        const opt = select.selectedOptions[0];
+        input.placeholder = opt?.dataset.placeholder || '+33 6 12 34 56 78';
+      };
+      syncPlaceholder();
+      select.addEventListener('change', syncPlaceholder);
 
-    input.addEventListener('blur', () => {
-      const country = select.value;
-      if (!input.value.trim() || country === 'OTHER') return;
-      input.value = new AsYouType(country as CountryCode).input(input.value);
+      input.addEventListener('blur', () => {
+        const country = select.value;
+        if (!input.value.trim() || country === 'OTHER') return;
+        input.value = new AsYouType(country as CountryCode).input(input.value);
+      });
     });
   }
 
-  bind();
-  document.addEventListener('astro:page-load', bind);
+  bindAll();
+  document.addEventListener('astro:page-load', bindAll);
 </script>

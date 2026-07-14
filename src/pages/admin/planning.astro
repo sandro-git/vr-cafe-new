@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import DatePicker from "../../components/DatePicker.astro";
+import PhoneCountryField from "../../components/PhoneCountryField.astro";
 ---
 
 <AdminLayout>
@@ -240,11 +241,13 @@ import DatePicker from "../../components/DatePicker.astro";
             <input id="edit-email" type="email" autocomplete="off" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]" />
             <ul id="edit-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
           </div>
-          <div class="relative">
-            <label class="block text-xs font-medium text-white/55 mb-1.5">Téléphone</label>
-            <input id="edit-telephone" type="tel" autocomplete="off" class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]" />
-            <ul id="edit-tel-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>
-          </div>
+          <PhoneCountryField
+            mode="admin"
+            countryId="edit-tel-country"
+            phoneId="edit-telephone"
+            suggestionsId="edit-tel-suggestions"
+            label="Téléphone"
+          />
           <div>
             <label class="block text-xs font-medium text-white/55 mb-1.5">Nombre de joueurs</label>
             <div id="edit-nb-grid" class="grid grid-cols-6 gap-2"></div>
@@ -292,6 +295,7 @@ import DatePicker from "../../components/DatePicker.astro";
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
+  import { isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
 
   // Helper : toutes les écritures admin passent par la fonction serveur
   async function adminDb(action, params = {}) {
@@ -728,10 +732,6 @@ import DatePicker from "../../components/DatePicker.astro";
   function isValidEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
   }
-  function isValidPhone(v) {
-    return /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/.test(v.trim());
-  }
-
   // ── Modal ──────────────────────────────────────────────────────────────────
   function openModal(res) {
     modalRes = res;
@@ -761,6 +761,7 @@ import DatePicker from "../../components/DatePicker.astro";
     document.getElementById('edit-nom').value = res.client_nom ?? '';
     document.getElementById('edit-email').value = res.client_email ?? '';
     document.getElementById('edit-telephone').value = res.client_telephone ?? '';
+    document.getElementById('edit-tel-country').value = res.client_telephone ? detectPhoneCountry(res.client_telephone) : 'FR';
     document.getElementById('edit-notes').value = res.notes ?? '';
     setupEditVrType(res.reservation_boxes?.[0]?.boxes?.type ?? 'filaire');
     editSelectedNb = res.nb_personnes ?? 1;
@@ -852,6 +853,7 @@ import DatePicker from "../../components/DatePicker.astro";
     document.getElementById('edit-nom').value = s.client_nom ?? '';
     document.getElementById('edit-email').value = s.client_email ?? '';
     document.getElementById('edit-telephone').value = s.client_telephone ?? '';
+    document.getElementById('edit-tel-country').value = s.client_telephone ? detectPhoneCountry(s.client_telephone) : 'FR';
     ['edit-nom-suggestions', 'edit-email-suggestions', 'edit-tel-suggestions'].forEach(id => {
       document.getElementById(id)?.classList.add('hidden');
     });
@@ -1113,6 +1115,7 @@ import DatePicker from "../../components/DatePicker.astro";
 
     const emailVal = document.getElementById('edit-email').value.trim();
     const telVal = document.getElementById('edit-telephone').value.trim();
+    const telCountry = document.getElementById('edit-tel-country').value;
     if (emailVal && !isValidEmail(emailVal)) {
       const errEl = document.getElementById('modal-edit-error');
       errEl.textContent = 'Adresse email invalide.';
@@ -1121,14 +1124,15 @@ import DatePicker from "../../components/DatePicker.astro";
       btn.textContent = 'Enregistrer';
       return;
     }
-    if (telVal && !isValidPhone(telVal)) {
+    if (telVal && !isValidPhone(telVal, telCountry)) {
       const errEl = document.getElementById('modal-edit-error');
-      errEl.textContent = 'Numéro de téléphone invalide (format français attendu).';
+      errEl.textContent = 'Numéro de téléphone invalide pour le pays sélectionné.';
       errEl.classList.remove('hidden');
       btn.disabled = false;
       btn.textContent = 'Enregistrer';
       return;
     }
+    const telFormatted = telVal ? formatPhoneForStorage(telVal, telCountry) : '';
     const currentVrType = modalRes.reservation_boxes?.[0]?.boxes?.type ?? 'filaire';
     const nbPersonnes = editSelectedNb;
     const typeResa = editTypeResa;
@@ -1197,7 +1201,7 @@ import DatePicker from "../../components/DatePicker.astro";
           fields: {
             client_nom: document.getElementById('edit-nom').value.trim(),
             client_email: document.getElementById('edit-email').value.trim(),
-            client_telephone: document.getElementById('edit-telephone').value.trim(),
+            client_telephone: telFormatted,
             nb_personnes: nbPersonnes,
             duree_minutes: dureeMin,
             notes: document.getElementById('edit-notes').value.trim() || null,
@@ -1252,7 +1256,7 @@ import DatePicker from "../../components/DatePicker.astro";
           fields: {
             client_nom: document.getElementById('edit-nom').value.trim(),
             client_email: document.getElementById('edit-email').value.trim(),
-            client_telephone: document.getElementById('edit-telephone').value.trim(),
+            client_telephone: telFormatted,
             nb_personnes: nbPersonnes,
             duree_minutes: dureeMin,
             notes: document.getElementById('edit-notes').value.trim() || null,
@@ -1289,7 +1293,7 @@ import DatePicker from "../../components/DatePicker.astro";
         fields: {
           client_nom: document.getElementById('edit-nom').value.trim(),
           client_email: document.getElementById('edit-email').value.trim(),
-          client_telephone: document.getElementById('edit-telephone').value.trim(),
+          client_telephone: telFormatted,
           nb_personnes: nbPersonnes,
           duree_minutes: dureeMin,
           notes: document.getElementById('edit-notes').value.trim() || null,

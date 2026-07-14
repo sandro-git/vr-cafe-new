@@ -71,6 +71,14 @@ export function formatPhoneForStorage(v: string, country?: PhoneCountryCode): st
   return parsed ? parsed.formatInternational() : v.trim();
 }
 
+// Déduit le pays d'un numéro déjà stocké (format international) pour préremplir le
+// sélecteur de pays en édition. "OTHER" si le numéro ne correspond à aucun pays de la liste.
+export function detectPhoneCountry(v: string): PhoneCountryCode {
+  const parsed = parsePhoneNumberFromString(v.trim());
+  const country = parsed?.country;
+  return country && COUNTRIES.some((c) => c.code === country) ? country : "OTHER";
+}
+
 export function isFakePhone(v: string, country?: PhoneCountryCode): boolean {
   const parsed = parsePhone(v, country);
   if (!parsed) return false;
