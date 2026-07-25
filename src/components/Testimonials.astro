@@ -43,49 +43,120 @@ const colorFor = (name: string) =>
       <GoogleRatingBadge />
     </div>
 
-    <!-- Grid -->
-    <div class="reveal reveal-stagger grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-      {avis.map((a) => (
-        <article class="card-glow group p-7 flex flex-col gap-5 transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
-          <!-- Quote mark -->
-          <svg class="w-8 h-8 text-[var(--color-brand-400)]/40 -mb-2" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M9.333 8C5.467 8 2.667 11.733 2.667 16v8h8v-8h-4c0-2.4 1.6-4 4-4V8H9.333zm13.334 0c-3.867 0-6.667 3.733-6.667 8v8h8v-8h-4c0-2.4 1.6-4 4-4V8h-1.333z" />
-          </svg>
+    <!-- Carousel -->
+    <div class="reveal relative" data-testimonials>
+      <!-- Edge fades -->
+      <div class="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-[var(--color-surface-elevated)] to-transparent z-[5]" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-[var(--color-surface-elevated)] to-transparent z-[5]" aria-hidden="true"></div>
 
-          <!-- Stars -->
-          <div class="flex gap-0.5" role="img" aria-label={`Note : ${a.note} sur 5`}>
-            {STAR_INDICES.map((i) => (
-              <svg
-                class={`w-5 h-5 ${i < a.note ? "text-[var(--color-accent-400)]" : "text-white/15"} fill-current`}
-                viewBox="0 0 20 20"
-                aria-hidden="true"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
+      <!-- Arrows -->
+      <button
+        type="button"
+        class="testimonials-prev absolute left-0 sm:-left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[var(--color-surface-card)] border border-white/10 flex items-center justify-center text-white shadow-md transition hover:bg-[var(--color-brand-500)]/20 hover:border-[var(--color-brand-400)]/40 disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Avis précédent"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="testimonials-next absolute right-0 sm:-right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[var(--color-surface-card)] border border-white/10 flex items-center justify-center text-white shadow-md transition hover:bg-[var(--color-brand-500)]/20 hover:border-[var(--color-brand-400)]/40 disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Avis suivant"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
 
-          <!-- Comment -->
-          <p class="text-white/85 leading-relaxed grow text-[15px]">
-            "{a.commentaire}"
-          </p>
+      <!-- Track -->
+      <div class="testimonials-track flex gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth scroll-px-10 px-10 py-2">
+        {avis.map((a) => (
+          <article class="card-glow group shrink-0 snap-start w-[80vw] sm:w-[360px] lg:w-[380px] p-7 flex flex-col gap-5 transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
+            <!-- Quote mark -->
+            <svg class="w-8 h-8 text-[var(--color-brand-400)]/40 -mb-2" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M9.333 8C5.467 8 2.667 11.733 2.667 16v8h8v-8h-4c0-2.4 1.6-4 4-4V8H9.333zm13.334 0c-3.867 0-6.667 3.733-6.667 8v8h8v-8h-4c0-2.4 1.6-4 4-4V8h-1.333z" />
+            </svg>
 
-          <!-- Author -->
-          <div class="flex items-center gap-3 pt-4 border-t border-white/10">
-            <div class={`w-10 h-10 rounded-full bg-gradient-to-br ${colorFor(a.prenom)} flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md`}>
-              {a.prenom.charAt(0).toUpperCase()}
+            <!-- Stars -->
+            <div class="flex gap-0.5" role="img" aria-label={`Note : ${a.note} sur 5`}>
+              {STAR_INDICES.map((i) => (
+                <svg
+                  class={`w-5 h-5 ${i < a.note ? "text-[var(--color-accent-400)]" : "text-white/15"} fill-current`}
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">{a.prenom}</p>
-              {a.dateVisite && (
-                <p class="text-xs text-white/50">
-                  {new Date(a.dateVisite).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
-                </p>
-              )}
+
+            <!-- Comment -->
+            <p class="text-white/85 leading-relaxed grow text-[15px]">
+              "{a.commentaire}"
+            </p>
+
+            <!-- Author -->
+            <div class="flex items-center gap-3 pt-4 border-t border-white/10">
+              <div class={`w-10 h-10 rounded-full bg-gradient-to-br ${colorFor(a.prenom)} flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md`}>
+                {a.prenom.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p class="font-semibold text-white text-sm">{a.prenom}</p>
+                {a.dateVisite && (
+                  <p class="text-xs text-white/50">
+                    {new Date(a.dateVisite).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </article>
-      ))}
+          </article>
+        ))}
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  const initTestimonials = () => {
+    document.querySelectorAll<HTMLElement>("[data-testimonials]").forEach((section) => {
+      if (section.dataset.testimonialsBound === "1") return;
+      section.dataset.testimonialsBound = "1";
+
+      const track = section.querySelector<HTMLElement>(".testimonials-track");
+      const prev = section.querySelector<HTMLButtonElement>(".testimonials-prev");
+      const next = section.querySelector<HTMLButtonElement>(".testimonials-next");
+      if (!track || !prev || !next) return;
+
+      const scrollByCard = (dir: number) => {
+        const card = track.querySelector<HTMLElement>("article");
+        const amount = card ? card.getBoundingClientRect().width + 20 : track.clientWidth * 0.8;
+        track.scrollBy({ left: dir * amount, behavior: "smooth" });
+      };
+
+      prev.addEventListener("click", () => scrollByCard(-1));
+      next.addEventListener("click", () => scrollByCard(1));
+
+      const updateButtons = () => {
+        const maxScroll = track.scrollWidth - track.clientWidth - 1;
+        prev.disabled = track.scrollLeft <= 0;
+        next.disabled = track.scrollLeft >= maxScroll;
+      };
+      track.addEventListener("scroll", updateButtons, { passive: true });
+      updateButtons();
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded", initTestimonials);
+  document.addEventListener("astro:page-load", initTestimonials);
+</script>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
