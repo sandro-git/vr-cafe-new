@@ -26,6 +26,12 @@ export const AVIS_QUERY = defineQuery(
   }`
 );
 
+export const PARTENAIRES_QUERY = defineQuery(
+  `*[_type == "editeur" && partenaireVedette == true && defined(logo)] | order(name asc) {
+    name, siteUrl, logo
+  }`
+);
+
 export const TARIF_ANNIVERSAIRE_QUERY = defineQuery(
   `*[_type == "tarif" && type == "anniversaire"][0] { _id, name, prix, features }`
 );

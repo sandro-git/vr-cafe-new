@@ -1,14 +1,24 @@
 ---
-import Image from "astro/components/Image.astro";
-import Arvi from "../assets/arvi_vr_white.webp";
-import Ubisoft from "../assets/ubisoft-white.webp";
-import Wanadev from "../assets/wanadev_studio.webp";
+import { loadQuery } from "../sanity/lib/load-query";
+import { PARTENAIRES_QUERY } from "../sanity/lib/queries";
+import { urlForImage } from "../sanity/lib/url-for-image";
 
-const partners = [
-  { src: Ubisoft, alt: "Ubisoft logo", href: "https://www.ubisoft.com/en-gb/entertainment/parks-experiences/escape-games", label: "Ubisoft" },
-  { src: Wanadev, alt: "Wanadev Studio logo", href: "https://www.wanadevstudio.com/home", label: "Wanadev Studio" },
-  { src: Arvi, alt: "ARVI VR logo", href: "https://vr.arvilab.com/", label: "ARVI VR" },
-];
+type Editeur = {
+  name: string | null;
+  siteUrl: string | null;
+  logo: any;
+};
+
+const { data: editeurs } = await loadQuery<Editeur[]>({ query: PARTENAIRES_QUERY });
+
+if (!editeurs || editeurs.length === 0) return;
+
+const partners = editeurs.map((e) => ({
+  src: urlForImage(e.logo).height(96).auto("format").url(),
+  alt: `${e.name} logo`,
+  href: e.siteUrl || "#",
+  label: e.name || "Partenaire",
+}));
 
 // Doubler la liste pour un marquee continu sans saut
 const loop = [...partners, ...partners];
@@ -42,7 +52,7 @@ const loop = [...partners, ...partners];
           tabindex={i >= partners.length ? -1 : 0}
           class="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-[var(--dur-base)] grayscale hover:grayscale-0"
         >
-          <Image src={p.src} alt={p.alt} class="h-10 lg:h-12 w-auto" height={48} loading="eager" />
+          <img src={p.src} alt={p.alt} class="h-10 lg:h-12 w-auto" height={48} loading="eager" />
         </a>
       ))}
     </div>
