@@ -1,0 +1,267 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto">
+
+      <!-- En-tête -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Avis Google</h1>
+          <p class="text-white/55 text-sm mt-0.5">VR Café · Back-office</p>
+        </div>
+        <button
+          id="btn-poll"
+          type="button"
+          class="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl border border-white/10 transition-colors"
+        >
+          🔄 Vérifier les nouveaux avis maintenant
+        </button>
+      </div>
+
+      <!-- Statistiques -->
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">En attente</p>
+          <p id="stat-en-attente" class="text-2xl font-bold text-amber-300">—</p>
+        </div>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Rejetés</p>
+          <p id="stat-rejete" class="text-2xl font-bold text-red-300">—</p>
+        </div>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Publiés</p>
+          <p id="stat-publie" class="text-2xl font-bold text-green-300">—</p>
+        </div>
+      </div>
+
+      <!-- Erreur -->
+      <div id="admin-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
+
+      <!-- Chargement -->
+      <div id="admin-loading" class="py-16 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+        <p class="text-white/55">Chargement...</p>
+      </div>
+
+      <!-- Vide -->
+      <div id="admin-empty" class="hidden py-16 text-center">
+        <p class="text-4xl mb-3">⭐</p>
+        <p class="text-white font-medium">Aucun avis pour le moment</p>
+        <p class="text-white/55 text-sm mt-1">Utilisez "Vérifier maintenant" pour synchroniser les avis Google.</p>
+      </div>
+
+      <!-- Contenu -->
+      <div id="admin-content" class="hidden space-y-8">
+        <section>
+          <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">À traiter</h2>
+          <div id="avis-a-traiter" class="space-y-4"></div>
+          <p id="avis-a-traiter-empty" class="hidden text-white/40 text-sm">Aucun avis en attente — tout est à jour.</p>
+        </section>
+
+        <section>
+          <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">Historique publié</h2>
+          <div id="avis-historique" class="space-y-3"></div>
+          <p id="avis-historique-empty" class="hidden text-white/40 text-sm">Aucune réponse publiée pour le moment.</p>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</AdminLayout>
+
+<script>
+  // @ts-nocheck
+  import { supabase } from '../../lib/supabase.js';
+
+  let avisCache = [];
+
+  // ── Chargement ────────────────────────────────────────────────────────────
+  // hideError n'est PAS appelé ici : loadAvis() est aussi invoqué après une
+  // action ayant échoué (runAction), et ne doit pas effacer le message
+  // d'erreur qu'elle vient d'afficher. hideError() est appelé explicitement
+  // au début de runAction() à la place.
+  async function loadAvis() {
+    showState('loading');
+
+    const { data, error } = await supabase
+      .from('avis_google')
+      .select('*')
+      .order('date_avis', { ascending: false });
+
+    if (error) {
+      showState(null);
+      showError('Erreur Supabase : ' + error.message);
+      return;
+    }
+
+    avisCache = data ?? [];
+    updateStats(avisCache);
+
+    if (!avisCache.length) {
+      showState('empty');
+      return;
+    }
+
+    render(avisCache);
+    showState('content');
+  }
+
+  function updateStats(avis) {
+    document.getElementById('stat-en-attente').textContent = String(avis.filter(a => a.statut === 'en_attente').length);
+    document.getElementById('stat-rejete').textContent = String(avis.filter(a => a.statut === 'rejete').length);
+    document.getElementById('stat-publie').textContent = String(avis.filter(a => a.statut === 'publie').length);
+  }
+
+  // ── Rendu ─────────────────────────────────────────────────────────────────
+  function render(avis) {
+    const aTraiter = avis.filter(a => a.statut === 'en_attente' || a.statut === 'rejete');
+    const historique = avis.filter(a => a.statut === 'publie');
+
+    const aTraiterEl = document.getElementById('avis-a-traiter');
+    aTraiterEl.innerHTML = '';
+    aTraiter.forEach(a => aTraiterEl.appendChild(renderCard(a)));
+    document.getElementById('avis-a-traiter-empty').classList.toggle('hidden', aTraiter.length > 0);
+
+    const historiqueEl = document.getElementById('avis-historique');
+    historiqueEl.innerHTML = '';
+    historique.forEach(a => historiqueEl.appendChild(renderCard(a)));
+    document.getElementById('avis-historique-empty').classList.toggle('hidden', historique.length > 0);
+  }
+
+  const STATUT_BADGE = {
+    en_attente: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    publie: 'bg-green-500/15 text-green-300 border-green-500/30',
+    rejete: 'bg-red-500/15 text-red-300 border-red-500/30',
+  };
+  const STATUT_LABEL = {
+    en_attente: 'En attente',
+    publie: 'Publié',
+    rejete: 'Rejeté',
+  };
+
+  function renderCard(a) {
+    const card = document.createElement('div');
+    card.className = 'card-glow p-5';
+    card.dataset.id = a.id;
+
+    const badge = STATUT_BADGE[a.statut] ?? 'bg-white/5 text-white/55 border-white/10';
+    const label = STATUT_LABEL[a.statut] ?? a.statut;
+    const stars = '★'.repeat(a.note) + '☆'.repeat(5 - a.note);
+    const dateFmt = a.date_avis
+      ? new Date(a.date_avis).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p class="font-medium text-white">${esc(a.auteur_nom)}</p>
+          <p class="text-amber-300 text-sm">${stars}</p>
+          <p class="text-white/40 text-xs mt-0.5">${esc(dateFmt)}</p>
+        </div>
+        <span class="px-2 py-1 rounded-lg border text-xs font-medium shrink-0 ${badge}">${label}</span>
+      </div>
+      ${a.commentaire ? `<p class="text-white/70 text-sm italic mb-4 border-l-2 border-white/10 pl-3">${esc(a.commentaire)}</p>` : ''}
+      ${a.statut === 'rejete' && a.erreur_publication ? `<div class="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs">${esc(a.erreur_publication)}</div>` : ''}
+      <label class="block text-white/55 text-xs uppercase tracking-wide mb-1.5">Réponse ${a.statut === 'publie' ? 'publiée' : 'brouillon'}</label>
+      <textarea
+        class="draft-textarea w-full min-h-[96px] px-3 py-2 rounded-lg bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] text-white text-sm outline-none resize-y"
+        ${a.statut === 'publie' ? 'readonly' : ''}
+      >${esc(a.brouillon_reponse ?? '')}</textarea>
+      ${a.statut !== 'publie' ? `
+        <div class="flex flex-wrap gap-3 mt-3">
+          <button class="btn-publish px-4 py-2 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-semibold rounded-lg transition-colors" data-id="${a.id}">
+            Publier
+          </button>
+          <button class="btn-regenerate px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-lg border border-white/10 transition-colors" data-id="${a.id}">
+            Régénérer
+          </button>
+        </div>
+      ` : ''}
+    `;
+    return card;
+  }
+
+  // ── Actions (event delegation) ────────────────────────────────────────────
+  document.addEventListener('click', async e => {
+    const publishBtn = /** @type {HTMLElement} */ (e.target).closest('.btn-publish');
+    const regenerateBtn = /** @type {HTMLElement} */ (e.target).closest('.btn-regenerate');
+
+    if (publishBtn) {
+      const id = publishBtn.dataset.id;
+      const card = publishBtn.closest('[data-id]');
+      const textarea = card?.querySelector('.draft-textarea');
+      const texte = textarea?.value?.trim();
+      if (!texte) {
+        showError('Le brouillon ne peut pas être vide.');
+        return;
+      }
+      if (!confirm('Publier cette réponse sur Google ? Cette action est visible publiquement.')) return;
+      await runAction(publishBtn, { action: 'publish_review_reply', id, texte_final: texte });
+    }
+
+    if (regenerateBtn) {
+      const id = regenerateBtn.dataset.id;
+      await runAction(regenerateBtn, { action: 'regenerate_draft', id });
+    }
+  });
+
+  document.getElementById('btn-poll').addEventListener('click', async () => {
+    await runAction(document.getElementById('btn-poll'), { action: 'poll_reviews_now' }, 'Vérification en cours...');
+  });
+
+  async function runAction(btn, payload, loadingLabel = '...') {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = loadingLabel;
+    hideError();
+
+    let result;
+    try {
+      const res = await fetch('/api/admin/avis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      result = await res.json();
+      if (!res.ok || result.error) {
+        showError('Erreur : ' + (result.error ?? 'Erreur serveur'));
+      }
+    } catch {
+      showError('Erreur serveur — impossible de contacter l\'API');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+
+    await loadAvis();
+    return result;
+  }
+
+  // ── UI helpers ────────────────────────────────────────────────────────────
+  function showState(state) {
+    ['loading', 'empty', 'content'].forEach(s => {
+      const el = document.getElementById(`admin-${s}`);
+      if (el) el.classList.toggle('hidden', s !== state);
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('admin-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function hideError() {
+    document.getElementById('admin-error').classList.add('hidden');
+  }
+
+  function esc(str) {
+    return String(str ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ── Démarrage ─────────────────────────────────────────────────────────────
+  loadAvis();
+</script>
