@@ -86,6 +86,13 @@ h1, h2, h3, .font-display {
   color: white;
 }
 
+/* <select> dark : color-scheme seul ne suffit pas sur Windows/Chrome
+   (le rendu natif de la listbox y ignore color-scheme pour les <option>) */
+select.scheme-dark option {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-strong);
+}
+
 /* ─────────────────────────────────────────────────────────────
    Animations
    ───────────────────────────────────────────────────────────── */
