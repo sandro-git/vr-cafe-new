@@ -22,7 +22,7 @@ const {
   <div class="flex gap-2">
     <select
       id={countryId}
-      class="shrink-0 w-[6.5rem] bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-2 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)]"
+      class="shrink-0 w-[6.5rem] bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-2 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] scheme-dark"
     >
       {COUNTRIES.map((c) => (
         <option value={c.code} selected={c.code === "FR"} data-placeholder={c.placeholder}>
