@@ -1,0 +1,325 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto">
+
+      <!-- En-tête -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Prospection</h1>
+          <p class="text-white/55 text-sm mt-0.5">VR Café · Relances email via Brevo</p>
+        </div>
+      </div>
+
+      <!-- Erreur -->
+      <div id="admin-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
+
+      <!-- Chargement -->
+      <div id="admin-loading" class="py-16 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+        <p class="text-white/55">Chargement...</p>
+      </div>
+
+      <!-- Contenu -->
+      <div id="admin-content" class="hidden space-y-8">
+
+        <!-- Statistiques -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4 text-center">
+            <p id="stat-total" class="text-2xl font-bold text-[var(--color-brand-300)]">—</p>
+            <p class="text-white/55 text-xs mt-1 uppercase tracking-wide">Total</p>
+          </div>
+          <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center">
+            <p id="stat-a-relancer" class="text-2xl font-bold text-blue-300">—</p>
+            <p class="text-white/55 text-xs mt-1 uppercase tracking-wide">À relancer</p>
+          </div>
+          <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+            <p id="stat-erreur" class="text-2xl font-bold text-red-300">—</p>
+            <p class="text-white/55 text-xs mt-1 uppercase tracking-wide">Erreurs</p>
+          </div>
+          <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+            <p id="stat-envoyee" class="text-2xl font-bold text-green-300">—</p>
+            <p class="text-white/55 text-xs mt-1 uppercase tracking-wide">Envoyées</p>
+          </div>
+        </div>
+
+        <!-- Ajout rapide -->
+        <section class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-5">
+          <h2 class="text-white font-semibold mb-3">Ajouter un contact</h2>
+          <form id="form-add" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <input
+              type="text"
+              name="nom"
+              placeholder="Nom"
+              class="sm:col-span-1 px-3 py-2 rounded-lg bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] text-white text-sm outline-none placeholder:text-white/30"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email *"
+              required
+              class="sm:col-span-1 px-3 py-2 rounded-lg bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] text-white text-sm outline-none placeholder:text-white/30"
+            />
+            <input
+              type="tel"
+              name="telephone"
+              placeholder="Téléphone"
+              class="sm:col-span-1 px-3 py-2 rounded-lg bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] text-white text-sm outline-none placeholder:text-white/30"
+            />
+            <button
+              type="submit"
+              class="sm:col-span-1 px-4 py-2 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Ajouter
+            </button>
+          </form>
+        </section>
+
+        <!-- À relancer -->
+        <section>
+          <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+            <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide">À relancer</h2>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-1.5 text-white/55 text-xs cursor-pointer select-none">
+                <input type="checkbox" id="select-all" class="accent-[var(--color-brand-400)]" />
+                Tout sélectionner
+              </label>
+              <button
+                type="button"
+                id="btn-valider"
+                disabled
+                class="px-4 py-2 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span class="btn-label">Envoyer la relance (0)</span>
+              </button>
+            </div>
+          </div>
+          <div id="list-a-relancer" class="space-y-2"></div>
+          <p id="empty-a-relancer" class="hidden text-white/40 text-sm py-4">Aucun contact à relancer pour l'instant.</p>
+        </section>
+
+        <!-- Historique -->
+        <section>
+          <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">Historique</h2>
+          <div id="list-historique" class="space-y-2"></div>
+          <p id="empty-historique" class="hidden text-white/40 text-sm py-4">Aucune relance envoyée pour l'instant.</p>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</AdminLayout>
+
+<script>
+  // @ts-nocheck
+
+  let contactsCache = [];
+  const selectedIds = new Set();
+
+  const STATUT_BADGE = {
+    a_relancer: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+    relance_envoyee: 'bg-green-500/15 text-green-300 border-green-500/30',
+    erreur_envoi: 'bg-red-500/15 text-red-300 border-red-500/30',
+  };
+  const STATUT_LABEL = {
+    a_relancer: 'À relancer',
+    relance_envoyee: 'Relance envoyée',
+    erreur_envoi: 'Erreur d\'envoi',
+  };
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function callApi(payload) {
+    const res = await fetch('/api/admin/prospection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || out.error) throw new Error(out.error || `Erreur ${res.status}`);
+    return out;
+  }
+
+  async function load() {
+    hideError();
+    try {
+      const { contacts } = await callApi({ action: 'list' });
+      contactsCache = contacts ?? [];
+      selectedIds.clear();
+      render();
+      document.getElementById('admin-loading').classList.add('hidden');
+      document.getElementById('admin-content').classList.remove('hidden');
+    } catch (err) {
+      document.getElementById('admin-loading').classList.add('hidden');
+      showError('Impossible de charger les contacts : ' + err.message);
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = String(contactsCache.length);
+    document.getElementById('stat-a-relancer').textContent = String(contactsCache.filter(c => c.statut === 'a_relancer').length);
+    document.getElementById('stat-erreur').textContent = String(contactsCache.filter(c => c.statut === 'erreur_envoi').length);
+    document.getElementById('stat-envoyee').textContent = String(contactsCache.filter(c => c.statut === 'relance_envoyee').length);
+  }
+
+  function renderRow(c, { withCheckbox }) {
+    const div = document.createElement('div');
+    div.className = 'bg-[var(--color-surface-card)] border border-white/10 rounded-xl px-4 py-3 flex items-start gap-3';
+    div.dataset.id = c.id;
+
+    const badge = STATUT_BADGE[c.statut] ?? 'bg-white/5 text-white/55 border-white/10';
+    const label = STATUT_LABEL[c.statut] ?? c.statut;
+
+    div.innerHTML = `
+      ${withCheckbox ? `<input type="checkbox" class="row-checkbox accent-[var(--color-brand-400)] mt-1" ${selectedIds.has(c.id) ? 'checked' : ''} />` : ''}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-medium text-white text-sm">${esc(c.nom) || 'Sans nom'}</span>
+          <span class="px-2 py-0.5 rounded-lg border text-xs font-medium ${badge}">${label}</span>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
+          <a href="mailto:${esc(c.email)}" class="text-[var(--color-brand-300)] hover:text-[var(--color-brand-200)] text-xs">${esc(c.email)}</a>
+          ${c.telephone ? `<span class="text-white/40 text-xs">${esc(c.telephone)}</span>` : ''}
+          ${c.date_envoi ? `<span class="text-white/40 text-xs">Envoyé le ${fmtDate(c.date_envoi)}</span>` : ''}
+        </div>
+        ${c.erreur ? `<p class="text-red-300/80 text-xs mt-1">${esc(c.erreur)}</p>` : ''}
+      </div>
+      <button type="button" class="btn-delete shrink-0 text-white/30 hover:text-red-300 text-sm transition-colors" title="Supprimer">✕</button>
+    `;
+    return div;
+  }
+
+  function render() {
+    updateStats();
+
+    const aRelancer = contactsCache.filter(c => c.statut === 'a_relancer' || c.statut === 'erreur_envoi');
+    const historique = contactsCache.filter(c => c.statut === 'relance_envoyee');
+
+    const listARelancer = document.getElementById('list-a-relancer');
+    listARelancer.innerHTML = '';
+    aRelancer.forEach(c => listARelancer.appendChild(renderRow(c, { withCheckbox: true })));
+    document.getElementById('empty-a-relancer').classList.toggle('hidden', aRelancer.length > 0);
+
+    const listHistorique = document.getElementById('list-historique');
+    listHistorique.innerHTML = '';
+    historique.forEach(c => listHistorique.appendChild(renderRow(c, { withCheckbox: false })));
+    document.getElementById('empty-historique').classList.toggle('hidden', historique.length > 0);
+
+    updateBulkButton();
+  }
+
+  function updateBulkButton() {
+    const btn = document.getElementById('btn-valider');
+    btn.querySelector('.btn-label').textContent = `Envoyer la relance (${selectedIds.size})`;
+    btn.disabled = selectedIds.size === 0;
+  }
+
+  // ── Sélection ─────────────────────────────────────────────────────────────
+  document.getElementById('list-a-relancer').addEventListener('change', e => {
+    const checkbox = e.target.closest('.row-checkbox');
+    if (!checkbox) return;
+    const id = checkbox.closest('[data-id]').dataset.id;
+    if (checkbox.checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+    updateBulkButton();
+  });
+
+  document.getElementById('select-all').addEventListener('change', e => {
+    const aRelancer = contactsCache.filter(c => c.statut === 'a_relancer' || c.statut === 'erreur_envoi');
+    if (e.target.checked) aRelancer.forEach(c => selectedIds.add(c.id));
+    else selectedIds.clear();
+    render();
+  });
+
+  // ── Suppression ───────────────────────────────────────────────────────────
+  document.addEventListener('click', async e => {
+    const deleteBtn = e.target.closest('.btn-delete');
+    if (!deleteBtn) return;
+    const id = deleteBtn.closest('[data-id]').dataset.id;
+    if (!confirm('Supprimer ce contact de prospection ?')) return;
+    try {
+      await callApi({ action: 'delete', id });
+      selectedIds.delete(id);
+      await load();
+    } catch (err) {
+      showError('Échec de la suppression : ' + err.message);
+    }
+  });
+
+  // ── Ajout ─────────────────────────────────────────────────────────────────
+  document.getElementById('form-add').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const btn = form.querySelector('button[type="submit"]');
+    const data = new FormData(form);
+    const nom = String(data.get('nom') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    const telephone = String(data.get('telephone') ?? '').trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    hideError();
+    try {
+      await callApi({ action: 'create', nom, email, telephone });
+      form.reset();
+      await load();
+    } catch (err) {
+      showError('Échec de l\'ajout : ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── Envoi groupé ──────────────────────────────────────────────────────────
+  document.getElementById('btn-valider').addEventListener('click', async () => {
+    const ids = [...selectedIds];
+    if (!ids.length) return;
+    if (!confirm(`Envoyer une relance email à ${ids.length} contact(s) via Brevo ?`)) return;
+
+    const btn = document.getElementById('btn-valider');
+    const label = btn.querySelector('.btn-label');
+    const originalText = label.textContent;
+    btn.disabled = true;
+    label.textContent = `Envoi en cours... (~${Math.ceil(ids.length * 2.5)}s)`;
+    hideError();
+
+    try {
+      const result = await callApi({ action: 'valider', ids });
+      const nbSucces = result.succes?.length ?? 0;
+      const nbEchecs = result.echecs?.length ?? 0;
+      if (nbEchecs > 0) {
+        showError(`${nbSucces} envoyé(s), ${nbEchecs} échec(s) : ` + result.echecs.map(e => e.erreur).join(' · '));
+      }
+      await load();
+    } catch (err) {
+      showError('Échec de l\'envoi groupé : ' + err.message);
+    } finally {
+      btn.disabled = false;
+      label.textContent = originalText;
+    }
+  });
+
+  // ── UI helpers ────────────────────────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('admin-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function hideError() {
+    document.getElementById('admin-error').classList.add('hidden');
+  }
+
+  // ── Démarrage ─────────────────────────────────────────────────────────────
+  load();
+</script>
