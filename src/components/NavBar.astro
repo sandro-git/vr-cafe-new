@@ -4,11 +4,7 @@ import { Image } from "astro:assets";
 
 const currentPath = Astro.url.pathname;
 
-const isExperiencesSubmenu =
-  currentPath.includes("/escapes") ||
-  currentPath.includes("/jeux") ||
-  currentPath.includes("/freeroaming") ||
-  currentPath.includes("/escapesFreeroaming");
+const isExperiencesSubmenu = currentPath.includes("/experiences-vr");
 
 const isOccasionsSubmenu =
   currentPath === "/anniversaire" || currentPath === "/anniversaire/" ||
@@ -21,28 +17,28 @@ const isActive = (path: string) =>
 // Items dropdowns avec icônes SVG + descriptions
 const experiencesItems = [
   {
-    href: "/escapes",
+    href: "/experiences-vr?famille=escape",
     title: "Escape Games VR",
     desc: "Missions immersives, jusqu'à 6 joueurs",
     accent: "from-[var(--color-brand-500)] to-[var(--color-glow-pink)]",
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11V7a4 4 0 118 0v4m-9 0h10a2 2 0 012 2v6a2 2 0 01-2 2H11a2 2 0 01-2-2v-6a2 2 0 012-2z"/>`,
   },
   {
-    href: "/escapesFreeroaming",
+    href: "/experiences-vr?famille=escape&mode=sans-fil",
     title: "Escape Games Sans Fil",
     desc: "Liberté de mouvement totale",
     accent: "from-[var(--color-glow-cyan)] to-[var(--color-brand-500)]",
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11V7a4 4 0 118 0v4m-9 0h10a2 2 0 012 2v6a2 2 0 01-2 2H11a2 2 0 01-2-2v-6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13c1.5-1.5 3-1.5 4.5 0M3 17c2.5-2 5-2 7.5 0" opacity="0.6"/>`,
   },
   {
-    href: "/jeux",
+    href: "/experiences-vr?famille=jeux",
     title: "Jeux VR",
     desc: "Arcade, sports, simulateurs",
     accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]",
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12h2m-1-1v2m6-1h.01M17 12h.01M5 7h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/>`,
   },
   {
-    href: "/freeroaming",
+    href: "/experiences-vr?famille=jeux&mode=sans-fil",
     title: "Jeux Sans Fil",
     desc: "Free roaming multi-joueurs",
     accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]",

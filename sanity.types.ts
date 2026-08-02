@@ -209,14 +209,17 @@ export type Games = {
   youtubeLink?: string;
   description?: string;
   tag?: TagReference;
+  headsetType?: "filaire" | "sans_fil";
   editeur?: EditeurReference;
   players?: string;
   duration?: string;
   difficulty?: number;
   age?: string;
-  tags?: Array<{
-    _key: string;
-  } & TagReference>;
+  tags?: Array<
+    {
+      _key: string;
+    } & TagReference
+  >;
 };
 
 export type Editeur = {
@@ -343,7 +346,30 @@ export type Geopoint = {
   alt?: number;
 };
 
-export type AllSanitySchemaTypes = SanityImageAssetReference | Config | SanityImageCrop | SanityImageHotspot | GamesReference | Avis | Page | Slug | Faq | Tarif | TagReference | EditeurReference | Games | Editeur | Tag | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageMetadata | SanityFileAsset | SanityAssetSourceData | SanityImageAsset | Geopoint;
+export type AllSanitySchemaTypes =
+  | SanityImageAssetReference
+  | Config
+  | SanityImageCrop
+  | SanityImageHotspot
+  | GamesReference
+  | Avis
+  | Page
+  | Slug
+  | Faq
+  | Tarif
+  | TagReference
+  | EditeurReference
+  | Games
+  | Editeur
+  | Tag
+  | SanityImagePaletteSwatch
+  | SanityImagePalette
+  | SanityImageDimensions
+  | SanityImageMetadata
+  | SanityFileAsset
+  | SanityAssetSourceData
+  | SanityImageAsset
+  | Geopoint;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: FAQS_QUERY
@@ -381,7 +407,7 @@ export type GAME_PATHS_QUERY_RESULT = Array<{
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
 // Variable: GAME_BY_SLUG_QUERY
-// Query: *[_type == "games" && slug.current == $slug][0]{  name,  description,  youtubeLink,  slug,  image,  tag->{name, title},  players,  duration,  difficulty,  age,  tags[]->{title}}
+// Query: *[_type == "games" && slug.current == $slug][0]{  name,  description,  youtubeLink,  slug,  image,  tag->{name, title},  headsetType,  players,  duration,  difficulty,  age,  tags[]->{title}}
 export type GAME_BY_SLUG_QUERY_RESULT = {
   name: string | null;
   description: string | null;
@@ -399,6 +425,7 @@ export type GAME_BY_SLUG_QUERY_RESULT = {
     name: null;
     title: string | null;
   } | null;
+  headsetType: "filaire" | "sans_fil" | null;
   players: string | null;
   duration: string | null;
   difficulty: number | null;
@@ -453,9 +480,9 @@ export type CONFIG_QUERY_RESULT = {
 } | null;
 
 // Source: ../vr-cafe-new/src/sanity/lib/queries.ts
-// Variable: GAMES_BY_TAG_QUERY
-// Query: *[_type == "games" && tag->title == $tagTitle]{  name,  description,  image{    alt,    asset->{url}  },  tag->{name, title},  players,  duration,  slug}
-export type GAMES_BY_TAG_QUERY_RESULT = Array<{
+// Variable: GAMES_ALL_QUERY
+// Query: *[_type == "games"] | order(name asc){  name,  description,  image{    alt,    asset->{url}  },  tag->{name, title},  headsetType,  players,  duration,  slug}
+export type GAMES_ALL_QUERY_RESULT = Array<{
   name: string | null;
   description: string | null;
   image: {
@@ -468,6 +495,7 @@ export type GAMES_BY_TAG_QUERY_RESULT = Array<{
     name: null;
     title: string | null;
   } | null;
+  headsetType: "filaire" | "sans_fil" | null;
   players: string | null;
   duration: string | null;
   slug: Slug | null;
@@ -477,14 +505,13 @@ export type GAMES_BY_TAG_QUERY_RESULT = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    "*[_type == \"faq\"] | order(ordre asc) { question, reponse, categorie, ordre }": FAQS_QUERY_RESULT;
-    "*[_type == \"games\"] { slug }": GAME_PATHS_QUERY_RESULT;
-    "*[_type == \"games\" && slug.current == $slug][0]{\n  name,\n  description,\n  youtubeLink,\n  slug,\n  image,\n  tag->{name, title},\n  players,\n  duration,\n  difficulty,\n  age,\n  tags[]->{title}\n}": GAME_BY_SLUG_QUERY_RESULT;
-    "*[_type == \"avis\" && afficher == true] | order(dateVisite desc) [0...12] {\n    prenom, note, commentaire, dateVisite\n  }": AVIS_QUERY_RESULT;
-    "*[_type == \"editeur\" && partenaireVedette == true && defined(logo)] | order(name asc) {\n    name, siteUrl, logo\n  }": PARTENAIRES_QUERY_RESULT;
-    "*[_type == \"tarif\" && type == \"anniversaire\"][0] { _id, name, prix, features }": TARIF_ANNIVERSAIRE_QUERY_RESULT;
-    "*[_type == \"config\"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }": CONFIG_QUERY_RESULT;
-    "*[_type == \"games\" && tag->title == $tagTitle]{\n  name,\n  description,\n  image{\n    alt,\n    asset->{url}\n  },\n  tag->{name, title},\n  players,\n  duration,\n  slug\n}": GAMES_BY_TAG_QUERY_RESULT;
+    '*[_type == "faq"] | order(ordre asc) { question, reponse, categorie, ordre }': FAQS_QUERY_RESULT;
+    '*[_type == "games"] { slug }': GAME_PATHS_QUERY_RESULT;
+    '*[_type == "games" && slug.current == $slug][0]{\n  name,\n  description,\n  youtubeLink,\n  slug,\n  image,\n  tag->{name, title},\n  headsetType,\n  players,\n  duration,\n  difficulty,\n  age,\n  tags[]->{title}\n}': GAME_BY_SLUG_QUERY_RESULT;
+    '*[_type == "avis" && afficher == true] | order(dateVisite desc) [0...12] {\n    prenom, note, commentaire, dateVisite\n  }': AVIS_QUERY_RESULT;
+    '*[_type == "editeur" && partenaireVedette == true && defined(logo)] | order(name asc) {\n    name, siteUrl, logo\n  }': PARTENAIRES_QUERY_RESULT;
+    '*[_type == "tarif" && type == "anniversaire"][0] { _id, name, prix, features }': TARIF_ANNIVERSAIRE_QUERY_RESULT;
+    '*[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }': CONFIG_QUERY_RESULT;
+    '*[_type == "games"] | order(name asc){\n  name,\n  description,\n  image{\n    alt,\n    asset->{url}\n  },\n  tag->{name, title},\n  headsetType,\n  players,\n  duration,\n  slug\n}': GAMES_ALL_QUERY_RESULT;
   }
 }
-

@@ -13,6 +13,7 @@ export const GAME_BY_SLUG_QUERY = defineQuery(`*[_type == "games" && slug.curren
   slug,
   image,
   tag->{name, title},
+  headsetType,
   players,
   duration,
   difficulty,
@@ -40,18 +41,19 @@ export const CONFIG_QUERY = defineQuery(
   `*[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }`
 );
 
-/** Forme commune des 4 requêtes "jeux par tag" ci-dessous (jeuxVR/escapeGame/freeroaming/escapeFreeroaming). */
 export type GameListItem = {
   name: string | null;
   description: string | null;
   image: { alt: string | null; asset: { url: string | null } | null } | null;
   tag: { name: string | null; title: string | null } | null;
+  headsetType: "filaire" | "sans_fil" | null;
   players: string | null;
   duration: string | null;
   slug: { current: string } | null;
 };
 
-export const GAMES_BY_TAG_QUERY = defineQuery(`*[_type == "games" && tag->title == $tagTitle]{
+/** Tous les jeux du catalogue, utilisé par la page unifiée /experiences-vr avec ses filtres famille/mode. */
+export const GAMES_ALL_QUERY = defineQuery(`*[_type == "games"] | order(name asc){
   name,
   description,
   image{
@@ -59,6 +61,7 @@ export const GAMES_BY_TAG_QUERY = defineQuery(`*[_type == "games" && tag->title 
     asset->{url}
   },
   tag->{name, title},
+  headsetType,
   players,
   duration,
   slug

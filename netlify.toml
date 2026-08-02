@@ -55,3 +55,28 @@
   to = "/.well-known/:splat"
   status = 200
   force = false
+
+# Fusion du catalogue de jeux (4 anciennes pages) en une page unique avec filtres
+[[redirects]]
+  from = "/jeux"
+  to = "/experiences-vr?famille=jeux"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/escapes"
+  to = "/experiences-vr?famille=escape"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/freeroaming"
+  to = "/experiences-vr?famille=jeux&mode=sans-fil"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/escapesFreeroaming"
+  to = "/experiences-vr?famille=escape&mode=sans-fil"
+  status = 301
+  force = true

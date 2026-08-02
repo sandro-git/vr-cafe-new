@@ -2,15 +2,14 @@
 // src/components/CardImage.astro
 import SanityPicture from "./SanityPicture.astro";
 import Play from "./Play.astro";
+import HeadsetBadge from "./HeadsetBadge.astro";
 
-const { image, alt, slug, title, category, players, duration } = Astro.props;
+const { image, alt, slug, title, category, headsetType, players, duration } = Astro.props;
 
-// Mappe le slug de catégorie vers un label lisible
+// Mappe le slug de catégorie (famille) vers un label lisible
 const CATEGORY_LABELS: Record<string, string> = {
   jeuxVR: "Jeu VR",
   escapeGame: "Escape Game",
-  freeroaming: "VR Sans Fil",
-  escapeFreeroaming: "Escape Sans Fil",
 };
 const categoryLabel = category ? CATEGORY_LABELS[category] ?? category : null;
 
@@ -51,6 +50,9 @@ const meta = metaParts.join(" · ");
       {categoryLabel}
     </span>
   )}
+
+  <!-- Badge type de casque -->
+  {headsetType && <HeadsetBadge type={headsetType} class="absolute top-3 right-3 z-10" />}
 
   <!-- Bas : titre + méta + play -->
   <div class="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 p-4">

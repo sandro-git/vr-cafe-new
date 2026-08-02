@@ -26,16 +26,19 @@ const TOOLS = [
   {
     name: "list_games",
     description:
-      "List VR games available at VR Café Lyon. Optionally filter by category.",
+      "List VR games available at VR Café Lyon. Optionally filter by category and/or headset type.",
     inputSchema: {
       type: "object",
       properties: {
         tag: {
           type: "string",
-          enum: ["jeuxVR", "escapeGame", "freeroaming", "escapeFreeroaming"],
-          description:
-            "jeuxVR = wired VR games, escapeGame = wired escape rooms, " +
-            "freeroaming = wireless VR games, escapeFreeroaming = wireless escape rooms",
+          enum: ["jeuxVR", "escapeGame"],
+          description: "jeuxVR = VR games (arcade, multiplayer...), escapeGame = escape rooms",
+        },
+        headsetType: {
+          type: "string",
+          enum: ["filaire", "sans_fil"],
+          description: "filaire = wired VR (PC VR, individual boxes), sans_fil = wireless VR (standalone headset)",
         },
       },
     },
@@ -119,18 +122,28 @@ const TOOLS = [
 async function toolListGames(args: Record<string, unknown>) {
   const sanityRaw = makeSanity() as unknown as { fetch(q: string, p?: Record<string, unknown>): Promise<Record<string, unknown>[]> };
   const tag = args.tag as string | undefined;
+  const headsetType = args.headsetType as string | undefined;
+
+  const filters = ['_type == "games"'];
+  const params: Record<string, unknown> = {};
+  if (tag) {
+    filters.push("tag->title == $tag");
+    params.tag = tag;
+  }
+  if (headsetType) {
+    filters.push("headsetType == $headsetType");
+    params.headsetType = headsetType;
+  }
 
   const games = await sanityRaw.fetch(
-    tag
-      ? `*[_type == "games" && $tag in tags[]->title] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`
-      : `*[_type == "games"] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age}`,
-    tag ? { tag } : undefined
+    `*[${filters.join(" && ")}] | order(name asc) {name, "slug": slug.current, description, players, duration, difficulty, age, headsetType}`,
+    params
   );
   if (!games.length) return text("Aucun jeu trouvé.");
 
   const lines = games.map(
     (g: Record<string, unknown>) =>
-      `- **${g.name}** (https://vr-cafe.fr/${g.slug}) — ${g.players} joueurs, ${g.duration} min, difficulté: ${g.difficulty}`
+      `- **${g.name}** (https://vr-cafe.fr/${g.slug}) — ${g.players} joueurs, ${g.duration} min, difficulté: ${g.difficulty}, ${g.headsetType === "sans_fil" ? "sans fil" : "filaire"}`
   );
   return text(lines.join("\n"));
 }

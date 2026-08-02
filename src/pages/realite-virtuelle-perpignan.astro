@@ -97,9 +97,9 @@ import Button from "../components/Button.astro";
       </h2>
       <div class="reveal reveal-stagger grid md:grid-cols-2 gap-6">
         {[
-          { href: "/escapes", title: "Escape Games VR", text: "Résolvez des énigmes en réalité virtuelle en équipe. Des scénarios épiques pour 1 à 6 joueurs — la formule idéale entre amis ou en famille.", cta: "Découvrir les escapes" },
-          { href: "/freeroaming", title: "Free Roaming VR", text: "Sautez dans la réalité virtuelle sans câbles. Le free roaming offre une liberté totale de mouvement pour une immersion absolue.", cta: "Découvrir le free roaming" },
-          { href: "/jeux", title: "Jeux VR Multijoueur", text: "Affrontez-vous ou coopérez en réalité virtuelle. Des dizaines de jeux pour tous les niveaux, dès 7 ans.", cta: "Voir les jeux" },
+          { href: "/experiences-vr?famille=escape", title: "Escape Games VR", text: "Résolvez des énigmes en réalité virtuelle en équipe. Des scénarios épiques pour 1 à 6 joueurs — la formule idéale entre amis ou en famille.", cta: "Découvrir les escapes" },
+          { href: "/experiences-vr?mode=sans-fil", title: "Free Roaming VR", text: "Sautez dans la réalité virtuelle sans câbles. Le free roaming offre une liberté totale de mouvement pour une immersion absolue.", cta: "Découvrir le free roaming" },
+          { href: "/experiences-vr?famille=jeux", title: "Jeux VR Multijoueur", text: "Affrontez-vous ou coopérez en réalité virtuelle. Des dizaines de jeux pour tous les niveaux, dès 7 ans.", cta: "Voir les jeux" },
           { href: "/cadeaux", title: "Cartes Cadeaux", text: "Offrez une expérience inoubliable à vos proches. Valable 1 an sur toutes nos formules. Livraison par email immédiate.", cta: "Commander une carte cadeau" },
         ].map((e) => (
           <a href={e.href} class="card-glow group block p-8 transition-transform duration-[var(--dur-base)] hover:-translate-y-1">

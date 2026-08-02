@@ -6,11 +6,29 @@ interface Props {
   title: string;
   highlight: string;
   subtitle: string;
-  filters?: { href: string; label: string }[];
 }
 
-const currentPath = Astro.url.pathname;
-const { eyebrow = "Catalogue", title, highlight, subtitle, filters } = Astro.props;
+const { eyebrow = "Catalogue", title, highlight, subtitle } = Astro.props;
+
+const familleOptions = [
+  { value: "all", label: "Tous" },
+  { value: "jeuxVR", label: "Jeux VR" },
+  { value: "escapeGame", label: "Escape Games" },
+];
+
+const modeOptions = [
+  { value: "all", label: "Tous" },
+  { value: "filaire", label: "Filaire" },
+  { value: "sans_fil", label: "Sans fil" },
+];
+
+const pillClass = (active: boolean) =>
+  [
+    "inline-flex items-center rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors duration-[var(--dur-fast)] ring-1",
+    active
+      ? "text-[var(--color-brand-300)] bg-white/5 ring-[var(--color-brand-500)]/30"
+      : "text-white/75 bg-white/[0.03] ring-white/10 hover:text-white hover:bg-white/10",
+  ].join(" ");
 ---
 
 <section class="bg-[var(--color-surface)]">
@@ -18,30 +36,96 @@ const { eyebrow = "Catalogue", title, highlight, subtitle, filters } = Astro.pro
     <PageHeader eyebrow={eyebrow} title={title} highlight={highlight} subtitle={subtitle} />
   </div>
 
-  {filters && filters.length > 0 && (
-    <ul class="reveal flex flex-wrap gap-3 justify-center mb-10 px-4">
-      {filters.map((f) => {
-        const isActive = currentPath === f.href || currentPath === `${f.href}/`;
-        return (
-          <li>
-            <a
-              href={f.href}
-              class:list={[
-                "inline-flex items-center rounded-full px-5 py-2 text-sm font-medium tracking-tight transition-colors duration-[var(--dur-fast)] ring-1",
-                isActive
-                  ? "text-[var(--color-brand-300)] bg-white/5 ring-[var(--color-brand-500)]/30"
-                  : "text-white/75 bg-white/[0.03] ring-white/10 hover:text-white hover:bg-white/10",
-              ]}
-            >
-              {f.label}
-            </a>
-          </li>
-        );
-      })}
+  <!-- Filtres famille + mode (JS côté client, aucun rechargement de page) -->
+  <div id="catalogue-filters" class="reveal flex flex-col items-center gap-3 mb-10 px-4">
+    <ul class="flex flex-wrap gap-2 justify-center" data-filter-group="famille">
+      {familleOptions.map((opt) => (
+        <li>
+          <button type="button" data-filter-value={opt.value} class={pillClass(opt.value === "all")}>
+            {opt.label}
+          </button>
+        </li>
+      ))}
     </ul>
-  )}
+    <ul class="flex flex-wrap gap-2 justify-center" data-filter-group="mode">
+      {modeOptions.map((opt) => (
+        <li>
+          <button type="button" data-filter-value={opt.value} class={pillClass(opt.value === "all")}>
+            {opt.label}
+          </button>
+        </li>
+      ))}
+    </ul>
+    <p id="catalogue-filters-empty" class="hidden text-sm text-white/55 mt-2">
+      Aucune expérience ne correspond à ces filtres.
+    </p>
+  </div>
 
   <div class="pb-20 lg:pb-28">
     <slot />
   </div>
 </section>
+
+<script>
+  function initCatalogueFilters() {
+    const root = document.getElementById("catalogue-filters");
+    if (!root || root.dataset.filtersBound === "1") return;
+    root.dataset.filtersBound = "1";
+
+    const state: Record<string, string> = { famille: "all", mode: "all" };
+
+    const params = new URLSearchParams(window.location.search);
+    const familleParam = params.get("famille");
+    const modeParam = params.get("mode");
+    if (familleParam === "jeux") state.famille = "jeuxVR";
+    if (familleParam === "escape") state.famille = "escapeGame";
+    if (modeParam === "sans-fil") state.mode = "sans_fil";
+    if (modeParam === "filaire") state.mode = "filaire";
+
+    const groups = root.querySelectorAll<HTMLElement>("[data-filter-group]");
+    groups.forEach((group) => {
+      const groupName = group.dataset.filterGroup!;
+      group.querySelectorAll<HTMLButtonElement>("button[data-filter-value]").forEach((btn) => {
+        if (btn.dataset.filterValue === state[groupName]) {
+          btn.classList.add("text-[var(--color-brand-300)]", "bg-white/5", "ring-[var(--color-brand-500)]/30");
+          btn.classList.remove("text-white/75", "bg-white/[0.03]", "ring-white/10");
+        }
+        btn.addEventListener("click", () => {
+          state[groupName] = btn.dataset.filterValue!;
+          group.querySelectorAll<HTMLButtonElement>("button[data-filter-value]").forEach((b) => {
+            const active = b === btn;
+            b.classList.toggle("text-[var(--color-brand-300)]", active);
+            b.classList.toggle("bg-white/5", active);
+            b.classList.toggle("ring-[var(--color-brand-500)]/30", active);
+            b.classList.toggle("text-white/75", !active);
+            b.classList.toggle("bg-white/[0.03]", !active);
+            b.classList.toggle("ring-white/10", !active);
+          });
+          applyFilters();
+        });
+      });
+    });
+
+    function applyFilters() {
+      const cards = document.querySelectorAll<HTMLElement>("[data-family][data-headset]");
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const familyMatch = state.famille === "all" || card.dataset.family === state.famille;
+        const modeMatch = state.mode === "all" || card.dataset.headset === state.mode;
+        const visible = familyMatch && modeMatch;
+        card.classList.toggle("hidden", !visible);
+        if (visible) visibleCount++;
+      });
+      document.getElementById("catalogue-filters-empty")?.classList.toggle("hidden", visibleCount > 0);
+    }
+
+    applyFilters();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCatalogueFilters);
+  } else {
+    initCatalogueFilters();
+  }
+  document.addEventListener("astro:page-load", initCatalogueFilters);
+</script>

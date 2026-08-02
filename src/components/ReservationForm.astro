@@ -195,6 +195,7 @@ const {
   // @ts-nocheck
   import { calcMontant } from '../lib/pricing';
   import { validateClientInfo, formatPhoneForStorage } from '../lib/reservation-validation';
+  import { headsetBadgeHtml } from '../lib/headsetBadge';
 
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
@@ -413,9 +414,8 @@ const {
     const dateFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long',
     });
-    const vrLabel = selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
     document.getElementById('step2-summary').innerHTML =
-      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${selectedDuree.label} &nbsp;·&nbsp; ${vrLabel}`;
+      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${selectedDuree.label} &nbsp;·&nbsp; ${headsetBadgeHtml(selectedVrType)}`;
 
     document.getElementById('slots-loading').classList.remove('hidden');
     document.getElementById('slots-grid').classList.add('hidden');
@@ -533,11 +533,10 @@ const {
     const h1 = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const h2 = fin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-    const vrLabel3 = selectedVrType === 'sans_fil' ? '📡 VR Sans Fil' : '🔌 VR Filaire';
     document.getElementById('step3-summary').innerHTML =
       `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
       `⏰ ${h1} → ${h2} (${selectedDuree.label})<br>` +
-      `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${vrLabel3}`;
+      `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${headsetBadgeHtml(selectedVrType)}`;
 
     showStep(3);
   }
@@ -691,6 +690,10 @@ const {
       <div class="flex justify-between">
         <span class="text-white/55">Joueurs</span>
         <span class="text-white">${selectedNb}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-white/55">Type VR</span>
+        ${headsetBadgeHtml(selectedVrType)}
       </div>
       <div class="flex justify-between">
         <span class="text-white/55">Box${boxes.length > 1 ? 'es' : ''}</span>

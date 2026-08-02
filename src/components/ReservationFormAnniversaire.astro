@@ -193,6 +193,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 <script>
   // @ts-nocheck
   import { validateClientInfo, formatPhoneForStorage } from '../lib/reservation-validation';
+  import { headsetBadgeHtml } from '../lib/headsetBadge';
   // Supabase en import dynamique : le rendu de l'étape 1 ne dépend pas du chunk.
   let supabase;
   async function ensureSupabase() {
@@ -734,9 +735,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function getVrLabel(type) {
-    if (type === 'both') return '🔌 VR Filaire + 📡 VR Sans Fil';
-    if (type === 'sans_fil') return '📡 VR Sans Fil';
-    return '🔌 VR Filaire';
+    if (type === 'both') return `${headsetBadgeHtml('filaire')} ${headsetBadgeHtml('sans_fil')}`;
+    return headsetBadgeHtml(type);
   }
   function showStep(n) {
     [1, 2, 3, 4].forEach(i => {

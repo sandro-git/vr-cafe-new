@@ -15,6 +15,7 @@ const { game, slug } = Astro.props;
       slug={slug}
       title={game.name}
       category={game.tag?.title}
+      headsetType={game.headsetType}
       players={game.players}
       duration={game.duration}
     />

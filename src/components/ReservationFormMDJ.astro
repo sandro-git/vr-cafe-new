@@ -178,6 +178,10 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 <script>
   // @ts-nocheck
   import { validateClientInfo, formatPhoneForStorage } from '../lib/reservation-validation';
+  import { headsetBadgeHtml } from '../lib/headsetBadge';
+
+  // MDJ bloque toujours les deux espaces (filaire + sans-fil) simultanément.
+  const mdjBadges = () => `${headsetBadgeHtml('filaire')} ${headsetBadgeHtml('sans_fil')}`;
   // Supabase en import dynamique : le rendu de l'étape 1 ne dépend pas du chunk.
   let supabase;
   async function ensureSupabase() {
@@ -369,7 +373,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     const nbCreneaux = Math.ceil(selectedNb / CAPACITE_PAR_CRENEAU);
     const dureeBlocage = nbCreneaux * selectedDuree.duree_minutes;
     document.getElementById('step2-summary').innerHTML =
-      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} enfants &nbsp;·&nbsp; ${nbCreneaux}×${selectedDuree.duree_minutes} min = ${dureeBlocage} min`;
+      `${dateFmt} &nbsp;·&nbsp; ${selectedNb} enfants &nbsp;·&nbsp; ${nbCreneaux}×${selectedDuree.duree_minutes} min = ${dureeBlocage} min &nbsp;·&nbsp; ${mdjBadges()}`;
 
     document.getElementById('slots-loading').classList.remove('hidden');
     document.getElementById('slots-grid').classList.add('hidden');
@@ -497,7 +501,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     document.getElementById('step3-summary').innerHTML =
       `<strong class="text-white">📅 ${dateFmt}</strong><br>` +
       `⏰ ${h1} → ${h2} (${dureeBlocage} min · ${nbCreneaux} session${nbCreneaux > 1 ? 's' : ''} de ${selectedDuree.duree_minutes} min)<br>` +
-      `👥 ${selectedNb} enfants &nbsp;·&nbsp; 🏠 MDJ (Filaire + Sans Fil)`;
+      `👥 ${selectedNb} enfants &nbsp;·&nbsp; ${mdjBadges()}`;
 
     showStep(3);
   }
@@ -649,9 +653,9 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         <span class="text-white/55">Enfants</span>
         <span class="text-white">${selectedNb}</span>
       </div>
-      <div class="flex justify-between">
+      <div class="flex justify-between items-center">
         <span class="text-white/55">Espaces</span>
-        <span class="text-white">🏠 MDJ (Filaire + Sans Fil)</span>
+        ${mdjBadges()}
       </div>
       <div class="flex justify-between">
         <span class="text-white/55">Box${boxes.length > 1 ? 'es' : ''}</span>

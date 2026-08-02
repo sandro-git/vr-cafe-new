@@ -1,0 +1,40 @@
+---
+export const prerender = true;
+
+import GameList from "../components/GameList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import GamesLayout from "../layouts/GamesLayout.astro";
+
+import { loadQuery } from "../sanity/lib/load-query";
+import { GAMES_ALL_QUERY, type GameListItem } from "../sanity/lib/queries";
+import JsonLd from "../components/JsonLd.astro";
+import { graph, businessNode, breadcrumb, gameListSchema } from "../lib/seo";
+
+const { data: experiences } = await loadQuery<GameListItem[]>({
+  query: GAMES_ALL_QUERY,
+});
+
+const schema = graph([
+  businessNode,
+  breadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Expériences VR", path: "/experiences-vr" },
+  ]),
+  gameListSchema(experiences),
+]);
+---
+
+<BaseLayout
+  title="Escape Games VR & Jeux VR à Perpignan | VR Café Canet-en-Roussillon"
+  description="Notre catalogue complet : escape games VR et jeux multijoueurs, en filaire ou sans fil. Salle VR à Canet-en-Roussillon, à 10 min de Perpignan."
+  canonical="https://vr-cafe.fr/experiences-vr/"
+>
+  <JsonLd schema={schema} />
+  <GamesLayout
+    title="Nos Expériences VR"
+    highlight="Expériences"
+    subtitle="Escape games et jeux multijoueurs, en filaire ou en sans-fil : filtrez pour trouver votre prochaine session."
+  >
+    <GameList experiences={experiences} />
+  </GamesLayout>
+</BaseLayout>

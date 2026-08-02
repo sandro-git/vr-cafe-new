@@ -6,6 +6,7 @@ import SanityPicture from "../components/SanityPicture.astro";
 import Play from "../components/Play.astro";
 import Button from "../components/Button.astro";
 import JsonLd from "../components/JsonLd.astro";
+import HeadsetBadge from "../components/HeadsetBadge.astro";
 import { graph, breadcrumb } from "../lib/seo";
 
 export const prerender = true;
@@ -68,9 +69,15 @@ if (!game) {
         <!-- Détails à droite -->
         <div class="reveal flex flex-col gap-6">
           <div>
-            <h1 class="font-display text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4">
+            <h1 class="font-display text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
               {game.name}
             </h1>
+
+            {game.headsetType && (
+              <div class="mb-4">
+                <HeadsetBadge type={game.headsetType} size="md" />
+              </div>
+            )}
 
             <!-- Tags -->
             {game.tags && game.tags.length > 0 && (

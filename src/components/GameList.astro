@@ -15,6 +15,7 @@ interface Experience {
     name: string;
     title?: string;
   };
+  headsetType?: "filaire" | "sans_fil";
   players?: string;
   duration?: string;
   slug: {
@@ -28,7 +29,7 @@ interface Experience {
 >
   {
     experiences.map((exp: Experience) => (
-      <div class="w-full">
+      <div class="w-full" data-family={exp.tag?.title} data-headset={exp.headsetType}>
         <Card game={exp} slug={exp.slug.current} />
       </div>
     ))
