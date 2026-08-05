@@ -12,6 +12,7 @@ export const GAME_BY_SLUG_QUERY = defineQuery(`*[_type == "games" && slug.curren
   youtubeLink,
   slug,
   image,
+  gallery[]{ alt, asset->{url} },
   tag->{name, title},
   headsetType,
   players,
@@ -40,6 +41,8 @@ export const TARIF_ANNIVERSAIRE_QUERY = defineQuery(
 export const CONFIG_QUERY = defineQuery(
   `*[_type == "config"][0]{ noteGoogle, nombreAvis, lienGoogleMaps }`
 );
+
+export const GAMES_COUNT_QUERY = defineQuery(`count(*[_type == "games"])`);
 
 export type GameListItem = {
   name: string | null;

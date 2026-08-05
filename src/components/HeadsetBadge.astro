@@ -5,13 +5,19 @@ interface Props {
   type: HeadsetType;
   size?: "sm" | "md";
   variant?: "pill" | "icon";
+  tone?: "neutral" | "cyan";
   class?: string;
 }
 
-const { type, size = "sm", variant = "pill", class: className } = Astro.props;
+const { type, size = "sm", variant = "pill", tone = "neutral", class: className } = Astro.props;
 
 const sizeClasses =
   size === "md" ? "px-3 py-1.5 text-xs gap-1.5" : "px-2.5 py-1 text-[11px] gap-1";
+
+const pillToneClasses =
+  tone === "cyan"
+    ? "bg-[var(--color-glow-cyan)]/30 ring-[var(--color-glow-cyan)]/50"
+    : "bg-black/40 ring-white/15";
 
 const iconSize = variant === "icon" ? 18 : 12;
 ---
@@ -44,7 +50,8 @@ const iconSize = variant === "icon" ? 18 : 12;
   ) : (
     <span
       class:list={[
-        "inline-flex items-center rounded-full bg-black/40 backdrop-blur-md ring-1 ring-white/15 font-semibold uppercase tracking-wide text-white",
+        "inline-flex items-center rounded-full backdrop-blur-md ring-1 font-semibold uppercase tracking-wide text-white",
+        pillToneClasses,
         sizeClasses,
         className,
       ]}
