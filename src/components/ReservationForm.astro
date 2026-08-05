@@ -34,6 +34,10 @@ const {
         Configurez votre session
       </h2>
 
+      <p id="prefill-note" class="hidden text-sm text-[var(--color-brand-300)] mb-4">
+        ✨ Type VR et durée pré-remplis selon le jeu choisi — modifiables si besoin.
+      </p>
+
       <div class="space-y-6">
 
         <!-- Date -->
@@ -226,6 +230,12 @@ const {
   let selectedDuree = null;
   let selectedSlot = null;
 
+  // ── Pré-remplissage depuis la fiche jeu (?vr=filaire|sans_fil&duree=30) ────
+  const prefillParams = new URLSearchParams(window.location.search);
+  const rawPrefillVrType = prefillParams.get('vr');
+  const prefillDureeMinutes = parseInt(prefillParams.get('duree'), 10) || null;
+  let prefillApplied = false;
+
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
     // UI immédiate — pas besoin de Supabase
@@ -263,6 +273,11 @@ const {
     });
 
     renderDurees();
+
+    if (prefillApplied) {
+      checkStep1Valid();
+      document.getElementById('prefill-note').classList.remove('hidden');
+    }
   }
 
   async function loadConfig() {
@@ -354,10 +369,12 @@ const {
       { id: 'filaire', label: '🔌 VR Filaire', desc: '6 boxes individuelles' },
       { id: 'sans_fil', label: '📡 VR Sans Fil', desc: 'Espace libre jusqu\'à 6 joueurs' },
     ];
+    const validPrefillVrType = types.some(t => t.id === rawPrefillVrType) ? rawPrefillVrType : null;
+
     types.forEach(t => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = vrTypeBtnClass(false);
+      btn.className = vrTypeBtnClass(t.id === validPrefillVrType);
       btn.innerHTML = `<span class="font-semibold">${t.label}</span><span class="block text-xs mt-1 opacity-70">${t.desc}</span>`;
       btn.addEventListener('click', () => {
         selectedVrType = t.id;
@@ -368,6 +385,11 @@ const {
       });
       grid.appendChild(btn);
     });
+
+    if (validPrefillVrType) {
+      selectedVrType = validPrefillVrType;
+      prefillApplied = true;
+    }
   }
 
   function renderDurees() {
@@ -380,10 +402,22 @@ const {
       return;
     }
 
+    // Résout la durée pré-remplie sur la durée réservable la plus proche
+    let prefillDureeRow = null;
+    if (prefillDureeMinutes) {
+      prefillDureeRow = dureeOptions.find(d => d.duree_minutes === prefillDureeMinutes)
+        ?? dureeOptions.reduce((closest, d) =>
+             !closest || Math.abs(d.duree_minutes - prefillDureeMinutes) < Math.abs(closest.duree_minutes - prefillDureeMinutes)
+               ? d
+               : closest,
+           null);
+    }
+
     dureeOptions.forEach(d => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = dureeBtnClass(false);
+      const isPrefilled = !!prefillDureeRow && d.id === prefillDureeRow.id;
+      btn.className = dureeBtnClass(isPrefilled);
       btn.innerHTML = `<span class="font-semibold text-base">${d.label}</span>`;
       btn.addEventListener('click', () => {
         selectedDuree = d;
@@ -393,6 +427,11 @@ const {
       });
       list.appendChild(btn);
     });
+
+    if (prefillDureeRow) {
+      selectedDuree = prefillDureeRow;
+      prefillApplied = true;
+    }
   }
 
   function setupButtons() {

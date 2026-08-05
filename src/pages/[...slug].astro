@@ -35,6 +35,21 @@ const { data: game } = await loadQuery<GAME_BY_SLUG_QUERY_RESULT>({
 if (!game) {
   return Astro.redirect("/404");
 }
+
+// Extrait le nombre de minutes depuis un champ Sanity libre ("30", "60 min", "15"...)
+function parseDurationMinutes(duration: string | null | undefined): number | null {
+  if (!duration) return null;
+  const match = duration.match(/\d+/);
+  if (!match) return null;
+  const n = parseInt(match[0], 10);
+  return n > 0 ? n : null;
+}
+
+const reserveParams = new URLSearchParams();
+if (game.headsetType) reserveParams.set("vr", game.headsetType);
+const durationMinutes = parseDurationMinutes(game.duration);
+if (durationMinutes) reserveParams.set("duree", String(durationMinutes));
+const reserveHref = reserveParams.size > 0 ? `/reservation?${reserveParams.toString()}` : "/reservation";
 ---
 
 <BaseLayout
@@ -144,7 +159,7 @@ if (!game) {
               <Play size={20} />
               Voir la vidéo
             </Button>
-            <Button href="/reservation" variant="primary" size="md">
+            <Button href={reserveHref} variant="primary" size="md">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
