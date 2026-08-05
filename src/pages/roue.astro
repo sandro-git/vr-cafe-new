@@ -1,0 +1,35 @@
+---
+export const prerender = false;
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import Section from "../components/Section.astro";
+import WheelSpin from "../components/WheelSpin.astro";
+import { loadQuery } from "../sanity/lib/load-query";
+import { LOTS_ROUE_QUERY, CONFIG_QUERY, type LotRoue } from "../sanity/lib/queries";
+
+const [{ data: lots }, { data: config }] = await Promise.all([
+  loadQuery<LotRoue[]>({ query: LOTS_ROUE_QUERY }),
+  loadQuery<{ lienGoogleMaps: string | null }>({ query: CONFIG_QUERY }),
+]);
+
+const lienGoogleMaps =
+  config?.lienGoogleMaps ??
+  "https://maps.google.com/?q=VR+Caf%C3%A9+2+rue+du+Pilou+66140+Canet-en-Roussillon";
+---
+
+<BaseLayout
+  title="Roue de récompense — VR Café"
+  description="Laissez un avis Google et tournez la roue pour tenter de gagner un lot à VR Café."
+>
+  <PageHeader
+    eyebrow="Merci de votre visite"
+    title="Tournez la roue et gagnez un lot"
+    highlight="roue"
+    subtitle="Laissez un avis Google, puis tentez votre chance : café offert, dessert offert, réduction… un seul essai par personne."
+  />
+
+  <Section bg="elevated" size="sm">
+    <WheelSpin lots={lots ?? []} lienGoogleMaps={lienGoogleMaps} />
+  </Section>
+</BaseLayout>

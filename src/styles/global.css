@@ -243,6 +243,13 @@ select.scheme-dark option {
   animation: bounce-soft 1.8s var(--ease-out-soft) infinite;
 }
 
+/* Roue de récompense — rotation one-shot pilotée par JS via `style.transform`
+   (l'angle cible dépend du lot tiré côté serveur, donc pas un keyframe fixe).
+   Neutralisée comme le reste par le bloc prefers-reduced-motion ci-dessous. */
+@utility wheel-spin {
+  transition: transform 4.5s var(--ease-out-expo);
+}
+
 /* Shimmer text */
 @utility text-shimmer {
   background: linear-gradient(

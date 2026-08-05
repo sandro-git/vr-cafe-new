@@ -1,0 +1,160 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-xl mx-auto">
+
+      <!-- En-tête -->
+      <div class="mb-8">
+        <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Roue de récompense</h1>
+        <p class="text-white/55 text-sm mt-0.5">Valider un code présenté en caisse</p>
+      </div>
+
+      <!-- Recherche -->
+      <form id="search-form" class="flex gap-3 mb-6">
+        <input
+          id="code-input"
+          type="text"
+          maxlength="6"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="Code (ex: A3F9K2)"
+          class="flex-1 uppercase tracking-[0.2em] font-semibold text-center bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 placeholder:normal-case placeholder:tracking-normal placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] transition-colors"
+        />
+        <button
+          type="submit"
+          class="px-5 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-xl border border-white/10 transition-colors"
+        >
+          Rechercher
+        </button>
+      </form>
+
+      <!-- Erreur -->
+      <div id="admin-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
+
+      <!-- Résultat -->
+      <div id="result-card" class="hidden card-glow p-6 space-y-4">
+        <div>
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Lot</p>
+          <p id="result-label" class="text-xl font-bold text-white"></p>
+        </div>
+        <div>
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Email</p>
+          <p id="result-email" class="text-white/70 text-sm"></p>
+        </div>
+        <div>
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Statut</p>
+          <p id="result-status" class="text-sm font-medium"></p>
+        </div>
+        <button
+          id="btn-valider"
+          type="button"
+          class="w-full px-4 py-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        >
+          Marquer comme utilisé
+        </button>
+      </div>
+
+    </div>
+  </main>
+</AdminLayout>
+
+<script>
+  // @ts-nocheck
+  let currentCode = "";
+  let currentUtilise = false;
+
+  document.getElementById("search-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("code-input");
+    const code = input.value.trim().toUpperCase();
+    if (!code) return;
+    await search(code);
+  });
+
+  document.getElementById("btn-valider").addEventListener("click", async () => {
+    if (!currentCode || currentUtilise) return;
+    await valider(currentCode);
+  });
+
+  async function search(code) {
+    hideError();
+    document.getElementById("result-card").classList.add("hidden");
+
+    const result = await call({ action: "rechercher_code", code });
+    if (!result) return;
+
+    currentCode = code;
+    renderResult(result.tirage);
+  }
+
+  async function valider(code) {
+    const btn = document.getElementById("btn-valider");
+    btn.disabled = true;
+    const result = await call({ action: "valider_code", code });
+    btn.disabled = false;
+    if (!result) return;
+
+    currentUtilise = true;
+    document.getElementById("result-status").textContent = "Utilisé à l'instant";
+    document.getElementById("result-status").className = "text-sm font-medium text-green-300";
+    btn.textContent = "Déjà utilisé";
+  }
+
+  function renderResult(tirage) {
+    document.getElementById("result-label").textContent = tirage.lot_label;
+    document.getElementById("result-email").textContent = tirage.email;
+
+    currentUtilise = !!tirage.utilise;
+    const statusEl = document.getElementById("result-status");
+    const btn = document.getElementById("btn-valider");
+
+    if (tirage.utilise) {
+      const dateFmt = tirage.utilise_at
+        ? new Date(tirage.utilise_at).toLocaleString("fr-FR")
+        : "";
+      statusEl.textContent = `Déjà utilisé le ${dateFmt}`;
+      statusEl.className = "text-sm font-medium text-red-300";
+      btn.disabled = true;
+      btn.textContent = "Déjà utilisé";
+    } else {
+      statusEl.textContent = "Non utilisé";
+      statusEl.className = "text-sm font-medium text-amber-300";
+      btn.disabled = false;
+      btn.textContent = "Marquer comme utilisé";
+    }
+
+    document.getElementById("result-card").classList.remove("hidden");
+  }
+
+  async function call(payload) {
+    try {
+      const res = await fetch("/api/admin/roue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        showError(data.error ?? "Erreur serveur");
+        return null;
+      }
+      return data;
+    } catch {
+      showError("Erreur serveur — impossible de contacter l'API");
+      return null;
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("admin-error");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+
+  function hideError() {
+    document.getElementById("admin-error").classList.add("hidden");
+  }
+</script>

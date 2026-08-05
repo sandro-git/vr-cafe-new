@@ -1,0 +1,239 @@
+---
+import type { LotRoue } from "../sanity/lib/queries";
+
+interface Props {
+  id?: string;
+  lots: LotRoue[];
+  lienGoogleMaps: string;
+}
+
+const { id = "wheel", lots, lienGoogleMaps } = Astro.props;
+const count = lots.length;
+const seg = count > 0 ? 360 / count : 0;
+---
+
+<div id={id} data-wheel data-count={count} data-seg={seg} class="max-w-md mx-auto">
+  {count === 0 ? (
+    <p class="text-center text-white/60">
+      Aucun lot n'est configuré pour le moment, revenez bientôt !
+    </p>
+  ) : (
+    <>
+      <!-- Étape 1 — email -->
+      <form id={`${id}-email-form`} data-wheel-step="email" class="space-y-4">
+        <p class="hidden" aria-hidden="true">
+          <label>
+            Ne pas remplir si vous êtes humain : <input name="bot-field" tabindex="-1" autocomplete="off" />
+          </label>
+        </p>
+
+        <div>
+          <label for={`${id}-email`} class="block mb-2 text-sm font-semibold text-white">
+            Votre email
+          </label>
+          <input
+            id={`${id}-email`}
+            name="email"
+            type="email"
+            required
+            placeholder="prenom@email.fr"
+            class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] transition-colors"
+          />
+          <p class="mt-2 text-xs text-white/40">
+            Un seul essai par personne — votre email sert uniquement à vérifier ça.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-brand-900 font-semibold px-6 py-3 hover:bg-accent-300 hover:-translate-y-0.5 transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)]"
+        >
+          Continuer
+        </button>
+      </form>
+
+      <!-- Étape 2 — avis Google -->
+      <div id={`${id}-review-step`} data-wheel-step="review" class="hidden space-y-4 text-center">
+        <p class="text-white/70">
+          Laissez un avis Google, puis revenez ici pour faire tourner la roue.
+        </p>
+        <a
+          href={lienGoogleMaps}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full inline-flex items-center justify-center gap-2 rounded-full border border-white/30 text-white px-6 py-3 hover:bg-white/10 hover:border-white/60 backdrop-blur-sm transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)]"
+        >
+          Laisser un avis Google
+        </a>
+        <button
+          id={`${id}-confirm-review`}
+          type="button"
+          class="w-full inline-flex items-center justify-center gap-2 rounded-full bg-accent-400 text-brand-900 font-semibold px-6 py-3 hover:bg-accent-300 hover:-translate-y-0.5 transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)] disabled:opacity-50 disabled:pointer-events-none"
+        >
+          J'ai laissé mon avis → tourner la roue
+        </button>
+      </div>
+
+      <!-- Étape 3 — la roue -->
+      <div id={`${id}-wheel-wrap`} data-wheel-step="spin" class="hidden flex-col items-center gap-6">
+        <div class="relative aspect-square w-full max-w-xs mx-auto">
+          <div class="absolute -top-2 left-1/2 -translate-x-1/2 z-10 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-[var(--color-accent-400)] drop-shadow"></div>
+          <div
+            id={`${id}-dial`}
+            class="wheel-spin relative w-full h-full rounded-full ring-4 ring-white/10 shadow-2xl"
+            style={`background: conic-gradient(${lots.map((lot, i) => `${lot.couleur} ${i * seg}deg ${(i + 1) * seg}deg`).join(", ")}); transform: rotate(0deg);`}
+          >
+            {lots.map((lot, i) => {
+              const center = i * seg + seg / 2;
+              return (
+                <div class="absolute inset-0 flex justify-center" style={`transform: rotate(${center}deg);`}>
+                  <span
+                    class="mt-[12%] max-w-[38%] text-center text-[10px] sm:text-xs font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] leading-tight"
+                    style={`transform: rotate(${-center}deg); transform-origin: center;`}
+                  >
+                    {lot.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <p class="text-white/60 text-sm">La roue tourne…</p>
+      </div>
+
+      <!-- Étape 4 — résultat -->
+      <div id={`${id}-result`} data-wheel-step="result" class="hidden text-center space-y-4">
+        <p class="text-sm uppercase tracking-[0.2em] text-[var(--color-brand-400)] font-semibold">
+          Vous avez gagné
+        </p>
+        <p id={`${id}-result-label`} class="font-display text-3xl font-extrabold text-white"></p>
+        <div class="card-glow p-6">
+          <p class="text-white/60 text-sm mb-2">Présentez ce code en caisse</p>
+          <p id={`${id}-result-code`} class="font-display text-4xl font-extrabold tracking-[0.3em] text-shimmer"></p>
+        </div>
+      </div>
+
+      <!-- Erreur / déjà joué -->
+      <div id={`${id}-error`} data-wheel-step="error" class="hidden text-center space-y-4">
+        <p id={`${id}-error-text`} class="text-white/70"></p>
+      </div>
+    </>
+  )}
+</div>
+
+<script>
+  function initWheel(rootId: string) {
+    const root = document.getElementById(rootId);
+    if (!root || root.dataset.wheelBound === "1") return;
+    root.dataset.wheelBound = "1";
+
+    const seg = Number(root.dataset.seg || 0);
+    if (!seg) return; // aucun lot configuré
+
+    const emailForm = document.getElementById(`${rootId}-email-form`) as HTMLFormElement | null;
+    const reviewStep = document.getElementById(`${rootId}-review-step`);
+    const spinStep = document.getElementById(`${rootId}-wheel-wrap`);
+    const resultStep = document.getElementById(`${rootId}-result`);
+    const errorStep = document.getElementById(`${rootId}-error`);
+    const dial = document.getElementById(`${rootId}-dial`);
+    const confirmReviewBtn = document.getElementById(`${rootId}-confirm-review`) as HTMLButtonElement | null;
+    const resultLabel = document.getElementById(`${rootId}-result-label`);
+    const resultCode = document.getElementById(`${rootId}-result-code`);
+    const errorText = document.getElementById(`${rootId}-error-text`);
+
+    if (!emailForm || !reviewStep || !spinStep || !resultStep || !errorStep || !dial || !confirmReviewBtn || !resultLabel || !resultCode || !errorText) {
+      return;
+    }
+
+    const STORAGE_KEY = "vrcafe_roue_tirage";
+    const steps = [emailForm, reviewStep, spinStep, resultStep, errorStep];
+
+    function showStep(step: HTMLElement) {
+      steps.forEach((el) => el.classList.add("hidden"));
+      step.classList.remove("hidden");
+      if (step === spinStep) step.classList.add("flex");
+    }
+
+    function showResult(label: string, code: string) {
+      resultLabel!.textContent = label;
+      resultCode!.textContent = code;
+      showStep(resultStep!);
+    }
+
+    function showError(message: string) {
+      errorText!.textContent = message;
+      showStep(errorStep!);
+    }
+
+    // Résultat déjà enregistré sur cet appareil → ré-affichage direct (confort, pas une sécurité)
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.label && parsed.code) {
+          showResult(parsed.label, parsed.code);
+          return;
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    let currentEmail = "";
+
+    emailForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const emailInput = emailForm.querySelector<HTMLInputElement>('input[name="email"]');
+      currentEmail = emailInput?.value.trim() ?? "";
+      if (!currentEmail) return;
+      showStep(reviewStep!);
+    });
+
+    confirmReviewBtn.addEventListener("click", async () => {
+      confirmReviewBtn.disabled = true;
+      showStep(spinStep!);
+
+      const botField = emailForm.querySelector<HTMLInputElement>('input[name="bot-field"]');
+
+      try {
+        const res = await fetch("/api/roue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: currentEmail, "bot-field": botField?.value ?? "" }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(
+            data.error === "already_played"
+              ? "Cet email a déjà participé à la roue de récompense."
+              : "Une erreur est survenue, réessayez plus tard."
+          );
+          return;
+        }
+
+        const spins = 6;
+        const targetDeg = spins * 360 - (data.index + 0.5) * seg;
+        // Forcer un reflow avant de changer transform, pour garantir le déclenchement de la transition
+        dial.getBoundingClientRect();
+        (dial as HTMLElement).style.transform = `rotate(${targetDeg}deg)`;
+
+        const onEnd = () => {
+          dial.removeEventListener("transitionend", onEnd);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: currentEmail, label: data.label, code: data.code }));
+          showResult(data.label, data.code);
+        };
+        dial.addEventListener("transitionend", onEnd);
+      } catch {
+        showError("Une erreur est survenue, réessayez plus tard.");
+      }
+    });
+  }
+
+  function initAllWheels() {
+    document.querySelectorAll<HTMLElement>("[data-wheel]").forEach((el) => initWheel(el.id));
+  }
+
+  document.addEventListener("DOMContentLoaded", initAllWheels);
+  document.addEventListener("astro:page-load", initAllWheels);
+</script>
