@@ -2,6 +2,14 @@
 
 Ce fichier fournit des instructions à Claude Code (claude.ai/code) pour travailler dans ce dépôt.
 
+## Workflow
+
+Toujours tester la fonctionnalité de bout en bout dans le navigateur avant de commit. Une fois que ça fonctionne : commit et push.
+
+## Tech Stack
+
+Projet Astro + TypeScript déployé sur Netlify avec un backend Sanity CMS. Lancer `astro check` pour détecter les erreurs de type, et nettoyer les bundles SSR obsolètes avant de vérifier via `netlify dev`.
+
 ## Vue d'ensemble du projet
 
 Site web complet d'un VR Café (vr-cafe.fr) construit avec Astro 7 + Sanity CMS + Supabase. Inclut un catalogue de jeux VR, un système de réservation en ligne 4 étapes, un panneau d'administration complet, des notifications push et des emails transactionnels via Mailjet.
@@ -34,114 +42,6 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - **Web Push (VAPID)** — notifications admin à chaque nouvelle réservation
 - **Google Analytics 4** — chargé via `<script async>` dans `BaseHead.astro` (var `PUBLIC_GA_ID`)
 - **Forescape** — widget externe cartes cadeaux (domaine `vrcafe.4escape.io`)
-
-### Structure du projet
-
-```
-src/
-├── sanity/
-│   ├── schemaTypes/         # Schémas de contenu Sanity
-│   │   ├── games.ts         # Jeux VR (slug, image, YouTube, tags, difficulté, durée, joueurs, âge)
-│   │   ├── tag.ts           # Tags/catégories (jeuxVR, escapeGame, freeroaming, escapeFreeroaming)
-│   │   ├── editeur.ts       # Éditeurs/développeurs de jeux
-│   │   └── index.ts         # Exports des schémas
-│   └── lib/
-│       ├── queries.ts       # Toutes les GROQ queries (GAME_PATHS, GAME_BY_SLUG, JEUX_VR, FAQS, TARIFS)
-│       ├── load-query.ts    # Helper de requêtes Sanity (sanityClient.fetch avec filterResponse: false)
-│       └── url-for-image.ts # Constructeur d'URL d'images Sanity
-├── lib/
-│   ├── supabase.js          # Client Supabase (PUBLIC_SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY)
-│   └── notify.ts            # Web push via web-push (notifyNewReservation, VAPID)
-├── components/              # 30 composants Astro
-├── layouts/
-│   ├── BaseLayout.astro     # Layout public (NavBar + Footer + WhatsApp button)
-│   ├── BaseHead.astro       # Head HTML (meta SEO, GA4, favicon)
-│   ├── AdminLayout.astro    # Layout admin (header + service worker push)
-│   └── GamesLayout.astro   # Layout liste de jeux
-├── pages/
-│   ├── index.astro          # Accueil (hero, features, tarifs, FAQ, partenaires)
-│   ├── vr.astro             # Hub VR filaire (Escapes + Jeux)
-│   ├── vr-sans-fil.astro    # Hub VR Sans Fil (Escapes + Jeux)
-│   ├── jeux.astro           # Liste jeux VR filaires (tag: jeuxVR)
-│   ├── escapes.astro        # Liste escape games filaires (tag: escapeGame)
-│   ├── freeroaming.astro    # Liste jeux sans fil (tag: freeroaming)
-│   ├── escapesFreeroaming.astro  # Escapes sans fil (tag: escapeFreeroaming)
-│   ├── [...slug].astro      # Pages détail jeu dynamiques (YouTube + bouton réserver)
-│   ├── reservation.astro    # Formulaire réservation client
-│   ├── contact.astro        # Formulaire contact
-│   ├── contact/merci.astro  # Confirmation contact
-│   ├── cadeaux.astro        # Cartes cadeaux (info + FAQ)
-│   ├── giftCard.astro       # Widget Forescape cartes cadeaux
-│   └── admin/
-│       ├── login.astro      # Login admin (POST → cookie admin_session 30j)
-│       ├── index.astro      # Redirect → /admin/reservations
-│       ├── reservations.astro  # Tableau réservations du jour
-│       ├── reservation.astro   # Nouvelle réservation (mode admin)
-│       ├── planning.astro      # Planning semaine/jour (vue boxes + vacances/fermetures)
-│       ├── clients.astro       # CRM clients (fidèles, inactifs, tous + historique)
-│       └── marketing.astro     # Stats marketing + liens Mailjet
-├── middleware.ts            # Auth admin (vérifie cookie admin_session vs ADMIN_PASSWORD)
-├── assets/                  # Images WebP (partenaires, logos)
-└── styles/global.css        # Tailwind + styles globaux
-
-netlify/
-├── functions/               # Fonctions serverless Netlify
-│   ├── reservation-confirmation.mts  # POST /api/reservation-confirmation
-│   ├── contact.mts                   # POST /api/contact (CSRF HMAC-SHA256)
-│   ├── push-notify.mts               # POST /api/push-notify
-│   ├── push-subscribe.mts            # POST /api/push/subscribe (auth admin)
-│   ├── admin-db.mts                  # POST /api/admin-db (auth admin, multi-actions DB)
-│   ├── reservation-annulation.mts    # Annulation réservation
-│   └── whatsapp-webhook.mts          # Webhook WhatsApp (non utilisé actuellement)
-└── lib/
-    └── mailjet-contacts.ts           # Sync contacts Mailjet
-
-public/
-└── sw.js                    # Service Worker notifications push
-```
-
-### Schémas Sanity
-
-**Types de contenu (définis dans `src/sanity/schemaTypes/`) :**
-- **`games`** : jeux VR — `name`, `slug`, `image`, `youtubeLink`, `description`, `tag` (ref Editeur), `editeur` (ref Editeur), `players`, `duration`, `difficulty`, `age`, `tags[]` (array of ref Tag)
-- **`tag`** : catégories — `title` (valeurs : `jeuxVR`, `escapeGame`, `freeroaming`, `escapeFreeroaming`)
-- **`editeur`** : éditeurs/développeurs — `name`
-- **`faq`** : FAQ — `question`, `reponse`, `categorie`, `ordre` (fetch dans `FAQ.astro` avec fallback hardcodé)
-- **`tarif`** : tarifs — `name`, `prix`, `description`, `isPromo`, `nbJoueurs`, `dureeMinutes` (fetch dans `Pricing.astro` avec fallback hardcodé)
-
-**Requêtes GROQ (`src/sanity/lib/queries.ts`) :**
-- `GAME_PATHS_QUERY` — slugs de tous les jeux (pour `getStaticPaths`)
-- `GAME_BY_SLUG_QUERY` — jeu complet par slug
-- `GAMES_BY_TAG_QUERY` — jeux filtrés par tag (paramètre `$tagTitle` : `jeuxVR`/`escapeGame`/`freeroaming`/`escapeFreeroaming`)
-- `FAQS_QUERY` — FAQ triée par `ordre`
-
-### Composants principaux
-
-**Réservation :**
-- `ReservationForm.astro` — formulaire 4 étapes complet (voir section Système de réservation)
-- `DatePicker.astro` — calendrier custom avec gestion vacances/jours fermés (input hidden pour valeur ISO)
-- `ReservationGift.astro` — iframe widget Forescape cartes cadeaux
-
-**Catalogue jeux :**
-- `GameList.astro` — grille 3 colonnes responsive de `Card.astro`
-- `Card.astro` — carte jeu (image, titre, lien slug)
-- `YoutubePlayer.astro` — lecteur YouTube en modal sur page détail jeu
-
-**Images :**
-- `SanityPicture.astro` — images Sanity (image builder avec hotspot)
-- `CriticalImage.astro` — images LCP (above the fold)
-- `LandingImage.astro` — images hero
-
-**Contenu :**
-- `FAQ.astro` — accordéon FAQ (fetch Sanity ou fallback hardcodé)
-- `Pricing.astro` → `PricingCard.astro` — tarifs (fetch Sanity ou fallback hardcodé)
-- `Partners.astro` — logos partenaires (Ubisoft, Wanadev, etc.)
-- `Features.astro` — section avantages
-
-**Navigation :**
-- `NavBar.astro` — navbar sticky avec dropdowns VR/VR Sans Fil, bouton Réserver, responsive mobile
-- `Footer.astro` — footer avec contact, liens, réseaux sociaux
-- `WhatsAppButton.astro` — bouton WhatsApp flottant
 
 ### Système de réservation
 
