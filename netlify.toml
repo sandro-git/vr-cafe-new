@@ -80,3 +80,73 @@
   to = "/experiences-vr?famille=escape&mode=sans-fil"
   status = 301
   force = true
+
+# Jeux renommés (URLs indexées par Google sous l'ancien slug)
+[[redirects]]
+  from = "/cyber-clash"
+  to = "/cyber-clash-tournament"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/~partytown"
+  to = "/partyplayland"
+  status = 301
+  force = true
+
+# Ancienne structure d'URL /escapes/:editeur (pré-refonte catalogue)
+[[redirects]]
+  from = "/escapes/*"
+  to = "/experiences-vr?famille=escape"
+  status = 301
+  force = true
+
+# Jeux définitivement retirés du catalogue mais encore re-crawlés par Google
+# (404 persistants sur Search Console) : redirection douce vers le catalogue
+[[redirects]]
+  from = "/insanity-the-haunting"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/Insanity-The-Haunting"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/quantum-arena"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/dead-corps"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/laserbots"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/rush-z"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/les-schtroumpfs"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/Cops-VS-Robbers"
+  to = "/experiences-vr"
+  status = 301
+  force = true
