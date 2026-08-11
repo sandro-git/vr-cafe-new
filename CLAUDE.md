@@ -81,6 +81,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, 30j, compar
 - `/admin/reservation` — nouvelle réservation (même `ReservationForm` en mode `"admin"`, avec autocomplete client)
 - `/admin/clients` — CRM : liste clients filtrée (fidèles, inactifs, tous) + historique des réservations
 - `/admin/marketing` — stats (fidèles, inactifs, nouveaux) + liens vers Mailjet
+- `/admin/aide` — chat d'aide opérationnelle pour les collaborateurs (questions suggérées + saisie libre), répond uniquement à partir de `content/staff-guide.md` via Claude Haiku 4.5
 
 `AdminLayout.astro` enregistre le service worker et demande la permission push à chaque chargement de page admin.
 
@@ -93,6 +94,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, 30j, compar
 | `POST /api/push-notify` | — | Envoi notification push (web-push VAPID) |
 | `POST /api/push/subscribe` | Cookie `admin_session` | Enregistre un abonnement push dans Supabase |
 | `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : update résa, vacances, fermetures, boxes |
+| `POST /api/admin/chat` | Cookie `admin_session` | Chat d'aide opérationnelle (Claude Haiku 4.5), répond à partir de `content/staff-guide.md` compilé au build |
 | `POST /api/reservation-annulation` | — | Annulation réservation |
 
 **CORS origins autorisées :** `https://vr-cafe.fr`, `https://www.vr-cafe.fr`, `http://localhost:4321`
@@ -128,6 +130,9 @@ VAPID_EMAIL=...
 MAILJET_API_KEY=...
 MAILJET_API_SECRET=...
 MAILJET_SENDER_EMAIL=contact@vr-cafe.fr
+
+# Anthropic (chat aide admin, réponses aux avis Google, agent WhatsApp)
+ANTHROPIC_API_KEY=...
 
 # Google Analytics
 PUBLIC_GA_ID=G-XXXXXXXXXX

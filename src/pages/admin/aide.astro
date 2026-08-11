@@ -1,0 +1,168 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <!-- En-tête -->
+      <div class="mb-8">
+        <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Aide collaborateurs</h1>
+        <p class="text-white/55 text-sm mt-0.5">Questions sur la mise en route, les casques, les manettes, le réseau...</p>
+      </div>
+
+      <!-- Questions suggérées -->
+      <div id="suggestions" class="flex flex-wrap gap-2 mb-6">
+        <button type="button" class="suggestion-btn" data-q="Comment lancer un jeu ?">Lancer un jeu</button>
+        <button type="button" class="suggestion-btn" data-q="Comment appairer une manette ?">Appairer une manette</button>
+        <button type="button" class="suggestion-btn" data-q="Quelle est la procédure de mise en route le matin ?">Mise en route</button>
+        <button type="button" class="suggestion-btn" data-q="Un casque freeze, que faire ?">Casque qui freeze</button>
+        <button type="button" class="suggestion-btn" data-q="Comment redémarrer le routeur ?">Redémarrer le routeur</button>
+      </div>
+
+      <!-- Conversation -->
+      <div
+        id="chat"
+        class="flex flex-col gap-3 mb-4 min-h-[16rem] max-h-[28rem] overflow-y-auto bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4"
+      >
+        <p id="chat-empty" class="text-white/40 text-sm">Pose une question ci-dessous ou choisis une suggestion.</p>
+      </div>
+
+      <!-- Saisie -->
+      <form id="chat-form" class="flex gap-2">
+        <input
+          type="text"
+          id="question-input"
+          maxlength="500"
+          placeholder="Pose ta question..."
+          autocomplete="off"
+          class="flex-1 bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] outline-none rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/35"
+        />
+        <button
+          type="submit"
+          id="send-btn"
+          class="shrink-0 px-4 py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Envoyer
+        </button>
+      </form>
+      <p id="chat-error" class="hidden text-red-300 text-xs mt-2"></p>
+
+    </div>
+  </main>
+</AdminLayout>
+
+<style>
+  .suggestion-btn {
+    background: rgb(255 255 255 / 0.05);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    color: rgb(255 255 255 / 0.7);
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 9999px;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .suggestion-btn:hover {
+    background: rgb(255 255 255 / 0.1);
+    color: white;
+  }
+  .suggestion-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  // @ts-nocheck
+  const QUESTION_MIN_LENGTH = 2;
+  const QUESTION_MAX_LENGTH = 500;
+
+  const chat = document.getElementById('chat');
+  const chatEmpty = document.getElementById('chat-empty');
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('question-input');
+  const sendBtn = document.getElementById('send-btn');
+  const errorEl = document.getElementById('chat-error');
+  const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function addMessage(text, who) {
+    chatEmpty.classList.add('hidden');
+    const div = document.createElement('div');
+    div.className = who === 'user'
+      ? 'self-end max-w-[85%] bg-[var(--color-brand-600)]/20 border border-[var(--color-brand-500)]/30 text-white rounded-xl px-4 py-2 text-sm whitespace-pre-wrap'
+      : 'self-start max-w-[85%] bg-white/5 border border-white/10 text-white/90 rounded-xl px-4 py-2 text-sm whitespace-pre-wrap';
+    div.innerHTML = esc(text);
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function addLoadingBubble() {
+    const div = document.createElement('div');
+    div.className = 'self-start flex items-center gap-2 text-white/40 text-sm px-1';
+    div.innerHTML = '<span class="inline-block w-3.5 h-3.5 border-2 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin"></span> Réponse en cours...';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function setBusy(busy) {
+    input.disabled = busy;
+    sendBtn.disabled = busy;
+    suggestionBtns.forEach((btn) => { btn.disabled = busy; });
+  }
+
+  async function ask(question) {
+    errorEl.classList.add('hidden');
+
+    const trimmed = question.trim();
+    if (trimmed.length < QUESTION_MIN_LENGTH || trimmed.length > QUESTION_MAX_LENGTH) {
+      errorEl.textContent = `La question doit contenir entre ${QUESTION_MIN_LENGTH} et ${QUESTION_MAX_LENGTH} caractères.`;
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    addMessage(trimmed, 'user');
+    setBusy(true);
+    const loadingBubble = addLoadingBubble();
+
+    try {
+      const res = await fetch('/api/admin/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      loadingBubble.remove();
+
+      if (!res.ok || data.error) {
+        addMessage(data.error || `Erreur ${res.status}`, 'bot');
+        return;
+      }
+      addMessage(data.answer || 'Pas de réponse.', 'bot');
+    } catch (err) {
+      loadingBubble.remove();
+      addMessage("Erreur réseau, réessaie dans un instant.", 'bot');
+    } finally {
+      setBusy(false);
+      input.focus();
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = input.value;
+    if (!value.trim()) return;
+    input.value = '';
+    ask(value);
+  });
+
+  suggestionBtns.forEach((btn) => {
+    btn.addEventListener('click', () => ask(btn.dataset.q));
+  });
+</script>
