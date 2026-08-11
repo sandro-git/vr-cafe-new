@@ -23,7 +23,15 @@
 🚧 À compléter : appairage, remplacement des piles, reset manette.
 
 ## Lancement d'un jeu
-🚧 À compléter : procédure standard, catalogue de jeux, blocages fréquents.
+
+### Via Arvi VR
+1. Lancer Arvi
+2. Appuyer sur le "+" en bas à gauche
+3. Choisir le jeu
+4. Choisir les stations
+5. Cliquer sur "Démarrer la session"
+
+🚧 À compléter : catalogue de jeux, blocages fréquents.
 
 ## Réseau
 🚧 À compléter : redémarrage du routeur RAXE300, diagnostics de base.
