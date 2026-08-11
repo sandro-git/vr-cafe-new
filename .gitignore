@@ -35,3 +35,7 @@ pnpm-debug.log*
 # Deno lockfile : régénéré par la CLI Netlify (edge functions), aucune dépendance
 # Deno tierce à figer ici → non versionné pour éviter le bruit de diff
 deno.lock
+
+# Généré à partir de content/staff-guide.md par scripts/build-staff-guide.mjs
+# (voir package.json : "build" / "dev:netlify")
+netlify/lib/staff-guide-content.generated.ts
