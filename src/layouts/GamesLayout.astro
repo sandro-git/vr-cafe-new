@@ -93,15 +93,45 @@ const pillClass = (active: boolean) =>
     "shadow-[0_8px_24px_-8px_rgba(139,92,246,0.55)]",
   ];
   const INACTIVE_CLASSES = ["text-white/70", "bg-white/[0.06]", "ring-white/15"];
+  const STORAGE_KEY = "vrcafe:catalogue-filters";
+  const CATALOGUE_PATH = /^\/experiences-vr\/?$/;
 
-  function initCatalogueFilters() {
-    const root = document.getElementById("catalogue-filters");
-    if (!root || root.dataset.filtersBound === "1") return;
-    root.dataset.filtersBound = "1";
+  interface FilterState {
+    famille: string;
+    mode: string;
+  }
 
-    const state: Record<string, string> = { famille: "all", mode: "all" };
+  interface AstroBeforeSwapEvent extends Event {
+    to: URL;
+    newDocument: Document;
+  }
 
-    const params = new URLSearchParams(window.location.search);
+  function readPersistedFilters(): Partial<FilterState> | null {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as Partial<FilterState>) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function persistFilters(state: FilterState) {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // sessionStorage indisponible : on continue simplement sans persistance
+    }
+  }
+
+  // Priorité : query params (liens externes/partagés) > dernier choix de l'onglet > défaut.
+  function resolveFilterState(url: URL): FilterState {
+    const state: FilterState = { famille: "all", mode: "all" };
+
+    const persisted = readPersistedFilters();
+    if (persisted?.famille) state.famille = persisted.famille;
+    if (persisted?.mode) state.mode = persisted.mode;
+
+    const params = new URLSearchParams(url.search);
     const familleParam = params.get("famille");
     const modeParam = params.get("mode");
     if (familleParam === "jeux") state.famille = "jeuxVR";
@@ -109,45 +139,57 @@ const pillClass = (active: boolean) =>
     if (modeParam === "sans-fil") state.mode = "sans_fil";
     if (modeParam === "filaire") state.mode = "filaire";
 
-    const groups = root.querySelectorAll<HTMLElement>("[data-filter-group]");
-    groups.forEach((group) => {
-      const groupName = group.dataset.filterGroup!;
+    return state;
+  }
+
+  // Applique l'état de filtre à un document donné (le document courant, ou le document
+  // entrant d'une navigation astro:before-swap, avant que le swap réel n'ait eu lieu).
+  function applyFilterState(doc: Document, state: FilterState) {
+    const root = doc.getElementById("catalogue-filters");
+    root?.querySelectorAll<HTMLElement>("[data-filter-group]").forEach((group) => {
+      const groupName = group.dataset.filterGroup as keyof FilterState;
       group.querySelectorAll<HTMLButtonElement>("button[data-filter-value]").forEach((btn) => {
-        if (btn.dataset.filterValue === state[groupName]) {
-          btn.classList.add(...ACTIVE_CLASSES);
-          btn.classList.remove(...INACTIVE_CLASSES);
-        }
-        btn.addEventListener("click", () => {
-          state[groupName] = btn.dataset.filterValue!;
-          group.querySelectorAll<HTMLButtonElement>("button[data-filter-value]").forEach((b) => {
-            const active = b === btn;
-            b.classList.toggle(ACTIVE_CLASSES[0], active);
-            b.classList.toggle(ACTIVE_CLASSES[1], active);
-            b.classList.toggle(ACTIVE_CLASSES[2], active);
-            b.classList.toggle(ACTIVE_CLASSES[3], active);
-            b.classList.toggle(INACTIVE_CLASSES[0], !active);
-            b.classList.toggle(INACTIVE_CLASSES[1], !active);
-            b.classList.toggle(INACTIVE_CLASSES[2], !active);
-          });
-          applyFilters();
-        });
+        const active = btn.dataset.filterValue === state[groupName];
+        btn.classList.toggle(ACTIVE_CLASSES[0], active);
+        btn.classList.toggle(ACTIVE_CLASSES[1], active);
+        btn.classList.toggle(ACTIVE_CLASSES[2], active);
+        btn.classList.toggle(ACTIVE_CLASSES[3], active);
+        btn.classList.toggle(INACTIVE_CLASSES[0], !active);
+        btn.classList.toggle(INACTIVE_CLASSES[1], !active);
+        btn.classList.toggle(INACTIVE_CLASSES[2], !active);
       });
     });
 
-    function applyFilters() {
-      const cards = document.querySelectorAll<HTMLElement>("[data-family][data-headset]");
-      let visibleCount = 0;
-      cards.forEach((card) => {
-        const familyMatch = state.famille === "all" || card.dataset.family === state.famille;
-        const modeMatch = state.mode === "all" || card.dataset.headset === state.mode;
-        const visible = familyMatch && modeMatch;
-        card.classList.toggle("hidden", !visible);
-        if (visible) visibleCount++;
-      });
-      document.getElementById("catalogue-filters-empty")?.classList.toggle("hidden", visibleCount > 0);
-    }
+    const cards = doc.querySelectorAll<HTMLElement>("[data-family][data-headset]");
+    let visibleCount = 0;
+    cards.forEach((card) => {
+      const familyMatch = state.famille === "all" || card.dataset.family === state.famille;
+      const modeMatch = state.mode === "all" || card.dataset.headset === state.mode;
+      const visible = familyMatch && modeMatch;
+      card.classList.toggle("hidden", !visible);
+      if (visible) visibleCount++;
+    });
+    doc.getElementById("catalogue-filters-empty")?.classList.toggle("hidden", visibleCount > 0);
+  }
 
-    applyFilters();
+  function initCatalogueFilters() {
+    const root = document.getElementById("catalogue-filters");
+    if (!root || root.dataset.filtersBound === "1") return;
+    root.dataset.filtersBound = "1";
+
+    const state = resolveFilterState(new URL(window.location.href));
+    applyFilterState(document, state);
+
+    root.querySelectorAll<HTMLElement>("[data-filter-group]").forEach((group) => {
+      const groupName = group.dataset.filterGroup as keyof FilterState;
+      group.querySelectorAll<HTMLButtonElement>("button[data-filter-value]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state[groupName] = btn.dataset.filterValue!;
+          persistFilters(state);
+          applyFilterState(document, state);
+        });
+      });
+    });
   }
 
   if (document.readyState === "loading") {
@@ -156,4 +198,20 @@ const pillClass = (active: boolean) =>
     initCatalogueFilters();
   }
   document.addEventListener("astro:page-load", initCatalogueFilters);
+
+  // Pré-applique les filtres persistés au document entrant AVANT qu'Astro ne restaure le
+  // scroll d'une navigation retour/avant (sinon la restauration se fait sur une page non
+  // filtrée donc plus haute, et le scroll retombe au mauvais endroit une fois filtrée).
+  // Enregistré une seule fois pour toute la session : `document` persiste entre les
+  // navigations View Transitions, donc ce listener reste actif même une fois quitté
+  // /experiences-vr (ex. sur la fiche d'un jeu), prêt à intercepter le retour arrière.
+  const win = window as typeof window & { __catalogueBeforeSwapBound?: boolean };
+  if (!win.__catalogueBeforeSwapBound) {
+    win.__catalogueBeforeSwapBound = true;
+    document.addEventListener("astro:before-swap", (event) => {
+      const swapEvent = event as AstroBeforeSwapEvent;
+      if (!CATALOGUE_PATH.test(swapEvent.to.pathname)) return;
+      applyFilterState(swapEvent.newDocument, resolveFilterState(swapEvent.to));
+    });
+  }
 </script>
