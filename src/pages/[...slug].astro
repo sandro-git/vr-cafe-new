@@ -55,13 +55,13 @@ const reserveHref = reserveParams.size > 0 ? `/reservation?${reserveParams.toStr
 <BaseLayout
   title={`${game.name} — VR Café Canet-en-Roussillon`}
   description={game.description ? game.description.slice(0, 155) + (game.description.length > 155 ? '…' : '') : `Découvrez ${game.name} en réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan. Réservez en ligne !`}
-  canonical={`https://vr-cafe.fr/${params.slug}/`}
+  canonical={`https://vr-cafe.fr/${params.slug}`}
 >
   <JsonLd
     schema={graph([
       breadcrumb([
         { name: "Accueil", path: "/" },
-        { name: game.name ?? params.slug!, path: `/${params.slug}/` },
+        { name: game.name ?? params.slug!, path: `/${params.slug}` },
       ]),
     ])}
   />

@@ -56,6 +56,17 @@
   status = 200
   force = false
 
+# Le site n'utilise jamais de slash final (voir liens internes, sitemap, JSON-LD) :
+# une URL comme /reservation/ ou /experiences-vr/ est une page dupliquée aux yeux
+# de Google puisqu'elle renvoie le même contenu que /reservation ou /experiences-vr
+# sans jamais rediriger. On force donc une redirection 301 vers la version canonique
+# (sans slash) pour toute URL à un seul segment se terminant par "/".
+[[redirects]]
+  from = "/:path/"
+  to = "/:path"
+  status = 301
+  force = true
+
 # Fusion du catalogue de jeux (4 anciennes pages) en une page unique avec filtres
 [[redirects]]
   from = "/jeux"
