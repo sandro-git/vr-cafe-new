@@ -11,6 +11,7 @@ interface Props {
   className?: string;
   sizes?: string;
   loading?: "lazy" | "eager";
+  fetchpriority?: "high" | "low" | "auto";
 }
 
 const {
@@ -19,6 +20,7 @@ const {
   className,
   sizes = "(min-width: 1280px) 400px, (min-width: 768px) 33vw, 100vw",
   loading = "lazy",
+  fetchpriority = "auto",
 } = Astro.props;
 
 const base = urlForImage(image).auto("format");
@@ -38,6 +40,7 @@ const srcset = widths
     height={800}
     class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
     loading={loading}
+    fetchpriority={fetchpriority}
     decoding="async"
   />
 </div>

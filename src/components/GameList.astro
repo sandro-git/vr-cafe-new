@@ -28,9 +28,9 @@ interface Experience {
   class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 container mx-auto px-4 max-w-7xl"
 >
   {
-    experiences.map((exp: Experience) => (
+    experiences.map((exp: Experience, index: number) => (
       <div class="w-full" data-family={exp.tag?.title} data-headset={exp.headsetType}>
-        <Card game={exp} slug={exp.slug.current} />
+        <Card game={exp} slug={exp.slug.current} priority={index === 0} />
       </div>
     ))
   }
