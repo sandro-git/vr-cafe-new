@@ -4,7 +4,7 @@ import SanityPicture from "./SanityPicture.astro";
 import Play from "./Play.astro";
 import HeadsetBadge from "./HeadsetBadge.astro";
 
-const { image, alt, slug, title, category, headsetType, players, duration } = Astro.props;
+const { image, alt, slug, title, category, headsetType, players, duration, loading, fetchpriority } = Astro.props;
 
 // Mappe le slug de catégorie (famille) vers un label lisible (accessibilité)
 const CATEGORY_LABELS: Record<string, string> = {
@@ -35,6 +35,8 @@ const meta = metaParts.join(" · ");
     image={image}
     alt={alt}
     className="!rounded-none transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] group-hover:scale-105"
+    loading={loading}
+    fetchpriority={fetchpriority}
   />
 
   <!-- Dégradé : sombre en bas, léger voile en haut pour les badges -->

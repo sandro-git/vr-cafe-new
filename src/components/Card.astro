@@ -2,7 +2,7 @@
 // src/components/Card.astro
 import CardImage from "./CardImage.astro";
 
-const { game, slug } = Astro.props;
+const { game, slug, priority = false } = Astro.props;
 ---
 
 <div
@@ -18,6 +18,8 @@ const { game, slug } = Astro.props;
       headsetType={game.headsetType}
       players={game.players}
       duration={game.duration}
+      loading={priority ? "eager" : "lazy"}
+      fetchpriority={priority ? "high" : "auto"}
     />
   </div>
 </div>
