@@ -4,20 +4,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Title from "../components/Title.astro";
 import FAQ from "../components/FAQ.astro";
 import JsonLd from "../components/JsonLd.astro";
-import { graph, businessNode, breadcrumb, product } from "../lib/seo";
+import { graph, businessNode, breadcrumb } from "../lib/seo";
 
+// Pas de schéma Product : les cartes cadeaux ne sont plus proposées pour le moment
+// (voir noindex sur BaseLayout ci-dessous).
 const schema = graph([
   businessNode,
   breadcrumb([
     { name: "Accueil", path: "/" },
     { name: "Cartes cadeaux", path: "/cadeaux" },
   ]),
-  product({
-    name: "Carte cadeau VR Café",
-    description:
-      "Carte cadeau valable 1 an sur toutes les expériences du VR Café de Canet-en-Roussillon : escape games VR, jeux multijoueurs et free roaming. Livraison immédiate par email.",
-    path: "/cadeaux",
-  }),
 ]);
 
 const giftCardFAQs = [
@@ -57,6 +53,7 @@ const giftCardFAQs = [
 <BaseLayout
   title="Carte Cadeau VR — Idée Cadeau Original à Perpignan | VR Café"
   description="Offrez une expérience VR inoubliable à Canet-en-Roussillon. Carte cadeau valable sur toutes nos formules. Livraison immédiate par email."
+  noindex={true}
 >
   <JsonLd schema={schema} />
   <Title title="Cartes Cadeaux" />

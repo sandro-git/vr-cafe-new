@@ -6,6 +6,7 @@ interface Props {
   description?: string;
   canonical?: string;
   ogImage?: string;
+  noindex?: boolean;
 }
 
 const {
@@ -13,6 +14,7 @@ const {
   description = "Vivez une expérience VR inoubliable à Canet-en-Roussillon. Escape game, jeux multijoueurs, anniversaires & team building. Réservez en ligne !",
   canonical = Astro.url.href,
   ogImage = "https://vr-cafe.fr/og-image.jpg",
+  noindex = false,
 } = Astro.props;
 
 const GA_ID = import.meta.env.PUBLIC_GA_ID;
@@ -32,6 +34,7 @@ const isProd = import.meta.env.PROD;
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
+  {noindex && <meta name="robots" content="noindex, nofollow" />}
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
