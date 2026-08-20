@@ -55,6 +55,18 @@ export default defineConfig({
     domains: ['cdn.sanity.io'],
   },
 
+  // Pages prérendues en fichiers plats (page.html) plutôt qu'en dossiers (page/index.html) :
+  // le site n'utilise jamais de slash final dans ses liens internes et ses redirections
+  // (voir netlify.toml), mais le format "directory" par défaut fait que Netlify sert ces
+  // pages sous /page/ et redirige automatiquement /page -> /page/ (301 caché sur ~48 URLs,
+  // cf. Search Console "Page avec redirection"). Le format "file" élimine cette redirection
+  // implicite à la source, sans règle de redirection custom (voir commit d808bad : une règle
+  // générique /:path/ -> /:path avait provoqué une boucle infinie en combinaison avec ce
+  // comportement de Netlify).
+  build: {
+    format: "file",
+  },
+
   output: "server",
   adapter: netlify({
     imageCDN: false  // Désactive l'optimisation d'images Netlify en dev

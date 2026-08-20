@@ -150,3 +150,36 @@
   to = "/experiences-vr"
   status = 301
   force = true
+
+[[redirects]]
+  from = "/LaserBots"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/Rush-Z"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zombie-urban-factory"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/Zombie-Urban-Factory"
+  to = "/experiences-vr"
+  status = 301
+  force = true
+
+# Ancien slug avec casse different de la casse actuelle (cyber-clash-tournament.html) :
+# on ne compte plus sur la résolution insensible à la casse des fichiers statiques,
+# fragile depuis le passage au format de build "file".
+[[redirects]]
+  from = "/Cyber-Clash-Tournament"
+  to = "/cyber-clash-tournament"
+  status = 301
+  force = true
