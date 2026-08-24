@@ -25,7 +25,7 @@ export default defineConfig({
       apiVersion: "2025-01-28",
     }), sitemap({
     filter: (page) =>
-      !page.includes('/admin/') &&
+      !page.includes('/admin') &&
       !page.includes('/contact/merci') &&
       !page.includes('/cadeaux') &&
       !page.includes('/giftCard'),
