@@ -69,3 +69,16 @@ export const GAMES_ALL_QUERY = defineQuery(`*[_type == "games"] | order(name asc
   duration,
   slug
 }`);
+
+/** Lots actifs de la roue de récompense (/roue), triés dans l'ordre des segments. */
+export const LOTS_ROUE_QUERY = defineQuery(
+  `*[_type == "lotRoue" && actif == true] | order(ordre asc) { _id, label, poids, couleur, ordre }`
+);
+
+export type LotRoue = {
+  _id: string;
+  label: string;
+  poids: number;
+  couleur: string;
+  ordre: number;
+};
