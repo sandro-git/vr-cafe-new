@@ -129,10 +129,16 @@ export default async (req: Request, _context: Context) => {
     const cancelUrl = `https://vr-cafe.fr/reservation/annulation?id=${encodeURIComponent(id)}&token=${encodeURIComponent(cancelToken)}`;
     const modifierUrl = `${cancelUrl}&action=modifier`;
     actionButtonsHtml = `
-        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-          <a href="${modifierUrl}" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #e2e8f0; text-decoration: none; font-size: 13px; font-weight: 600;">Modifier</a>
-          <a href="${cancelUrl}" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>
-        </div>`;
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+          <tr>
+            <td width="50%" style="padding-right: 6px;">
+              <a href="${modifierUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #e2e8f0; text-decoration: none; font-size: 13px; font-weight: 600;">Modifier</a>
+            </td>
+            <td width="50%" style="padding-left: 6px;">
+              <a href="${cancelUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>
+            </td>
+          </tr>
+        </table>`;
   }
 
   const clientHtml = `
