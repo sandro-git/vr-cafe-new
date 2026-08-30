@@ -17,17 +17,21 @@ function escHtml(str: string): string {
     .replace(/'/g, "&#x27;");
 }
 
-async function verifyCsrf(token: string, secret: string): Promise<boolean> {
+const MIN_SUBMIT_DELAY_MS = 3000; // aucun humain ne remplit+envoie le formulaire en moins de 3s
+const MAX_TOKEN_AGE_MS = 3600000; // 1h — au-delà, la page a été laissée ouverte trop longtemps
+
+async function verifyCsrf(token: string, ts: string, secret: string): Promise<boolean> {
+  const tsNum = Number(ts);
+  if (!ts || !Number.isFinite(tsNum)) return false;
+
+  const age = Date.now() - tsNum;
+  if (age < 0 || age > MAX_TOKEN_AGE_MS) return false;
+
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const window5m = Math.floor(Date.now() / 300000);
-  // Accepter la fenêtre courante et la précédente (pour éviter les refus en bord de fenêtre)
-  for (const w of [window5m, window5m - 1]) {
-    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(String(w)));
-    const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
-    if (token === expected) return true;
-  }
-  return false;
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(ts));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+  return token === expected;
 }
 
 export default async (req: Request, _context: Context) => {
@@ -53,8 +57,9 @@ export default async (req: Request, _context: Context) => {
     const email = formData.get("email") as string;
     const subject = formData.get("subject") as string;
     const message = formData.get("message") as string;
-    const botField = formData.get("bot-field") as string;
+    const botField = formData.get("website") as string;
     const csrfToken = formData.get("_csrf") as string;
+    const ts = formData.get("_ts") as string;
 
     // Protection anti-spam honeypot
     if (botField) {
@@ -63,9 +68,18 @@ export default async (req: Request, _context: Context) => {
       return Response.redirect(url.toString(), 303);
     }
 
+    // Protection anti-spam par vitesse de soumission (avant la validation CSRF stricte,
+    // pour rediriger silencieusement comme le honeypot plutôt que de renvoyer une erreur)
+    const tsNum = Number(ts);
+    if (ts && Number.isFinite(tsNum) && Date.now() - tsNum < MIN_SUBMIT_DELAY_MS) {
+      console.log("Bot detected via timing");
+      const url = new URL("/contact/merci", req.url);
+      return Response.redirect(url.toString(), 303);
+    }
+
     // Validation CSRF
     const csrfSecret = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
-    if (!csrfToken || !(await verifyCsrf(csrfToken, csrfSecret))) {
+    if (!csrfToken || !ts || !(await verifyCsrf(csrfToken, ts, csrfSecret))) {
       return new Response(
         JSON.stringify({ error: "Invalid CSRF token" }),
         { status: 403, headers: { "Content-Type": "application/json" } }

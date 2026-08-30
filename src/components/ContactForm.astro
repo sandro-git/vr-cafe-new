@@ -7,12 +7,13 @@ const {
   subtitle = "Une question ? Une réservation ? Notre équipe est à votre écoute pour vous répondre rapidement.",
 } = Astro.props;
 
-// Génération du token CSRF (HMAC-SHA256, fenêtre de 5 minutes)
+// Génération du token CSRF (HMAC-SHA256 signant l'horodatage exact du rendu,
+// ce qui permet aussi de détecter les soumissions trop rapides pour être humaines)
 const secret = process.env.ADMIN_PASSWORD || import.meta.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
-const window5m = Math.floor(Date.now() / 300000);
+const renderedAt = Date.now();
 const enc = new TextEncoder();
 const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-const sig = await crypto.subtle.sign("HMAC", key, enc.encode(String(window5m)));
+const sig = await crypto.subtle.sign("HMAC", key, enc.encode(String(renderedAt)));
 const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
 
 // Classes communes des champs (input/textarea)
@@ -115,13 +116,14 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
           action="/api/contact"
           class="flex flex-col grow space-y-6"
         >
-          <!-- Token CSRF -->
+          <!-- Token CSRF + horodatage du rendu (anti-bot : détecte les soumissions trop rapides) -->
           <input type="hidden" name="_csrf" value={csrfToken} />
+          <input type="hidden" name="_ts" value={renderedAt} />
 
           <!-- Honeypot anti-spam (caché pour les humains) -->
           <p class="hidden" aria-hidden="true">
             <label>
-              Ne pas remplir si vous êtes humain : <input name="bot-field" />
+              Ne pas remplir si vous êtes humain : <input name="website" />
             </label>
           </p>
 
