@@ -3,12 +3,15 @@ import Mailjet from "node-mailjet";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 import { calcMontant } from "../../src/lib/pricing.ts";
 import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
+import { generateReservationToken } from "../lib/reservation-token.ts";
 
 const ALLOWED_ORIGINS = [
   "https://vr-cafe.fr",
   "https://www.vr-cafe.fr",
   "http://localhost:4321",
 ];
+
+const MIN_NOTICE_MS = 24 * 60 * 60 * 1000; // cohérent avec reservation-cancel-public.mts
 
 function escHtml(str: string | null | undefined): string {
   if (!str) return "";
@@ -37,6 +40,7 @@ export default async (req: Request, _context: Context) => {
   }
 
   let body: {
+    id: string;
     client_nom: string;
     client_email: string | null;
     client_telephone: string;
@@ -60,6 +64,7 @@ export default async (req: Request, _context: Context) => {
   }
 
   const {
+    id,
     client_nom,
     client_email,
     client_telephone,
@@ -116,6 +121,20 @@ export default async (req: Request, _context: Context) => {
   const montant = calcMontant(duree_minutes, nb_personnes);
   const montantFmt = montant !== null ? `${montant} €` : null;
 
+  const noticeMs = debut.getTime() - Date.now();
+  const canSelfManage = !!id && noticeMs >= MIN_NOTICE_MS;
+  let actionButtonsHtml = "";
+  if (canSelfManage) {
+    const cancelToken = await generateReservationToken(id);
+    const cancelUrl = `https://vr-cafe.fr/reservation/annulation?id=${encodeURIComponent(id)}&token=${encodeURIComponent(cancelToken)}`;
+    const modifierUrl = `${cancelUrl}&action=modifier`;
+    actionButtonsHtml = `
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <a href="${modifierUrl}" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #e2e8f0; text-decoration: none; font-size: 13px; font-weight: 600;">Modifier</a>
+          <a href="${cancelUrl}" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>
+        </div>`;
+  }
+
   const clientHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #e2e8f0; border-radius: 12px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #7c3aed, #2563eb); padding: 32px; text-align: center;">
@@ -153,6 +172,7 @@ export default async (req: Request, _context: Context) => {
             </tr>` : ""}
           </table>
         </div>
+        ${actionButtonsHtml}
         <div style="background-color: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
           <p style="margin: 0; color: #94a3b8; font-size: 13px;">Une question ? Appelez-nous au</p>
           <p style="margin: 4px 0 0; color: #7c3aed; font-size: 18px; font-weight: bold;">📞 06 71 41 06 95</p>

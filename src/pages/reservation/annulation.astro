@@ -1,0 +1,170 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Button from "../../components/Button.astro";
+
+const id = Astro.url.searchParams.get("id") ?? "";
+const token = Astro.url.searchParams.get("token") ?? "";
+const isModifier = Astro.url.searchParams.get("action") === "modifier";
+
+let lookup: {
+  ok: boolean;
+  reservation?: {
+    client_nom: string;
+    client_email: string | null;
+    client_telephone: string;
+    nb_personnes: number;
+    duree_minutes: number;
+    creneau_debut: string;
+    creneau_fin: string;
+    vr_type: string;
+  };
+  can_cancel?: boolean;
+  already_cancelled?: boolean;
+} | null = null;
+
+if (id && token) {
+  try {
+    const lookupUrl = new URL("/api/reservation-lookup-public", Astro.url);
+    lookupUrl.searchParams.set("id", id);
+    lookupUrl.searchParams.set("token", token);
+    const res = await fetch(lookupUrl);
+    if (res.ok) lookup = await res.json();
+  } catch {
+    lookup = null;
+  }
+}
+
+const r = lookup?.reservation;
+const dateFmt = r
+  ? new Date(r.creneau_debut).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" })
+  : "";
+const heureFmt = r
+  ? new Date(r.creneau_debut).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })
+  : "";
+const heureFinFmt = r
+  ? new Date(r.creneau_fin).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })
+  : "";
+---
+
+<BaseLayout
+  title="Annuler ma réservation — VR Café"
+  description="Annulez ou reprogrammez votre réservation VR Café en ligne."
+  canonical="https://vr-cafe.fr/reservation/annulation"
+>
+  <section class="bg-[var(--color-surface)] py-16 md:py-24 min-h-[calc(100vh-var(--navHeight))] flex items-center px-4">
+    <div class="mx-auto max-w-xl w-full">
+      <div class="reveal card-glow p-8 md:p-10">
+        {!lookup?.ok ? (
+          <div class="text-center">
+            <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
+              Lien invalide
+            </h1>
+            <p class="mb-8 text-white/70">
+              Ce lien d'annulation est invalide ou a expiré. Contactez-nous directement pour toute demande.
+            </p>
+            <Button href="tel:0671410695" variant="primary" size="md">📞 06 71 41 06 95</Button>
+          </div>
+        ) : lookup.already_cancelled ? (
+          <div class="text-center">
+            <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
+              Déjà annulée
+            </h1>
+            <p class="mb-8 text-white/70">Cette réservation a déjà été annulée.</p>
+            <Button href="/reservation" variant="primary" size="md">Faire une nouvelle réservation</Button>
+          </div>
+        ) : !lookup.can_cancel ? (
+          <div class="text-center">
+            <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
+              Délai dépassé
+            </h1>
+            <p class="mb-8 text-white/70">
+              L'annulation en ligne n'est plus possible à moins de 24h du créneau. Merci de nous contacter directement.
+            </p>
+            <Button href="tel:0671410695" variant="primary" size="md">📞 06 71 41 06 95</Button>
+          </div>
+        ) : (
+          <>
+          <div id="annulation-view">
+            <h1 class="mb-2 font-display text-3xl font-extrabold tracking-tight text-white">
+              {isModifier ? "Reprogrammer" : "Annuler"} ma réservation
+            </h1>
+            <p class="mb-6 text-white/70">
+              {isModifier
+                ? "Votre réservation actuelle sera annulée, vous pourrez ensuite choisir un nouveau créneau."
+                : "Merci de confirmer l'annulation de votre réservation ci-dessous."}
+            </p>
+
+            <div class="bg-white/5 ring-1 ring-white/10 rounded-xl p-6 mb-8 space-y-3">
+              <div class="flex justify-between"><span class="text-white/55">Nom</span><span class="text-white">{r?.client_nom}</span></div>
+              <div class="flex justify-between"><span class="text-white/55">Date</span><span class="text-white">{dateFmt}</span></div>
+              <div class="flex justify-between"><span class="text-white/55">Heure</span><span class="text-white">{heureFmt} – {heureFinFmt}</span></div>
+              <div class="flex justify-between"><span class="text-white/55">Joueurs</span><span class="text-white">{r?.nb_personnes}</span></div>
+            </div>
+
+            <div id="annulation-error" class="hidden mb-6 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-300" role="alert"></div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+              <button
+                id="btn-confirm-cancel"
+                type="button"
+                class="group relative inline-flex items-center justify-center gap-2 font-semibold tracking-tight rounded-full transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)] focus:outline-none px-6 py-3 text-base bg-white text-brand-900 hover:bg-accent-300 hover:-translate-y-0.5 shadow-[0_10px_40px_-10px_rgba(139,92,246,0.6)] w-full disabled:opacity-50"
+              >
+                {isModifier ? "Confirmer et choisir un nouveau créneau" : "Confirmer l'annulation"}
+              </button>
+              <Button href="/" variant="secondary" size="md" class="w-full">Retour</Button>
+            </div>
+          </div>
+
+          <div id="annulation-success" class="hidden text-center">
+            <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
+              Réservation annulée
+            </h1>
+            <p class="mb-8 text-white/70">
+              {isModifier
+                ? "Redirection vers le formulaire de réservation..."
+                : "Votre réservation a bien été annulée. À bientôt au VR Café !"}
+            </p>
+          </div>
+          </>
+        )}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ id, token, isModifier, clientNom: r?.client_nom ?? "", clientEmail: r?.client_email ?? "", clientTelephone: r?.client_telephone ?? "" }}>
+  const btn = document.getElementById("btn-confirm-cancel");
+  if (btn) {
+    btn.addEventListener("click", async () => {
+      const errorEl = document.getElementById("annulation-error");
+      const view = document.getElementById("annulation-view");
+      const success = document.getElementById("annulation-success");
+      errorEl?.classList.add("hidden");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/reservation-cancel-public", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, token }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Une erreur est survenue.");
+
+        view?.classList.add("hidden");
+        success?.classList.remove("hidden");
+
+        if (isModifier) {
+          const params = new URLSearchParams({ nom: clientNom, email: clientEmail, telephone: clientTelephone });
+          setTimeout(() => { window.location.href = `/reservation?${params.toString()}`; }, 1500);
+        }
+      } catch (err) {
+        if (errorEl) {
+          errorEl.textContent = err instanceof Error ? err.message : "Une erreur est survenue.";
+          errorEl.classList.remove("hidden");
+        }
+        btn.disabled = false;
+      }
+    });
+  }
+</script>

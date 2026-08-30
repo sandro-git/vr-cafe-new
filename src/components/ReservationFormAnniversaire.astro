@@ -650,6 +650,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: res.id,
           client_nom: res.client_nom,
           client_email: res.client_email,
           client_telephone: res.client_telephone,

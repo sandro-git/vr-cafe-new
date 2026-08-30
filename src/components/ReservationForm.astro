@@ -236,6 +236,11 @@ const {
   const prefillDureeMinutes = parseInt(prefillParams.get('duree'), 10) || null;
   let prefillApplied = false;
 
+  // ── Pré-remplissage client depuis un lien de reprogrammation (?nom=&email=&telephone=) ─
+  const prefillNom = prefillParams.get('nom');
+  const prefillEmail = prefillParams.get('email');
+  const prefillTelephone = prefillParams.get('telephone');
+
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
     // UI immédiate — pas besoin de Supabase
@@ -278,6 +283,10 @@ const {
       checkStep1Valid();
       document.getElementById('prefill-note').classList.remove('hidden');
     }
+
+    if (prefillNom) /** @type {HTMLInputElement} */ (document.getElementById('client-nom')).value = prefillNom;
+    if (prefillEmail) /** @type {HTMLInputElement} */ (document.getElementById('client-email')).value = prefillEmail;
+    if (prefillTelephone) /** @type {HTMLInputElement} */ (document.getElementById('client-telephone')).value = prefillTelephone;
   }
 
   async function loadConfig() {
@@ -655,6 +664,7 @@ const {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: res.id,
           client_nom: res.client_nom,
           client_email: res.client_email,
           client_telephone: res.client_telephone,
