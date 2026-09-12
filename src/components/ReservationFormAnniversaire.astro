@@ -239,6 +239,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       periodesVacances,
       joursNormaux: [...JOURS_OUVERTURE_NORMAL],
       adminMode: (window.__anniversaireMode ?? 'client') === 'admin',
+      excludeToday: (window.__anniversaireMode ?? 'client') !== 'admin',
     }}));
 
     // `document` persiste entre navigations View Transitions : on retire l'ancien

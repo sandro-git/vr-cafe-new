@@ -495,6 +495,16 @@ const {
     }
   }
 
+  function ceilToHalfHour(date) {
+    const d = new Date(date);
+    const m = d.getMinutes();
+    d.setSeconds(0, 0);
+    if (m === 0 || m === 30) return d;
+    if (m < 30) { d.setMinutes(30); }
+    else { d.setMinutes(0); d.setHours(d.getHours() + 1); }
+    return d;
+  }
+
   function generateSlots() {
     const dureeMin = selectedDuree.duree_minutes;
     const bufferMin = Number(appConfig.buffer_minutes);
@@ -520,8 +530,15 @@ const {
     for (let start = openTotal; start + dureeMin + bufferMin <= closeTotal; start += 30) {
       const debut = dateAtMinutes(selectedDate, start);
 
-      // Ignorer les créneaux passés si c'est aujourd'hui
-      if (selectedDate === todayStr && debut <= now) continue;
+      // Délai minimum de réservation (1h, arrondi au prochain quart de 30 min) — client uniquement
+      if (selectedDate === todayStr) {
+        if (mode !== 'admin') {
+          const minBookable = ceilToHalfHour(new Date(now.getTime() + 60 * 60000));
+          if (debut < minBookable) continue;
+        } else if (debut <= now) {
+          continue;
+        }
+      }
       if (bloqueSoir && start >= 18 * 60) continue;
 
       slots.push({

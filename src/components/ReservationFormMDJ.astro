@@ -230,6 +230,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       periodesVacances,
       joursNormaux: [...JOURS_OUVERTURE_NORMAL],
       adminMode: (window.__mdjMode ?? 'client') === 'admin',
+      excludeToday: (window.__mdjMode ?? 'client') !== 'admin',
     }}));
 
     document.addEventListener('datepicker:select', (e) => {

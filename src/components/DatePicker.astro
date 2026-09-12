@@ -56,6 +56,7 @@ const { id = 'dp' } = Astro.props;
     let periodesVacances: { date_debut: string; date_fin: string }[] = [];
     let joursNormaux = new Set<number>([0, 3, 5, 6]);
     let adminMode = false;
+    let excludeToday = false;
 
     function pad(n: number) { return String(n).padStart(2, '0'); }
     function localDateStr(d: Date) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
@@ -117,7 +118,7 @@ const { id = 'dp' } = Astro.props;
       // Jours du mois
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${calYear}-${pad(calMonth + 1)}-${pad(day)}`;
-        const isPast = dateStr < today;
+        const isPast = dateStr < today || (excludeToday && dateStr === today);
         const isOpen = estOuvert(dateStr);
         const isSelected = dateStr === selectedDate;
         const isToday = dateStr === today;
@@ -205,6 +206,7 @@ const { id = 'dp' } = Astro.props;
       periodesVacances = detail.periodesVacances ?? [];
       joursNormaux = new Set(detail.joursNormaux ?? [0, 3, 5, 6]);
       adminMode = detail.adminMode ?? false;
+      excludeToday = detail.excludeToday ?? false;
       if (detail.selectedDate) {
         const d = new Date(detail.selectedDate + 'T12:00:00');
         calYear = d.getFullYear();
