@@ -46,6 +46,12 @@ import DatePicker from "../../components/DatePicker.astro";
           >
             <span id="btn-block-label">⏳ Chargement…</span>
           </button>
+          <button
+            id="btn-block-reservations-soir"
+            class="flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1 bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+          >
+            <span id="btn-block-label-soir">⏳ Chargement…</span>
+          </button>
           <a
             href="/admin/planning"
             class="flex items-center justify-center px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 text-sm rounded-xl transition-colors border border-white/10"
@@ -469,12 +475,25 @@ import DatePicker from "../../components/DatePicker.astro";
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
   loadReservations(currentDate);
-  initBlockButton();
+  initBlockButton({
+    btnId: 'btn-block-reservations',
+    labelId: 'btn-block-label',
+    cle: 'reservations_bloquees_date',
+    labelBloque: '🔴 Réservations bloquées — Débloquer',
+    labelLibre: '🚫 Bloquer les réservations du jour',
+  });
+  initBlockButton({
+    btnId: 'btn-block-reservations-soir',
+    labelId: 'btn-block-label-soir',
+    cle: 'reservations_bloquees_soir_date',
+    labelBloque: '🔴 Soir bloqué (18h+) — Débloquer',
+    labelLibre: '🌙 Bloquer les réservations du soir (18h+)',
+  });
 
-  // ── Bouton blocage réservations ───────────────────────────────────────────
-  async function initBlockButton() {
-    const btn = document.getElementById('btn-block-reservations');
-    const label = document.getElementById('btn-block-label');
+  // ── Bouton blocage réservations (jour entier ou soir 18h+) ─────────────────
+  async function initBlockButton({ btnId, labelId, cle, labelBloque, labelLibre }) {
+    const btn = document.getElementById(btnId);
+    const label = document.getElementById(labelId);
     if (!btn || !label) return;
 
     const todayStr = localDateStr(new Date());
@@ -483,11 +502,11 @@ import DatePicker from "../../components/DatePicker.astro";
     const { data } = await supabase
       .from('config')
       .select('valeur')
-      .eq('cle', 'reservations_bloquees_date')
+      .eq('cle', cle)
       .maybeSingle();
 
     let bloque = data?.valeur === todayStr;
-    updateBlockBtn(btn, label, bloque);
+    updateBlockBtn(btn, label, bloque, labelBloque, labelLibre);
 
     btn.addEventListener('click', async () => {
       btn.disabled = true;
@@ -495,26 +514,26 @@ import DatePicker from "../../components/DatePicker.astro";
       const res = await fetch('/api/admin/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set_config', cle: 'reservations_bloquees_date', valeur: newValeur }),
+        body: JSON.stringify({ action: 'set_config', cle, valeur: newValeur }),
       });
       btn.disabled = false;
       if (res.ok) {
         bloque = !bloque;
-        updateBlockBtn(btn, label, bloque);
+        updateBlockBtn(btn, label, bloque, labelBloque, labelLibre);
       } else {
         showError('Erreur lors de la mise à jour du blocage');
       }
     });
   }
 
-  function updateBlockBtn(btn, label, bloque) {
+  function updateBlockBtn(btn, label, bloque, labelBloque, labelLibre) {
     const base = 'flex items-center justify-center px-4 py-2.5 text-sm rounded-xl transition-colors border col-span-2 sm:col-span-1';
     if (bloque) {
       btn.className = `${base} bg-red-500/15 border-red-500/30 text-red-300 hover:bg-red-500/25`;
-      label.textContent = '🔴 Réservations bloquées — Débloquer';
+      label.textContent = labelBloque;
     } else {
       btn.className = `${base} bg-white/5 border-white/10 text-white/70 hover:bg-white/10`;
-      label.textContent = '🚫 Bloquer les réservations du jour';
+      label.textContent = labelLibre;
     }
   }
 </script>
