@@ -223,3 +223,10 @@ Refonte visuelle complète appliquée à **tout le site public** (mergée sur `m
 - **Logique métier intouchée** : middleware/cookie `admin_session`, scripts Supabase + RPC `get_boxes_disponibles`, `/api/admin/db` (+ `/api/reservation-annulation`), `calcMontant`, DatePicker, autocomplete, auto-refresh planning, layout JS anti-overlap. Seules les classes Tailwind ont changé.
 - ⚠️ Tailwind v4 : toujours `var()` dans l'arbitraire (`text-[var(--color-brand-300)]`, jamais `text-[--color-brand-300]`). Les pages admin n'utilisent **pas** `reveal` (back-office = rapidité, pas d'animation au scroll).
 - Les formulaires de réservation admin (`ReservationForm` mode admin, MDJ, Anniversaire) étaient déjà au design system — réutilisés tels quels.
+
+## Reste à faire
+
+Fonctionnalités à créer. Des brouillons existaient sur des branches aujourd'hui supprimées ; leur code reste consultable via des **tags locaux uniquement** (non poussés sur GitHub) : `git show <tag> --stat`.
+
+- **Roue de récompense** (`/roue`, façon Riwil) : page publique de tirage + page admin `/admin/roue`, lots gérés dans Sanity (type `lotRoue`, déjà présent dans `vr-cafe-studio`), tirages stockés dans Supabase. Brouillon : tag `archive/roue-recompense`.
+- **Prospection** : relances email via Brevo (edge function Supabase `send-prospection`) + page admin `/admin/prospection` pour valider les relances avant envoi. Brouillon : tag `archive/prospection-brevo`.
