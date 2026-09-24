@@ -77,6 +77,8 @@ const reserveHref = reserveParams.size > 0 ? `/reservation?${reserveParams.toStr
               className="w-full h-auto"
               sizes="(min-width: 1024px) 600px, 100vw"
               loading="eager"
+              fetchpriority="high"
+              mobileMaxWidth={800}
             />
           )}
         </div>

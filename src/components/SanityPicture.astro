@@ -1,8 +1,8 @@
 ---
 // src/components/SanityPicture.astro
-// Image Sanity responsive : un seul <img srcset> multi-largeurs, la
-// négociation de format (AVIF/WebP selon le navigateur) étant déléguée au
-// CDN Sanity via auto=format. Crop carré conservé (aspect-square).
+// Image Sanity responsive : <img srcset> multi-largeurs, la négociation de
+// format (AVIF/WebP selon le navigateur) étant déléguée au CDN Sanity via
+// auto=format. Crop carré conservé (aspect-square).
 import { urlForImage } from "../sanity/lib/url-for-image";
 
 interface Props {
@@ -15,6 +15,9 @@ interface Props {
   // Largeur max proposée dans le srcset : plafonne la densité sur mobile
   // haute résolution (ex. 380px × DPR 2,6 → 1200w sinon).
   maxWidth?: number;
+  // Plafond appliqué uniquement sous 768px (via <picture><source media>),
+  // pour garder les grandes tailles sur desktop.
+  mobileMaxWidth?: number;
 }
 
 const {
@@ -25,26 +28,51 @@ const {
   loading = "lazy",
   fetchpriority = "auto",
   maxWidth = 1600,
+  mobileMaxWidth,
 } = Astro.props;
 
+// Dimensions de la source, lues dans l'id d'asset (« …-1000x1000-jpg ») ou
+// son URL (« …-1000x1000.jpg ») : au-delà, le CDN agrandit l'image, ce qui
+// l'alourdit sans la rendre plus nette.
+const assetId: string = image?.asset?._ref ?? image?.asset?.url ?? "";
+const dims = assetId.match(/-(\d+)x(\d+)[.-]/);
+const sourceMax = dims ? Math.min(+dims[1], +dims[2]) : Infinity;
+
 const base = urlForImage(image).auto("format");
-const widths = [400, 600, 800, 1200, 1600].filter((w) => w <= maxWidth);
-const srcset = widths
-  .map((w) => `${base.width(w).height(w).url()} ${w}w`)
-  .join(", ");
+
+function widthsUpTo(max: number) {
+  const cap = Math.min(max, sourceMax);
+  const widths = [400, 600, 800, 1200, 1600].filter((w) => w <= cap);
+  // Source plus petite qu'un palier : on propose sa taille native.
+  if (cap < max && !widths.includes(cap)) widths.push(cap);
+  return widths;
+}
+
+const toSrcset = (widths: number[]) =>
+  widths.map((w) => `${base.width(w).height(w).url()} ${w}w`).join(", ");
+
+const widths = widthsUpTo(maxWidth);
+const srcset = toSrcset(widths);
+const mobileSrcset = mobileMaxWidth ? toSrcset(widthsUpTo(mobileMaxWidth)) : null;
+const fallback = Math.min(800, widths[widths.length - 1]);
 ---
 
 <div class={`aspect-square overflow-hidden rounded-lg ${className || ""}`}>
-  <img
-    src={base.width(Math.min(800, maxWidth)).height(Math.min(800, maxWidth)).url()}
-    srcset={srcset}
-    sizes={sizes}
-    alt={alt || image?.alt || "Image"}
-    width={800}
-    height={800}
-    class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-    loading={loading}
-    fetchpriority={fetchpriority}
-    decoding="async"
-  />
+  <picture class="contents">
+    {mobileSrcset && (
+      <source media="(max-width: 767px)" srcset={mobileSrcset} sizes={sizes} />
+    )}
+    <img
+      src={base.width(fallback).height(fallback).url()}
+      srcset={srcset}
+      sizes={sizes}
+      alt={alt || image?.alt || "Image"}
+      width={800}
+      height={800}
+      class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding="async"
+    />
+  </picture>
 </div>
