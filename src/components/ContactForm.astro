@@ -7,15 +7,6 @@ const {
   subtitle = "Une question ? Une réservation ? Notre équipe est à votre écoute pour vous répondre rapidement.",
 } = Astro.props;
 
-// Génération du token CSRF (HMAC-SHA256 signant l'horodatage exact du rendu,
-// ce qui permet aussi de détecter les soumissions trop rapides pour être humaines)
-const secret = process.env.ADMIN_PASSWORD || import.meta.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
-const renderedAt = Date.now();
-const enc = new TextEncoder();
-const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-const sig = await crypto.subtle.sign("HMAC", key, enc.encode(String(renderedAt)));
-const csrfToken = btoa(String.fromCharCode(...new Uint8Array(sig)));
-
 // Classes communes des champs (input/textarea)
 const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded-xl focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none block w-full p-3.5 placeholder:text-white/35 transition-all";
 ---
@@ -116,9 +107,10 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
           action="/api/contact"
           class="flex flex-col grow space-y-6"
         >
-          <!-- Token CSRF + horodatage du rendu (anti-bot : détecte les soumissions trop rapides) -->
-          <input type="hidden" name="_csrf" value={csrfToken} />
-          <input type="hidden" name="_ts" value={renderedAt} />
+          <!-- Token CSRF + horodatage d'émission (anti-bot : détecte les soumissions trop rapides),
+               récupérés côté client via /api/contact-token : la page reste statique -->
+          <input type="hidden" name="_csrf" value="" />
+          <input type="hidden" name="_ts" value="" />
 
           <!-- Honeypot anti-spam (caché pour les humains) -->
           <p class="hidden" aria-hidden="true">
@@ -199,10 +191,30 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
 </section>
 
 <script>
+  const TOKEN_MAX_AGE_MS = 50 * 60 * 1000; // /api/contact refuse au-delà d'1h
+  const MIN_SUBMIT_DELAY_MS = 3100; // /api/contact écarte en silence en dessous de 3s
+
+  // Récupère un jeton CSRF si absent ou bientôt expiré (page laissée ouverte).
+  // Avant un envoi, attend le délai minimum pour ne pas être pris pour un bot.
+  async function ensureToken(form: HTMLFormElement, beforeSubmit = false) {
+    const csrf = form.querySelector<HTMLInputElement>('input[name="_csrf"]')!;
+    const ts = form.querySelector<HTMLInputElement>('input[name="_ts"]')!;
+    if (csrf.value && Date.now() - Number(ts.value) < TOKEN_MAX_AGE_MS) return;
+
+    const res = await fetch("/api/contact-token", { cache: "no-store" });
+    if (!res.ok) throw new Error(`Token HTTP ${res.status}`);
+    const data = await res.json();
+    csrf.value = data.csrf;
+    ts.value = data.ts;
+    if (beforeSubmit) await new Promise((r) => setTimeout(r, MIN_SUBMIT_DELAY_MS));
+  }
+
   function initContactForm() {
     const form = document.querySelector<HTMLFormElement>('form[name="contact"]');
     if (!form || form.dataset.fetchBound) return;
     form.dataset.fetchBound = "true";
+
+    ensureToken(form).catch((err) => console.error("Contact token fetch failed:", err));
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -214,6 +226,7 @@ const fieldClass = "bg-white/5 ring-1 ring-white/10 text-white text-base rounded
       if (btn) btn.disabled = true;
 
       try {
+        await ensureToken(form, true);
         const res = await fetch(form.action, {
           method: "POST",
           body: new FormData(form),
