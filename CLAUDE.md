@@ -24,6 +24,15 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - **`bun run build`** - Construire le site en production dans `./dist/`
 - **`bun run preview`** - Prévisualiser le build de production en local
 - **`bun astro ...`** - Exécuter les commandes Astro CLI (ex. `bun astro check`)
+- **`bun run test`** - Lancer les tests unitaires Vitest une fois (⚠️ pas `bun test`, qui lance le runner intégré de Bun et non Vitest)
+- **`bun run test:watch`** - Vitest en mode watch
+
+### Tests unitaires
+
+- **Vitest** configuré via `getViteConfig()` d'Astro (`vitest.config.ts`), tests dans `tests/**/*.test.ts`
+- Couvert : `src/lib/pricing.ts` (grille + anniversaire), `netlify/lib/reservation-token.ts` (HMAC), `netlify/lib/reservation-notice.ts` (règle des 24h)
+- **Bloquant au déploiement** : la commande de build Netlify est `bun run test && bun run build` → un test cassé fait échouer le deploy
+- `vite` est épinglé en devDependency sur la **même version que celle d'Astro** : sinon Bun remonte une autre version pour Vitest et `astro check` casse (types `Plugin` en double). À réaligner quand on met à jour Astro
 
 ## Architecture
 
@@ -77,7 +86,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 
 ### Modification et annulation par le client
 
-**Liens dans l'email de confirmation** (`reservation-confirmation.mts`) : boutons « Modifier » / « Annuler » ajoutés seulement si l'`id` de la réservation est transmis **et** que le créneau commence dans ≥ 24h (`MIN_NOTICE_MS`, à garder cohérent dans `reservation-confirmation`, `reservation-lookup-public` et `reservation-cancel-public`). Sinon, phrase invitant à appeler le café.
+**Liens dans l'email de confirmation** (`reservation-confirmation.mts`) : boutons « Modifier » / « Annuler » ajoutés seulement si l'`id` de la réservation est transmis **et** que le créneau commence dans ≥ 24h (`hasMinNotice()` de `netlify/lib/reservation-notice.ts`, partagé par `reservation-confirmation`, `reservation-lookup-public` et `reservation-cancel-public`). Sinon, phrase invitant à appeler le café.
 - Annuler : `/reservation/annulation?id=<uuid>&token=<token>` — Modifier : même lien + `&action=modifier`.
 - `token` = HMAC-SHA256 de l'id signé avec `ADMIN_PASSWORD` (`netlify/lib/reservation-token.ts`, comparaison en temps constant). Pas d'expiration ; changer `ADMIN_PASSWORD` invalide tous les liens déjà envoyés.
 - Mailjet réécrit les liens (suivi des clics `*.mjt.lu/lnk/...`) : l'URL réelle est le dernier segment, encodé en base64 URL-safe.
@@ -166,7 +175,7 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 ### Déploiement
 
 - **Plateforme** : Netlify
-- **Commande de build** : `bun run build`
+- **Commande de build** : `bun run test && bun run build` (tests unitaires bloquants)
 - **Répertoire de publication** : `dist`
 - **Package manager** : Bun 1.3.2
 - **Configuration spéciale** : headers `.well-known` configurés dans `netlify.toml` (Apple Pay et services similaires)

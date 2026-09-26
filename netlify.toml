@@ -1,6 +1,6 @@
 # Netlify configuration
 [build]
-  command = "bun run build"
+  command = "bun run test && bun run build"
   publish = "dist"
 
 [dev]

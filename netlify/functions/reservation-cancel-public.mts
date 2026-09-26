@@ -1,9 +1,8 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { verifyReservationToken } from "../lib/reservation-token.ts";
+import { hasMinNotice } from "../lib/reservation-notice.ts";
 import { sendCancellationAdminEmail, sendCancellationClientEmail } from "../lib/reservation-emails.ts";
-
-const MIN_NOTICE_MS = 24 * 60 * 60 * 1000; // 24h — en dessous, on refuse l'auto-annulation
 
 function getEnv(key: string): string | undefined {
   try { return Netlify.env.get(key); } catch { /* hors contexte Netlify */ }
@@ -64,8 +63,7 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Cette réservation ne peut plus être annulée en ligne." }, 409);
   }
 
-  const noticeMs = new Date(reservation.creneau_debut).getTime() - Date.now();
-  if (noticeMs < MIN_NOTICE_MS) {
+  if (!hasMinNotice(reservation.creneau_debut)) {
     return json({ error: "Le délai d'annulation en ligne (24h avant le créneau) est dépassé. Merci de nous appeler au 06 71 41 06 95." }, 422);
   }
 

@@ -1,8 +1,8 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { verifyReservationToken } from "../lib/reservation-token.ts";
+import { hasMinNotice } from "../lib/reservation-notice.ts";
 
-const MIN_NOTICE_MS = 24 * 60 * 60 * 1000; // doit rester cohérent avec reservation-cancel-public.mts
 
 function getEnv(key: string): string | undefined {
   try { return Netlify.env.get(key); } catch { /* hors contexte Netlify */ }
@@ -48,7 +48,6 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Reservation not found" }, 404);
   }
 
-  const noticeMs = new Date(reservation.creneau_debut).getTime() - Date.now();
   const vrType = ((reservation as any).reservation_boxes ?? [])[0]?.boxes?.type ?? "filaire";
 
   return json({
@@ -65,7 +64,7 @@ export default async (req: Request, _context: Context) => {
       statut: reservation.statut,
       type_reservation: reservation.type_reservation ?? "standard",
     },
-    can_cancel: reservation.statut === "confirmée" && noticeMs >= MIN_NOTICE_MS,
+    can_cancel: reservation.statut === "confirmée" && hasMinNotice(reservation.creneau_debut),
     already_cancelled: reservation.statut === "annulée",
   });
 };
