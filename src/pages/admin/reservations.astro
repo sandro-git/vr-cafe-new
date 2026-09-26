@@ -1,10 +1,22 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import DatePicker from "../../components/DatePicker.astro";
+import { loadQuery } from "../../sanity/lib/load-query";
+import { TARIF_ANNIVERSAIRE_QUERY } from "../../sanity/lib/queries";
+import { PRIX_ANNIVERSAIRE_DEFAUT } from "../../lib/pricing";
+
+// Prix/pers. anniversaire (tarif Sanity) pour le CA ; repli si Sanity est indisponible
+let prixAnniversaire = PRIX_ANNIVERSAIRE_DEFAUT;
+try {
+  const { data } = await loadQuery<{ prix: number } | null>({ query: TARIF_ANNIVERSAIRE_QUERY });
+  if (typeof data?.prix === "number" && data.prix > 0) prixAnniversaire = data.prix;
+} catch (error) {
+  console.error("Sanity anniversaire price lookup failed:", error);
+}
 ---
 
 <AdminLayout>
-  <main class="min-h-screen py-8 px-4 sm:px-6">
+  <main class="min-h-screen py-8 px-4 sm:px-6" data-prix-anniversaire={prixAnniversaire}>
     <div class="max-w-6xl mx-auto">
 
       <!-- En-tête -->
@@ -140,7 +152,7 @@ import DatePicker from "../../components/DatePicker.astro";
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
-  import { calcMontant } from '../../lib/pricing';
+  import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from '../../lib/pricing';
 
   let currentDate = localDateStr(new Date());
   let reservationsCache = [];
@@ -191,7 +203,9 @@ import DatePicker from "../../components/DatePicker.astro";
     const confirmed = reservations.filter(r => r.statut === 'confirmée');
     const cancelled = reservations.filter(r => r.statut === 'annulée');
     const players = confirmed.reduce((sum, r) => sum + (r.nb_personnes || 0), 0);
-    const revenue = confirmed.reduce((sum, r) => sum + (calcMontant(r.duree_minutes, r.nb_personnes || 0) ?? 0), 0);
+    const prixAnniversaire = Number(document.querySelector('[data-prix-anniversaire]')?.dataset.prixAnniversaire) || PRIX_ANNIVERSAIRE_DEFAUT;
+    const revenue = confirmed.reduce((sum, r) =>
+      sum + (calcMontantReservation(r.type_reservation, r.duree_minutes, r.nb_personnes || 0, prixAnniversaire) ?? 0), 0);
 
     document.getElementById('stat-total').textContent = String(reservations.length);
     document.getElementById('stat-confirmed').textContent = String(confirmed.length);

@@ -61,7 +61,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - 60 min : 29 € (1-2 pers.) / 27 € (3-4 pers.) / 25 € (5+ pers.) par personne
 - ⚠️ Les prix affichés sur `/tarifs` viennent de Sanity (documents `tarif` de type `session_30min` / `session_1h`) : un changement de prix doit être fait **aux deux endroits**.
 
-**Tarification anniversaire** — prix par personne lu dans Sanity (document `tarif` de type `anniversaire`, 25 €/pers., 1h, minimum 5 enfants), affiché sur `/anniversaire`. Dans l'email de confirmation, `reservation-confirmation.mts` lit `type_reservation` en base et, pour un anniversaire, calcule `prix Sanity × nb_personnes` via `getPrixAnniversaire()` (API CDN Sanity, timeout 3 s, repli `PRIX_ANNIVERSAIRE_DEFAUT` = 25 €). Changer le prix dans Sanity suffit pour la page et l'email. Le CA de `/admin/reservations` utilise encore `calcMontant` pour tous les types (identique tant que l'anniversaire reste à 25 €).
+**Tarification anniversaire** — prix par personne lu dans Sanity (document `tarif` de type `anniversaire`, 25 €/pers., 1h, minimum 5 enfants), affiché sur `/anniversaire`. Dans l'email de confirmation, `reservation-confirmation.mts` lit `type_reservation` en base et, pour un anniversaire, calcule `prix Sanity × nb_personnes` via `getPrixAnniversaire()` (API CDN Sanity, timeout 3 s, repli `PRIX_ANNIVERSAIRE_DEFAUT` = 25 €). Changer le prix dans Sanity suffit pour la page et l'email. Le calcul par type est centralisé dans `calcMontantReservation()` (`src/lib/pricing.ts`), utilisé par l'email et par le CA de `/admin/reservations` (prix anniversaire lu dans Sanity au rendu de la page, passé au script via `data-prix-anniversaire`).
 
 **Tables Supabase :**
 - `reservations` — données client + créneau + statut

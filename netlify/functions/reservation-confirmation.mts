@@ -2,7 +2,7 @@ import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
 import { createClient } from "@supabase/supabase-js";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
-import { calcMontant } from "../../src/lib/pricing.ts";
+import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from "../../src/lib/pricing.ts";
 import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
 import { generateReservationToken } from "../lib/reservation-token.ts";
 
@@ -23,8 +23,6 @@ function escHtml(str: string | null | undefined): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;");
 }
-
-const PRIX_ANNIVERSAIRE_DEFAUT = 25; // €/pers., repli si Sanity ne répond pas
 
 /** Prix par personne de la formule anniversaire, lu dans Sanity (document `tarif` de type "anniversaire"). */
 async function getPrixAnniversaire(): Promise<number> {
@@ -163,9 +161,8 @@ export default async (req: Request, _context: Context) => {
 
   // Anniversaire : prix/pers. du tarif Sanity (type "anniversaire"), comme sur /anniversaire.
   // Standard et MDJ : grille calcMontant.
-  const montant = typeReservation === "anniversaire"
-    ? (await getPrixAnniversaire()) * nb_personnes
-    : calcMontant(duree_minutes, nb_personnes);
+  const prixAnniversaire = typeReservation === "anniversaire" ? await getPrixAnniversaire() : undefined;
+  const montant = calcMontantReservation(typeReservation, duree_minutes, nb_personnes, prixAnniversaire);
   const montantFmt = montant !== null ? `${montant} €` : null;
   let actionButtonsHtml = "";
   if (canSelfManage) {
