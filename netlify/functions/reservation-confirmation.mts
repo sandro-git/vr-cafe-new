@@ -126,20 +126,42 @@ export default async (req: Request, _context: Context) => {
 
   const noticeMs = debut.getTime() - Date.now();
   const canSelfManage = !!id && noticeMs >= MIN_NOTICE_MS;
+
+  const supabaseUrl = Netlify.env.get("PUBLIC_SUPABASE_URL") || process.env.PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabase = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
+
+  // Les réservations MDJ n'ont pas de formulaire public : modification par téléphone uniquement
+  let isMdj = false;
+  if (canSelfManage && supabase) {
+    try {
+      const { data } = await supabase.from("reservations").select("type_reservation").eq("id", id).single();
+      isMdj = data?.type_reservation === "mdj";
+    } catch (error) {
+      console.error("Lookup of reservation type failed:", error);
+    }
+  }
   let actionButtonsHtml = "";
   if (canSelfManage) {
     const cancelToken = await generateReservationToken(id);
     const cancelUrl = `https://vr-cafe.fr/reservation/annulation?id=${encodeURIComponent(id)}&token=${encodeURIComponent(cancelToken)}`;
     const modifierUrl = `${cancelUrl}&action=modifier`;
-    actionButtonsHtml = `
+    const cancelBtn = `<a href="${cancelUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>`;
+    actionButtonsHtml = isMdj
+      ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+          <tr>
+            <td>${cancelBtn}</td>
+          </tr>
+        </table>
+        <p style="margin: -12px 0 24px; color: #64748b; font-size: 12px; text-align: center;">Annulation en ligne possible jusqu'à 24h avant votre créneau. Pour modifier votre réservation, appelez-nous.</p>`
+      : `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
           <tr>
             <td width="50%" style="padding-right: 6px;">
               <a href="${modifierUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #e2e8f0; text-decoration: none; font-size: 13px; font-weight: 600;">Modifier</a>
             </td>
-            <td width="50%" style="padding-left: 6px;">
-              <a href="${cancelUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>
-            </td>
+            <td width="50%" style="padding-left: 6px;">${cancelBtn}</td>
           </tr>
         </table>
         <p style="margin: -12px 0 24px; color: #64748b; font-size: 12px; text-align: center;">Modification et annulation en ligne possibles jusqu'à 24h avant votre créneau.</p>`;
@@ -156,10 +178,8 @@ export default async (req: Request, _context: Context) => {
   if (typeof remplace_id === "string" && /^[0-9a-f-]{36}$/i.test(remplace_id)) {
     remplaceRef = remplace_id.split("-")[0].toUpperCase();
     try {
-      const supabaseUrl = Netlify.env.get("PUBLIC_SUPABASE_URL") || process.env.PUBLIC_SUPABASE_URL;
-      const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (supabaseUrl && serviceRoleKey) {
-        const { data: ancienne } = await createClient(supabaseUrl, serviceRoleKey)
+      if (supabase) {
+        const { data: ancienne } = await supabase
           .from("reservations")
           .select("statut, creneau_debut, creneau_fin")
           .eq("id", remplace_id)

@@ -48,6 +48,19 @@ import Button from "../../components/Button.astro";
           <Button href="tel:0671410695" variant="primary" size="md">📞 06 71 41 06 95</Button>
         </div>
 
+        <div data-state="modif-phone" class="hidden text-center">
+          <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
+            Modifier ma réservation
+          </h1>
+          <p class="mb-8 text-white/70">
+            Les réservations MDJ se modifient par téléphone. Appelez-nous, nous trouverons ensemble un nouveau créneau.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button href="tel:0671410695" variant="primary" size="md">📞 06 71 41 06 95</Button>
+            <a data-cancel-link href="#" class="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold text-white/70 ring-1 ring-white/15 hover:text-white hover:ring-white/30 transition-colors">Annuler ma réservation</a>
+          </div>
+        </div>
+
         <div data-state="confirm" class="hidden">
           <h1 class="mb-2 font-display text-3xl font-extrabold tracking-tight text-white">
             <span data-modifier-text="Reprogrammer">Annuler</span> ma réservation
@@ -95,6 +108,7 @@ import Button from "../../components/Button.astro";
   type Lookup = {
     ok: boolean;
     reservation?: {
+      type_reservation?: string;
       client_nom: string;
       client_email: string | null;
       client_telephone: string;
@@ -145,6 +159,13 @@ import Button from "../../components/Button.astro";
     if (lookup.already_cancelled) return showState(root, "cancelled");
     if (!lookup.can_cancel) return showState(root, "too-late");
 
+    // MDJ : pas de formulaire public → modification par téléphone (l'annulation reste possible)
+    if (isModifier && r.type_reservation === "mdj") {
+      root.querySelector<HTMLAnchorElement>("[data-cancel-link]")!.href =
+        `/reservation/annulation?${new URLSearchParams({ id, token })}`;
+      return showState(root, "modif-phone");
+    }
+
     const debut = new Date(r.creneau_debut);
     const fin = new Date(r.creneau_fin);
     const heure = (d: Date) => d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
@@ -166,7 +187,8 @@ import Button from "../../components/Button.astro";
       // réservation seulement après confirmation du nouveau créneau.
       if (isModifier) {
         const next = new URLSearchParams({ nom: r.client_nom, email: r.client_email ?? "", telephone: r.client_telephone, remplace: id, token });
-        window.location.href = `/reservation?${next.toString()}`;
+        const form = r.type_reservation === "anniversaire" ? "/reservation-anniversaire" : "/reservation";
+        window.location.href = `${form}?${next.toString()}`;
         return;
       }
 

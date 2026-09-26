@@ -306,6 +306,9 @@ const {
       if (!res.ok) return;
       const data = await res.json();
       if (!data.ok || !data.can_cancel || data.already_cancelled) return;
+      // Anniversaire / MDJ : pas de remplacement depuis le formulaire standard (type et tarif différents)
+      const type = data.reservation.type_reservation ?? 'standard';
+      if (type !== 'standard') return;
 
       replacing = { id: replaceId, token: replaceToken, ref: replaceId.split('-')[0].toUpperCase() };
       const debut = new Date(data.reservation.creneau_debut);

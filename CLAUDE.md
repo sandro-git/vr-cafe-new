@@ -84,12 +84,12 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 **Annulation simple** : bouton « Confirmer l'annulation » → `POST /api/reservation-cancel-public {id, token}` (revérifie token + 24h, passe `statut` à `annulée`) → email admin `[Annulation]` + email client « Annulation de votre réservation » (`netlify/lib/reservation-emails.ts`).
 
 **Modification — l'ancienne réservation n'est annulée qu'après création de la nouvelle** (le client ne perd jamais son créneau s'il abandonne) :
-1. `action=modifier` : la page n'annule rien, bouton « Choisir un nouveau créneau » → redirige vers `/reservation?nom=&email=&telephone=&remplace=<id>&token=<token>`.
-2. `ReservationForm` (mode client) vérifie le lien via `reservation-lookup-public` ; si valide et annulable, affiche le bandeau `#replace-note` (« Vous modifiez votre réservation #REF du … ») et mémorise `replacing`. Lien invalide → formulaire normal, sans remplacement.
+1. `action=modifier` : la page n'annule rien, bouton « Choisir un nouveau créneau » → redirige, selon `type_reservation` (renvoyé par `reservation-lookup-public`), vers `/reservation` (standard) ou `/reservation-anniversaire` (anniversaire), avec `?nom=&email=&telephone=&remplace=<id>&token=<token>`. **MDJ** : pas de formulaire public → écran `modif-phone` (« appelez-nous » + lien vers l'annulation simple), et l'email de confirmation MDJ n'a que le bouton « Annuler ».
+2. `ReservationForm` / `ReservationFormAnniversaire` (mode client) vérifient le lien via `reservation-lookup-public` ; si valide, annulable **et du bon type** (standard pour l'un, anniversaire pour l'autre), affichent le bandeau `#replace-note` (« Vous modifiez votre réservation #REF du … ») et mémorisent `replacing`. Sinon → formulaire normal, sans remplacement.
 3. À la soumission : insert `reservations` + `reservation_boxes`, **puis** `POST /api/reservation-cancel-public {id, token, motif: "modification"}` sur l'ancienne. Écran de confirmation : « ancienne réservation #REF annulée » ou, en cas d'échec, invitation à appeler.
 4. `motif: "modification"` → `reservation-cancel-public` n'envoie **aucun** email. Le formulaire envoie `remplace_id` à `/api/reservation-confirmation`, qui relit l'ancienne en base (service role) et envoie : au client la confirmation avec « Elle remplace votre réservation #REF » ; à l'admin **un seul** email `[Modification] Nom · jour · 14:00 → 17:00` (ancien créneau barré, alerte si l'ancienne est encore active).
 
-**Limites connues** : pendant le choix du nouveau créneau, l'ancienne réservation occupe encore ses boxes (un créneau qui la chevauche peut apparaître indisponible). « Modifier » renvoie toujours vers le formulaire standard, même pour une réservation anniversaire/MDJ. Les annulations faites depuis l'admin (`/api/reservation-annulation`) n'envoient pas d'email au client.
+**Limites connues** : pendant le choix du nouveau créneau, l'ancienne réservation occupe encore ses boxes (un créneau qui la chevauche peut apparaître indisponible). Les annulations faites depuis l'admin (`/api/reservation-annulation`) n'envoient pas d'email au client.
 
 ### Section admin
 

@@ -40,7 +40,7 @@ export default async (req: Request, _context: Context) => {
 
   const { data: reservation, error } = await supabase
     .from("reservations")
-    .select("id, statut, client_nom, client_email, client_telephone, nb_personnes, duree_minutes, creneau_debut, creneau_fin, reservation_boxes(boxes(type))")
+    .select("id, statut, type_reservation, client_nom, client_email, client_telephone, nb_personnes, duree_minutes, creneau_debut, creneau_fin, reservation_boxes(boxes(type))")
     .eq("id", id)
     .single();
 
@@ -63,6 +63,7 @@ export default async (req: Request, _context: Context) => {
       creneau_fin: reservation.creneau_fin,
       vr_type: vrType,
       statut: reservation.statut,
+      type_reservation: reservation.type_reservation ?? "standard",
     },
     can_cancel: reservation.statut === "confirmée" && noticeMs >= MIN_NOTICE_MS,
     already_cancelled: reservation.statut === "annulée",
