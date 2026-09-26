@@ -92,6 +92,22 @@ describe("isFakePhone", () => {
     expect(isFakePhone("0987654321", "FR")).toBe(true);
   });
 
+  it("les suites sont détectées même quand le préfixe (6, 7…) casse la séquence", () => {
+    expect(isFakePhone("0712345678", "FR")).toBe(true);
+    expect(isFakePhone("0698765432", "FR")).toBe(true);
+    expect(isFakePhone("+33 7 23 45 67 89", "OTHER")).toBe(true);
+  });
+
+  it("détecte une paire de chiffres répétée", () => {
+    expect(isFakePhone("0612121212", "FR")).toBe(true);
+    expect(isFakePhone("0745454545", "FR")).toBe(true);
+  });
+
+  it("ne piège pas les numéros courts (Andorre, 6 chiffres)", () => {
+    expect(isFakePhone("312345", "AD")).toBe(false);
+    expect(isFakePhone("321212", "AD")).toBe(false);
+  });
+
   it("laisse passer les vrais numéros", () => {
     expect(isFakePhone(CAFE, "FR")).toBe(false);
     expect(isFakePhone("0561234567", "FR")).toBe(false);

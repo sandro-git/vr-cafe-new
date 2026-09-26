@@ -92,10 +92,17 @@ export function isFakePhone(v: string, country?: PhoneCountryCode): boolean {
   const rest = national.slice(1);
   if (/^(\d)\1+$/.test(rest)) return true;
 
-  const nums = national.split("").map(Number);
-  const ascending = nums.every((n, i) => i === 0 || n === (nums[i - 1] + 1) % 10);
-  const descending = nums.every((n, i) => i === 0 || n === (nums[i - 1] + 9) % 10);
-  if (ascending || descending) return true;
+  // Motifs vérifiés sur le numéro sans son préfixe (sinon le "6" de 06 12 34 56 78 casse la suite),
+  // et seulement sur 6 chiffres ou plus pour ne pas piéger les numéros courts (Andorre : 6 chiffres).
+  if (rest.length >= 6) {
+    // Paire répétée : 06 12 12 12 12
+    if (/^(\d\d)\1+$/.test(rest)) return true;
+    // Suite croissante/décroissante : 07 12 34 56 78, 06 98 76 54 32
+    const nums = rest.split("").map(Number);
+    const ascending = nums.every((n, i) => i === 0 || n === (nums[i - 1] + 1) % 10);
+    const descending = nums.every((n, i) => i === 0 || n === (nums[i - 1] + 9) % 10);
+    if (ascending || descending) return true;
+  }
 
   return false;
 }
