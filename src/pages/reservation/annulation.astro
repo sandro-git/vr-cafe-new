@@ -52,7 +52,7 @@ import Button from "../../components/Button.astro";
           <h1 class="mb-2 font-display text-3xl font-extrabold tracking-tight text-white">
             <span data-modifier-text="Reprogrammer">Annuler</span> ma réservation
           </h1>
-          <p class="mb-6 text-white/70" data-modifier-text="Votre réservation actuelle sera annulée, vous pourrez ensuite choisir un nouveau créneau.">
+          <p class="mb-6 text-white/70" data-modifier-text="Choisissez votre nouveau créneau : votre réservation actuelle reste valable et ne sera annulée qu'une fois le nouveau créneau confirmé.">
             Merci de confirmer l'annulation de votre réservation ci-dessous.
           </p>
 
@@ -69,7 +69,7 @@ import Button from "../../components/Button.astro";
             <button
               id="btn-confirm-cancel"
               type="button"
-              data-modifier-text="Confirmer et choisir un nouveau créneau"
+              data-modifier-text="Choisir un nouveau créneau"
               class="group relative inline-flex items-center justify-center gap-2 font-semibold tracking-tight rounded-full transition-all duration-[var(--dur-base)] ease-[var(--ease-out-soft)] focus:outline-none px-6 py-3 text-base bg-white text-brand-900 hover:bg-accent-300 hover:-translate-y-0.5 shadow-[0_10px_40px_-10px_rgba(139,92,246,0.6)] w-full disabled:opacity-50"
             >
               Confirmer l'annulation
@@ -82,7 +82,7 @@ import Button from "../../components/Button.astro";
           <h1 class="mb-4 font-display text-3xl font-extrabold tracking-tight text-white">
             Réservation annulée
           </h1>
-          <p class="mb-8 text-white/70" data-modifier-text="Redirection vers le formulaire de réservation...">
+          <p class="mb-8 text-white/70">
             Votre réservation a bien été annulée. À bientôt au VR Café !
           </p>
         </div>
@@ -162,6 +162,14 @@ import Button from "../../components/Button.astro";
     const btn = root.querySelector<HTMLButtonElement>("#btn-confirm-cancel")!;
     const errorEl = root.querySelector<HTMLElement>("#annulation-error");
     btn.addEventListener("click", async () => {
+      // Modification : on n'annule rien ici. Le formulaire annulera l'ancienne
+      // réservation seulement après confirmation du nouveau créneau.
+      if (isModifier) {
+        const next = new URLSearchParams({ nom: r.client_nom, email: r.client_email ?? "", telephone: r.client_telephone, remplace: id, token });
+        window.location.href = `/reservation?${next.toString()}`;
+        return;
+      }
+
       errorEl?.classList.add("hidden");
       btn.disabled = true;
 
@@ -175,11 +183,6 @@ import Button from "../../components/Button.astro";
         if (!res.ok) throw new Error(data.error || "Une erreur est survenue.");
 
         showState(root, "success");
-
-        if (isModifier) {
-          const prefill = new URLSearchParams({ nom: r.client_nom, email: r.client_email ?? "", telephone: r.client_telephone });
-          setTimeout(() => { window.location.href = `/reservation?${prefill.toString()}`; }, 1500);
-        }
       } catch (err) {
         if (errorEl) {
           errorEl.textContent = err instanceof Error ? err.message : "Une erreur est survenue.";

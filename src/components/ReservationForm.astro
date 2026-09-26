@@ -27,6 +27,9 @@ const {
     <!-- Erreur globale -->
     <div id="global-error" class="hidden mb-6 p-4 bg-red-900/50 border border-red-700 rounded-xl text-red-300 text-sm"></div>
 
+    <!-- Modification d'une réservation existante (lien « Modifier » de l'email) -->
+    <div id="replace-note" class="hidden mb-6 p-4 rounded-xl bg-[var(--color-brand-500)]/10 ring-1 ring-[var(--color-brand-400)]/30 text-sm text-white/80"></div>
+
     <!-- ===== ÉTAPE 1 : Configuration ===== -->
     <div id="step-1" class="card-glow p-6 sm:p-8 shadow-xl">
       <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-3">
@@ -241,6 +244,12 @@ const {
   const prefillEmail = prefillParams.get('email');
   const prefillTelephone = prefillParams.get('telephone');
 
+  // ── Modification (?remplace=<id>&token=) : l'ancienne réservation n'est annulée
+  // qu'après confirmation de la nouvelle, pour ne jamais laisser le client sans créneau
+  const replaceId = prefillParams.get('remplace');
+  const replaceToken = prefillParams.get('token');
+  let replacing = null; // { id, token, ref } une fois le lien vérifié
+
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
     // UI immédiate — pas besoin de Supabase
@@ -287,6 +296,28 @@ const {
     if (prefillNom) /** @type {HTMLInputElement} */ (document.getElementById('client-nom')).value = prefillNom;
     if (prefillEmail) /** @type {HTMLInputElement} */ (document.getElementById('client-email')).value = prefillEmail;
     if (prefillTelephone) /** @type {HTMLInputElement} */ (document.getElementById('client-telephone')).value = prefillTelephone;
+
+    if (mode === 'client' && replaceId && replaceToken) loadReplacing();
+  }
+
+  async function loadReplacing() {
+    try {
+      const res = await fetch(`/api/reservation-lookup-public?${new URLSearchParams({ id: replaceId, token: replaceToken })}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.ok || !data.can_cancel || data.already_cancelled) return;
+
+      replacing = { id: replaceId, token: replaceToken, ref: replaceId.split('-')[0].toUpperCase() };
+      const debut = new Date(data.reservation.creneau_debut);
+      const dateFmt = debut.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' });
+      const heure = debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+      const note = document.getElementById('replace-note');
+      note.innerHTML = `✏️ Vous modifiez votre réservation <strong class="text-white">#${esc(replacing.ref)}</strong> du ${esc(dateFmt)} à ${esc(heure)}. `
+        + `Elle reste valable jusqu'à la confirmation du nouveau créneau, puis sera annulée automatiquement.`;
+      note.classList.remove('hidden');
+    } catch (err) {
+      console.error('Replace lookup failed:', err);
+    }
   }
 
   async function loadConfig() {
@@ -681,6 +712,21 @@ const {
 
       if (boxErr) throw boxErr;
 
+      // Modification : annuler l'ancienne réservation maintenant que la nouvelle existe
+      let replaceResult = null;
+      if (replacing) {
+        try {
+          const cancelRes = await fetch('/api/reservation-cancel-public', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: replacing.id, token: replacing.token }),
+          });
+          replaceResult = cancelRes.ok ? 'ok' : 'failed';
+        } catch {
+          replaceResult = 'failed';
+        }
+      }
+
       // Envoi email (fire-and-forget — avant la navigation pour garantir l'envoi)
       fetch('/api/reservation-confirmation', {
         method: 'POST',
@@ -698,6 +744,7 @@ const {
           box_names: assignedBoxes.map(b => b.box_nom).join(', '),
           ref: res.id.split('-')[0].toUpperCase(),
           notes: res.notes ?? null,
+          remplace_ref: replaceResult === 'ok' ? replacing.ref : null,
         }),
       }).catch(err => console.error('Email notification failed:', err));
 
@@ -713,7 +760,7 @@ const {
         }),
       }).catch(() => {});
 
-      showConfirmation(res, assignedBoxes);
+      showConfirmation(res, assignedBoxes, replaceResult);
     } catch (err) {
       console.error(err);
       showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
@@ -722,7 +769,7 @@ const {
     }
   }
 
-  function showConfirmation(res, boxes) {
+  function showConfirmation(res, boxes, replaceResult = null) {
     if (mode === 'admin') {
       window.location.href = successRedirect;
       return;
@@ -779,6 +826,11 @@ const {
       </div>`
           : '';
       })()}
+      ${replaceResult === 'ok'
+        ? `<p class="pt-3 border-t border-white/10 mt-1 text-white/70">✔️ Votre ancienne réservation <strong class="text-white">#${esc(replacing.ref)}</strong> a été annulée.</p>`
+        : replaceResult === 'failed'
+          ? `<p class="pt-3 border-t border-white/10 mt-1 text-amber-300">⚠️ Nous n'avons pas pu annuler votre ancienne réservation <strong>#${esc(replacing.ref)}</strong>. Appelez-nous au 06 71 41 06 95 pour l'annuler.</p>`
+          : ''}
     `;
 
     showStep(4);

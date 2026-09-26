@@ -52,6 +52,7 @@ export default async (req: Request, _context: Context) => {
     box_names: string;
     ref: string;
     notes: string | null;
+    remplace_ref?: string | null;
   };
 
   try {
@@ -76,6 +77,7 @@ export default async (req: Request, _context: Context) => {
     box_names,
     ref,
     notes,
+    remplace_ref,
   } = body;
 
   // Validation des champs obligatoires (l'email est optionnel — réservations admin par téléphone)
@@ -138,8 +140,15 @@ export default async (req: Request, _context: Context) => {
               <a href="${cancelUrl}" style="display: block; text-align: center; padding: 12px; border-radius: 8px; background-color: #1e293b; color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;">Annuler</a>
             </td>
           </tr>
-        </table>`;
+        </table>
+        <p style="margin: -12px 0 24px; color: #64748b; font-size: 12px; text-align: center;">Modification et annulation en ligne possibles jusqu'à 24h avant votre créneau.</p>`;
+  } else {
+    actionButtonsHtml = `
+        <p style="margin: 0 0 24px; color: #94a3b8; font-size: 13px; text-align: center;">Votre créneau commence dans moins de 24h : pour le modifier ou l'annuler, appelez-nous au numéro ci-dessous.</p>`;
   }
+
+  // Réservation créée via « Modifier » depuis un email précédent (réf. envoyée par le formulaire)
+  const remplaceRef = typeof remplace_ref === "string" && /^[A-Z0-9]{1,16}$/.test(remplace_ref) ? remplace_ref : null;
 
   const clientHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #e2e8f0; border-radius: 12px; overflow: hidden;">
@@ -150,6 +159,7 @@ export default async (req: Request, _context: Context) => {
       <div style="padding: 32px;">
         <p style="color: #94a3b8; margin: 0 0 24px;">Bonjour <strong style="color: #e2e8f0;">${escHtml(client_nom)}</strong>,</p>
         <p style="color: #94a3b8; margin: 0 0 24px;">Votre réservation au VR Café est confirmée. Voici le récapitulatif :</p>
+        ${remplaceRef ? `<p style="color: #94a3b8; margin: -12px 0 24px; font-size: 13px;">Elle remplace votre réservation <strong style="color: #e2e8f0;">#${remplaceRef}</strong>, qui a été annulée.</p>` : ""}
         <div style="background-color: #1e293b; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
@@ -193,6 +203,7 @@ export default async (req: Request, _context: Context) => {
   const adminHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #7c3aed;">🎮 Nouvelle réservation – #${ref}</h2>
+      ${remplaceRef ? `<p style="margin: 0 0 16px; color: #b45309;"><strong>Modification :</strong> remplace la réservation #${remplaceRef} (annulée par le client).</p>` : ""}
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 16px; color: #1e293b;">Client</h3>
         <p style="margin: 4px 0;"><strong>Nom :</strong> ${escHtml(client_nom)}</p>
