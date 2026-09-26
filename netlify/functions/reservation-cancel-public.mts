@@ -23,7 +23,8 @@ export default async (req: Request, _context: Context) => {
   }
 
   // motif "modification" : annulation déclenchée par le formulaire après création de la
-  // nouvelle réservation (dont l'email mentionne déjà le remplacement) → pas d'email client
+  // nouvelle réservation → aucun email ici : l'email client de la nouvelle réservation mentionne
+  // le remplacement, et l'admin reçoit un seul email « [Modification] » (reservation-confirmation)
   let body: { id: string; token: string; motif?: string };
   try {
     body = await req.json();
@@ -98,13 +99,13 @@ export default async (req: Request, _context: Context) => {
     };
     const creds = { apiKey, apiSecret, senderEmail };
 
-    try {
-      await sendCancellationAdminEmail(details, creds);
-    } catch (error) {
-      console.error("Failed to send cancellation notification email:", error);
-    }
-
     if (motif !== "modification") {
+      try {
+        await sendCancellationAdminEmail(details, creds);
+      } catch (error) {
+        console.error("Failed to send cancellation notification email:", error);
+      }
+
       try {
         await sendCancellationClientEmail(details, creds);
       } catch (error) {

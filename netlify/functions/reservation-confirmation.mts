@@ -1,5 +1,6 @@
 import type { Context, Config } from "@netlify/functions";
 import Mailjet from "node-mailjet";
+import { createClient } from "@supabase/supabase-js";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 import { calcMontant } from "../../src/lib/pricing.ts";
 import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
@@ -52,7 +53,7 @@ export default async (req: Request, _context: Context) => {
     box_names: string;
     ref: string;
     notes: string | null;
-    remplace_ref?: string | null;
+    remplace_id?: string | null;
   };
 
   try {
@@ -77,7 +78,7 @@ export default async (req: Request, _context: Context) => {
     box_names,
     ref,
     notes,
-    remplace_ref,
+    remplace_id,
   } = body;
 
   // Validation des champs obligatoires (l'email est optionnel — réservations admin par téléphone)
@@ -147,8 +148,37 @@ export default async (req: Request, _context: Context) => {
         <p style="margin: 0 0 24px; color: #94a3b8; font-size: 13px; text-align: center;">Votre créneau commence dans moins de 24h : pour le modifier ou l'annuler, appelez-nous au numéro ci-dessous.</p>`;
   }
 
-  // Réservation créée via « Modifier » depuis un email précédent (réf. envoyée par le formulaire)
-  const remplaceRef = typeof remplace_ref === "string" && /^[A-Z0-9]{1,16}$/.test(remplace_ref) ? remplace_ref : null;
+  // Réservation créée via « Modifier » : le formulaire envoie l'id de l'ancienne, déjà annulée
+  // par /api/reservation-cancel-public (qui n'envoie alors pas d'email admin séparé). On relit
+  // l'ancienne en base pour afficher son créneau dans un email admin unique « [Modification] ».
+  let remplaceRef: string | null = null;
+  let ancienCreneau: { dateFmt: string; heureFmt: string; heureFinFmt: string; annulee: boolean } | null = null;
+  if (typeof remplace_id === "string" && /^[0-9a-f-]{36}$/i.test(remplace_id)) {
+    remplaceRef = remplace_id.split("-")[0].toUpperCase();
+    try {
+      const supabaseUrl = Netlify.env.get("PUBLIC_SUPABASE_URL") || process.env.PUBLIC_SUPABASE_URL;
+      const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceRoleKey) {
+        const { data: ancienne } = await createClient(supabaseUrl, serviceRoleKey)
+          .from("reservations")
+          .select("statut, creneau_debut, creneau_fin")
+          .eq("id", remplace_id)
+          .single();
+        if (ancienne) {
+          const d = new Date(ancienne.creneau_debut);
+          const f = new Date(ancienne.creneau_fin);
+          ancienCreneau = {
+            dateFmt: d.toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Europe/Paris" }),
+            heureFmt: d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }),
+            heureFinFmt: f.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }),
+            annulee: ancienne.statut === "annulée",
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Lookup of replaced reservation failed:", error);
+    }
+  }
 
   const clientHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #e2e8f0; border-radius: 12px; overflow: hidden;">
@@ -202,8 +232,14 @@ export default async (req: Request, _context: Context) => {
 
   const adminHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #7c3aed;">🎮 Nouvelle réservation – #${ref}</h2>
-      ${remplaceRef ? `<p style="margin: 0 0 16px; color: #b45309;"><strong>Modification :</strong> remplace la réservation #${remplaceRef} (annulée par le client).</p>` : ""}
+      <h2 style="color: #7c3aed;">${remplaceRef ? "✏️ Réservation modifiée" : "🎮 Nouvelle réservation"} – #${ref}</h2>
+      ${remplaceRef ? `
+      <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+        <h3 style="margin: 0 0 12px; color: #92400e;">✏️ Modification par le client</h3>
+        <p style="margin: 4px 0;"><strong>Ancienne réservation :</strong> #${remplaceRef}${ancienCreneau && !ancienCreneau.annulee ? ` <strong style="color: #dc2626;">⚠️ toujours active, à annuler</strong>` : " (annulée)"}</p>
+        ${ancienCreneau ? `<p style="margin: 4px 0;"><strong>Ancien créneau :</strong> <span style="text-decoration: line-through;">${escHtml(ancienCreneau.dateFmt)} · ${escHtml(ancienCreneau.heureFmt)} – ${escHtml(ancienCreneau.heureFinFmt)}</span></p>` : ""}
+        <p style="margin: 4px 0;"><strong>Nouveau créneau :</strong> ${escHtml(dateFmt)} · ${escHtml(heureFmt)} – ${escHtml(heureFinFmt)}</p>
+      </div>` : ""}
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 16px; color: #1e293b;">Client</h3>
         <p style="margin: 4px 0;"><strong>Nom :</strong> ${escHtml(client_nom)}</p>
@@ -224,7 +260,15 @@ export default async (req: Request, _context: Context) => {
     </div>
   `;
 
-  const adminSubject = `[Nouvelle résa] ${client_nom} · ${dateFmt} · ${heureFmt}`;
+  // Modification : « jour · ancienne heure → nouvelle heure » (dates complètes si le jour change)
+  const modifCreneau = !ancienCreneau
+    ? `${dateFmt} · ${heureFmt}`
+    : ancienCreneau.dateFmt === dateFmt
+      ? `${dateFmt} · ${ancienCreneau.heureFmt} → ${heureFmt}`
+      : `${ancienCreneau.dateFmt} ${ancienCreneau.heureFmt} → ${dateFmt} ${heureFmt}`;
+  const adminSubject = remplaceRef
+    ? `[Modification] ${client_nom} · ${modifCreneau}`
+    : `[Nouvelle résa] ${client_nom} · ${dateFmt} · ${heureFmt}`;
 
   try {
     const mailjet = new Mailjet({ apiKey, apiSecret });

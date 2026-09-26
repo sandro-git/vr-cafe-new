@@ -744,7 +744,7 @@ const {
           box_names: assignedBoxes.map(b => b.box_nom).join(', '),
           ref: res.id.split('-')[0].toUpperCase(),
           notes: res.notes ?? null,
-          remplace_ref: replaceResult === 'ok' ? replacing.ref : null,
+          remplace_id: replaceResult === 'ok' ? replacing.id : null,
         }),
       }).catch(err => console.error('Email notification failed:', err));
 
