@@ -24,6 +24,25 @@ function escHtml(str: string | null | undefined): string {
     .replace(/'/g, "&#x27;");
 }
 
+const PRIX_ANNIVERSAIRE_DEFAUT = 25; // €/pers., repli si Sanity ne répond pas
+
+/** Prix par personne de la formule anniversaire, lu dans Sanity (document `tarif` de type "anniversaire"). */
+async function getPrixAnniversaire(): Promise<number> {
+  const projectId = Netlify.env.get("PUBLIC_SANITY_PROJECT_ID") || process.env.PUBLIC_SANITY_PROJECT_ID || "0oshw5tf";
+  const dataset = Netlify.env.get("PUBLIC_SANITY_DATASET") || process.env.PUBLIC_SANITY_DATASET || "production";
+  const query = encodeURIComponent('*[_type == "tarif" && type == "anniversaire"][0].prix');
+  try {
+    const res = await fetch(`https://${projectId}.apicdn.sanity.io/v2025-01-28/data/query/${dataset}?query=${query}`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    const { result } = await res.json();
+    return typeof result === "number" && result > 0 ? result : PRIX_ANNIVERSAIRE_DEFAUT;
+  } catch (error) {
+    console.error("Sanity anniversaire price lookup failed:", error);
+    return PRIX_ANNIVERSAIRE_DEFAUT;
+  }
+}
+
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
     return new Response(
@@ -121,8 +140,6 @@ export default async (req: Request, _context: Context) => {
   const heureFinFmt = fin.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
   const vrIcon = vr_type === "sans_fil" ? "📡" : "🔌";
   const vrLabel = vr_type === "sans_fil" ? "VR Sans Fil" : "VR Filaire";
-  const montant = calcMontant(duree_minutes, nb_personnes);
-  const montantFmt = montant !== null ? `${montant} €` : null;
 
   const noticeMs = debut.getTime() - Date.now();
   const canSelfManage = !!id && noticeMs >= MIN_NOTICE_MS;
@@ -131,16 +148,25 @@ export default async (req: Request, _context: Context) => {
   const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabase = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
-  // Les réservations MDJ n'ont pas de formulaire public : modification par téléphone uniquement
-  let isMdj = false;
-  if (canSelfManage && supabase) {
+  // Type de réservation (lu en base plutôt que fourni par le client)
+  let typeReservation = "standard";
+  if (id && supabase) {
     try {
       const { data } = await supabase.from("reservations").select("type_reservation").eq("id", id).single();
-      isMdj = data?.type_reservation === "mdj";
+      typeReservation = data?.type_reservation ?? "standard";
     } catch (error) {
       console.error("Lookup of reservation type failed:", error);
     }
   }
+  // Les réservations MDJ n'ont pas de formulaire public : modification par téléphone uniquement
+  const isMdj = typeReservation === "mdj";
+
+  // Anniversaire : prix/pers. du tarif Sanity (type "anniversaire"), comme sur /anniversaire.
+  // Standard et MDJ : grille calcMontant.
+  const montant = typeReservation === "anniversaire"
+    ? (await getPrixAnniversaire()) * nb_personnes
+    : calcMontant(duree_minutes, nb_personnes);
+  const montantFmt = montant !== null ? `${montant} €` : null;
   let actionButtonsHtml = "";
   if (canSelfManage) {
     const cancelToken = await generateReservationToken(id);
