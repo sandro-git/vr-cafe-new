@@ -56,9 +56,12 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
    - POST `/api/push-notify` → notification push aux admins abonnés
    - Client : page de confirmation | Admin : redirect `/admin/planning`
 
-**Tarification (hardcodée dans `ReservationForm.astro` et `reservation-confirmation.mts`) :**
+**Tarification standard et MDJ** — grille codée en dur dans `calcMontant()` (`src/lib/pricing.ts`), utilisée par `ReservationForm`, `ReservationFormMDJ`, `/admin/reservations` (CA) et `reservation-confirmation.mts` :
 - 30 min : 18 €/personne
 - 60 min : 29 € (1-2 pers.) / 27 € (3-4 pers.) / 25 € (5+ pers.) par personne
+- ⚠️ Les prix affichés sur `/tarifs` viennent de Sanity (documents `tarif` de type `session_30min` / `session_1h`) : un changement de prix doit être fait **aux deux endroits**.
+
+**Tarification anniversaire** — prix par personne lu dans Sanity (document `tarif` de type `anniversaire`, 25 €/pers., 1h, minimum 5 enfants), affiché sur `/anniversaire`. Dans l'email de confirmation, `reservation-confirmation.mts` lit `type_reservation` en base et, pour un anniversaire, calcule `prix Sanity × nb_personnes` via `getPrixAnniversaire()` (API CDN Sanity, timeout 3 s, repli `PRIX_ANNIVERSAIRE_DEFAUT` = 25 €). Changer le prix dans Sanity suffit pour la page et l'email. Le CA de `/admin/reservations` utilise encore `calcMontant` pour tous les types (identique tant que l'anniversaire reste à 25 €).
 
 **Tables Supabase :**
 - `reservations` — données client + créneau + statut
