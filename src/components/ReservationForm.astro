@@ -719,7 +719,7 @@ const {
           const cancelRes = await fetch('/api/reservation-cancel-public', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: replacing.id, token: replacing.token }),
+            body: JSON.stringify({ id: replacing.id, token: replacing.token, motif: 'modification' }),
           });
           replaceResult = cancelRes.ok ? 'ok' : 'failed';
         } catch {

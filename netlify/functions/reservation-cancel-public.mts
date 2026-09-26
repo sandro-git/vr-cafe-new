@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { verifyReservationToken } from "../lib/reservation-token.ts";
-import { sendCancellationAdminEmail } from "../lib/reservation-emails.ts";
+import { sendCancellationAdminEmail, sendCancellationClientEmail } from "../lib/reservation-emails.ts";
 
 const MIN_NOTICE_MS = 24 * 60 * 60 * 1000; // 24h — en dessous, on refuse l'auto-annulation
 
@@ -22,14 +22,16 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  let body: { id: string; token: string };
+  // motif "modification" : annulation déclenchée par le formulaire après création de la
+  // nouvelle réservation (dont l'email mentionne déjà le remplacement) → pas d'email client
+  let body: { id: string; token: string; motif?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const { id, token } = body;
+  const { id, token, motif } = body;
   if (!id || !token) return json({ error: "Missing id or token" }, 400);
 
   if (!(await verifyReservationToken(id, token))) {
@@ -80,29 +82,34 @@ export default async (req: Request, _context: Context) => {
   const senderEmail = getEnv("MAILJET_SENDER_EMAIL") || "contact@vr-cafe.fr";
 
   if (apiKey && apiSecret) {
-    try {
-      const resaBoxes = (reservation as any).reservation_boxes ?? [];
-      const boxNames = resaBoxes.map((rb: any) => rb.boxes?.nom).filter(Boolean).join(", ");
-      const vrType = resaBoxes[0]?.boxes?.type ?? "filaire";
+    const resaBoxes = (reservation as any).reservation_boxes ?? [];
+    const details = {
+      client_nom: reservation.client_nom,
+      client_email: reservation.client_email,
+      client_telephone: reservation.client_telephone,
+      nb_personnes: reservation.nb_personnes,
+      duree_minutes: reservation.duree_minutes,
+      vr_type: resaBoxes[0]?.boxes?.type ?? "filaire",
+      creneau_debut: reservation.creneau_debut,
+      creneau_fin: reservation.creneau_fin,
+      box_names: resaBoxes.map((rb: any) => rb.boxes?.nom).filter(Boolean).join(", "),
+      ref: id.split("-")[0].toUpperCase(),
+      notes: reservation.notes,
+    };
+    const creds = { apiKey, apiSecret, senderEmail };
 
-      await sendCancellationAdminEmail(
-        {
-          client_nom: reservation.client_nom,
-          client_email: reservation.client_email,
-          client_telephone: reservation.client_telephone,
-          nb_personnes: reservation.nb_personnes,
-          duree_minutes: reservation.duree_minutes,
-          vr_type: vrType,
-          creneau_debut: reservation.creneau_debut,
-          creneau_fin: reservation.creneau_fin,
-          box_names: boxNames,
-          ref: id.split("-")[0].toUpperCase(),
-          notes: reservation.notes,
-        },
-        { apiKey, apiSecret, senderEmail }
-      );
+    try {
+      await sendCancellationAdminEmail(details, creds);
     } catch (error) {
       console.error("Failed to send cancellation notification email:", error);
+    }
+
+    if (motif !== "modification") {
+      try {
+        await sendCancellationClientEmail(details, creds);
+      } catch (error) {
+        console.error("Failed to send cancellation client email:", error);
+      }
     }
   }
 
