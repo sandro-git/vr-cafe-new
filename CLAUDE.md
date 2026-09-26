@@ -72,6 +72,25 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 
 **RPC Supabase :** `get_boxes_disponibles(p_debut, p_fin, p_type_vr)` — retourne les boxes libres pour un créneau
 
+### Modification et annulation par le client
+
+**Liens dans l'email de confirmation** (`reservation-confirmation.mts`) : boutons « Modifier » / « Annuler » ajoutés seulement si l'`id` de la réservation est transmis **et** que le créneau commence dans ≥ 24h (`MIN_NOTICE_MS`, à garder cohérent dans `reservation-confirmation`, `reservation-lookup-public` et `reservation-cancel-public`). Sinon, phrase invitant à appeler le café.
+- Annuler : `/reservation/annulation?id=<uuid>&token=<token>` — Modifier : même lien + `&action=modifier`.
+- `token` = HMAC-SHA256 de l'id signé avec `ADMIN_PASSWORD` (`netlify/lib/reservation-token.ts`, comparaison en temps constant). Pas d'expiration ; changer `ADMIN_PASSWORD` invalide tous les liens déjà envoyés.
+- Mailjet réécrit les liens (suivi des clics `*.mjt.lu/lnk/...`) : l'URL réelle est le dernier segment, encodé en base64 URL-safe.
+
+**Page `/reservation/annulation`** (statique, tout côté client) : charge la réservation via `GET /api/reservation-lookup-public` puis affiche un état parmi `invalid` (token/réservation introuvable), `cancelled` (déjà annulée), `too-late` (< 24h), `confirm`, `success`.
+
+**Annulation simple** : bouton « Confirmer l'annulation » → `POST /api/reservation-cancel-public {id, token}` (revérifie token + 24h, passe `statut` à `annulée`) → email admin `[Annulation]` + email client « Annulation de votre réservation » (`netlify/lib/reservation-emails.ts`).
+
+**Modification — l'ancienne réservation n'est annulée qu'après création de la nouvelle** (le client ne perd jamais son créneau s'il abandonne) :
+1. `action=modifier` : la page n'annule rien, bouton « Choisir un nouveau créneau » → redirige vers `/reservation?nom=&email=&telephone=&remplace=<id>&token=<token>`.
+2. `ReservationForm` (mode client) vérifie le lien via `reservation-lookup-public` ; si valide et annulable, affiche le bandeau `#replace-note` (« Vous modifiez votre réservation #REF du … ») et mémorise `replacing`. Lien invalide → formulaire normal, sans remplacement.
+3. À la soumission : insert `reservations` + `reservation_boxes`, **puis** `POST /api/reservation-cancel-public {id, token, motif: "modification"}` sur l'ancienne. Écran de confirmation : « ancienne réservation #REF annulée » ou, en cas d'échec, invitation à appeler.
+4. `motif: "modification"` → `reservation-cancel-public` n'envoie **aucun** email. Le formulaire envoie `remplace_id` à `/api/reservation-confirmation`, qui relit l'ancienne en base (service role) et envoie : au client la confirmation avec « Elle remplace votre réservation #REF » ; à l'admin **un seul** email `[Modification] Nom · jour · 14:00 → 17:00` (ancien créneau barré, alerte si l'ancienne est encore active).
+
+**Limites connues** : pendant le choix du nouveau créneau, l'ancienne réservation occupe encore ses boxes (un créneau qui la chevauche peut apparaître indisponible). « Modifier » renvoie toujours vers le formulaire standard, même pour une réservation anniversaire/MDJ. Les annulations faites depuis l'admin (`/api/reservation-annulation`) n'envoient pas d'email au client.
+
 ### Section admin
 
 Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, 30j, comparé à `ADMIN_PASSWORD`).
@@ -91,11 +110,14 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, 30j, compar
 |----------|-----------------|-------------|
 | `POST /api/reservation-confirmation` | CORS origin | Email confirmation client + sync contact Mailjet |
 | `POST /api/contact` | CORS + CSRF HMAC-SHA256 | Email formulaire contact via Mailjet |
+| `GET /api/contact-token` | — | Jeton CSRF + horodatage pour le formulaire contact (récupéré côté client : `/contact` est statique) |
 | `POST /api/push-notify` | — | Envoi notification push (web-push VAPID) |
 | `POST /api/push/subscribe` | Cookie `admin_session` | Enregistre un abonnement push dans Supabase |
 | `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : update résa, vacances, fermetures, boxes |
 | `POST /api/admin/chat` | Cookie `admin_session` | Chat d'aide opérationnelle (Claude Haiku 4.5), répond à partir de `content/staff-guide.md` compilé au build |
-| `POST /api/reservation-annulation` | — | Annulation réservation |
+| `POST /api/reservation-annulation` | Cookie `admin_session` | Annulation réservation (admin) |
+| `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
+| `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
 **CORS origins autorisées :** `https://vr-cafe.fr`, `https://www.vr-cafe.fr`, `http://localhost:4321`
 
@@ -179,7 +201,7 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 
 ## Design System (refonte 2026)
 
-Refonte visuelle complète appliquée à **tout le site public** (mergée sur `master`) **et au back-office `/admin/*`** (branche `redesign`, voir « Back-office » plus bas).
+Refonte visuelle complète appliquée à **tout le site public** (mergée sur `master`) **et au back-office `/admin/*`** (également mergé sur `master`, voir « Back-office » plus bas).
 
 **Tokens** — définis dans `src/styles/global.css` via `@theme` (Tailwind v4) :
 - Couleurs : `brand-50…900` (violet, base #8b5cf6), `accent-300/400/500` (jaune), `glow-pink/blue/cyan`, surfaces `surface` (#0b0b14) / `surface-elevated` (#14141f) / `surface-card` (#1c1c2b) / `surface-border`, textes `text-strong/base/muted/faded`.
@@ -216,7 +238,7 @@ Refonte visuelle complète appliquée à **tout le site public** (mergée sur `m
 - `devToolbar` désactivée (astro.config.mjs) pour le confort mobile.
 - Le bouton WhatsApp flottant (`FloatingActions`) est **commenté** dans `BaseLayout.astro` (à replacer ailleurs plus tard).
 
-**Back-office `/admin/*` (refonte faite, branche `redesign`)** :
+**Back-office `/admin/*` (refonte faite, mergée sur `master`)** :
 - `AdminLayout.astro` : fond `surface` + **topbar unifiée persistante** (wordmark « VR Café · Admin » ≥ sm, nav Réservations/Planning/Clients/Marketing avec onglet actif détecté via `Astro.url.pathname`, CTA « + Réserver » brand, liens scrollables sur mobile via `.no-scrollbar`). Le `<slot>` est dans un `<div class="pt-14">` (PAS un `<main>` : chaque page admin a déjà son propre `<main>`). Script service worker / push conservé.
 - Pages refaites en palette design system **sobre & dense** (pas de shimmer/reveal/orbs) : `login`, `reservations`, `clients`, `marketing`, `planning`, `reservation`. Stats cards `bg-[var(--color-surface-card)] border-white/10`, champs `bg-white/5 ring-1 ring-white/10 focus:ring-[var(--color-brand-400)]`, modales `bg-black/60 backdrop-blur-sm` + panneau surface-card, spinners `border-t-[var(--color-brand-400)]`.
 - **Couleurs sémantiques conservées** (elles portent du sens métier, ne pas “brandifier”) : badges de statut (confirmée vert / annulée rouge / no_show jaune) en `*-500/15` + `text-*-300` + `border-*-500/30` ; types de résa (anniversaire rose, MDJ violet) ; **couleurs inline des blocs du planning** (`statusClass` ligne ~455 : sans-fil vert / filaire>30 bleu / filaire≤30 violet / anniv rose) + la légende correspondante.
