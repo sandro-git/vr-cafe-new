@@ -30,7 +30,12 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 ### Tests unitaires
 
 - **Vitest** configuré via `getViteConfig()` d'Astro (`vitest.config.ts`), tests dans `tests/**/*.test.ts`
-- Couvert : `src/lib/pricing.ts` (grille + anniversaire), `netlify/lib/reservation-token.ts` (HMAC), `netlify/lib/reservation-notice.ts` (règle des 24h)
+- Couvert :
+  - `src/lib/pricing.ts` (grille + anniversaire)
+  - `netlify/lib/reservation-token.ts` (HMAC)
+  - `netlify/lib/reservation-notice.ts` (règle des 24h)
+  - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
+- Avant de durcir une règle de validation, la rejouer en SQL sur les numéros en base (ne remonter que des comptes) pour vérifier l'absence de faux positifs
 - **Bloquant au déploiement** : la commande de build Netlify est `bun run test && bun run build` → un test cassé fait échouer le deploy
 - `vite` est épinglé en devDependency sur la **même version que celle d'Astro** : sinon Bun remonte une autre version pour Vitest et `astro check` casse (types `Plugin` en double). À réaligner quand on met à jour Astro
 
@@ -59,6 +64,11 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 1. **Étape 1 — Date + config** : charge depuis Supabase (`config`, `durees_session`, `jours_fermeture`, `periodes_vacances`), sélection date + nb personnes + type VR (filaire/sans_fil) + durée
 2. **Étape 2 — Créneau** : génère les slots de 30min dans la plage horaire, appelle RPC `get_boxes_disponibles` pour chaque slot, affiche les créneaux disponibles
 3. **Étape 3 — Infos client** : nom, email, téléphone, notes (+ autocomplete admin depuis historique Supabase)
+   - Validation partagée `src/lib/reservation-validation.ts` (formulaires standard/anniversaire/MDJ côté client **et** `reservation-confirmation.mts` côté serveur ; `isValidPhone`/`detectPhoneCountry` aussi dans l'admin) :
+     - **Email** : format + domaines bidons refusés (`example.com`, `exemple.fr`, `test.fr`, `mdj.fr`…)
+     - **Téléphone** : validé avec `libphonenumber-js` selon le pays choisi (liste courte `COUNTRIES`) ; « Autre pays » exige l'indicatif `+` ; stocké au format international (`formatPhoneForStorage`, ex. `+33 6 71 41 06 95`)
+     - **Faux numéros** (`isFakePhone`) : placeholders connus (dont l'exemple FR `06 12 34 56 78`, refusé volontairement), puis sur le numéro **sans son chiffre de préfixe** : chiffres tous identiques, et à partir de 6 chiffres paire répétée (`06 12 12 12 12`) ou suite croissante/décroissante (`07 12 34 56 78`)
+     - **Pays d'un numéro stocké** (`detectPhoneCountry`, pour préremplir le sélecteur en édition admin) : un territoire hors liste qui partage l'indicatif d'un pays de la liste retombe sur ce pays (Guernesey/Jersey/île de Man en `+44` → Royaume-Uni)
 4. **Étape 4 — Confirmation** :
    - Insert `reservations` + `reservation_boxes` dans Supabase
    - POST `/api/reservation-confirmation` → email Mailjet client + sync contact Mailjet
