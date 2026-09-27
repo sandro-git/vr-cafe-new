@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumberFromString } from "libphonenumber-js/min";
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/min";
 import {
   COUNTRIES,
   detectPhoneCountry,
@@ -190,7 +190,9 @@ describe("validateClientInfo", () => {
 
 describe("COUNTRIES (exemples affichés dans le champ téléphone)", () => {
   it("chaque exemple est un numéro valide, détecté dans son propre pays", () => {
-    for (const c of COUNTRIES.filter((c) => c.code !== "OTHER")) {
+    const listed = COUNTRIES.filter((c): c is typeof c & { code: CountryCode } => c.code !== "OTHER");
+    expect(listed.length).toBeGreaterThan(0);
+    for (const c of listed) {
       expect(isValidPhone(c.placeholder, c.code), c.name).toBe(true);
       expect(detectPhoneCountry(formatPhoneForStorage(c.placeholder, c.code)), c.name).toBe(c.code);
       // Pays exact, sans le repli par indicatif (ex. un numéro de Guernesey pour le Royaume-Uni)

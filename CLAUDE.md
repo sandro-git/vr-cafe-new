@@ -35,6 +35,12 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
   - `netlify/lib/reservation-token.ts` (HMAC)
   - `netlify/lib/reservation-notice.ts` (règle des 24h)
   - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
+  - `src/lib/seo.ts` (JSON-LD) et `src/lib/headsetBadge.ts`
+  - `netlify/lib/reservation-emails.ts` : destinataires, sujets, échappement HTML des saisies client, pas de flexbox
+  - `netlify/lib/google-business.ts` (OAuth + cache du jeton, pagination, notes), `generate-review-reply.ts`, `mailjet-contacts.ts` (synchro, changement d'email, suppression RGPD, campagnes), `src/lib/notify.ts` (push, abonnements expirés)
+- **Aucun appel réseau réel** : Mailjet, Supabase, Anthropic, web-push sont remplacés par `vi.mock` et `fetch` par `vi.stubGlobal` ; faux client Mailjet réutilisable dans `tests/helpers/mailjet-mock.ts`
+- Lancer aussi `bun astro check` après avoir modifié un test : les erreurs de type des tests n'empêchent pas Vitest de passer
+- Non testés : `src/lib/supabase.js` (config) et `netlify/lib/staff-guide-content.generated.ts` (généré)
 - Avant de durcir une règle de validation, la rejouer en SQL sur les numéros en base (ne remonter que des comptes) pour vérifier l'absence de faux positifs
 - **Bloquant au déploiement** : la commande de build Netlify est `bun run test && bun run build` → un test cassé fait échouer le deploy
 - `vite` est épinglé en devDependency sur la **même version que celle d'Astro** : sinon Bun remonte une autre version pour Vitest et `astro check` casse (types `Plugin` en double). À réaligner quand on met à jour Astro
