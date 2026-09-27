@@ -1,5 +1,6 @@
 ---
 interface Props {
+  id?: string;
   href?: string;
   type?: "button" | "submit" | "reset";
   variant?: "primary" | "secondary" | "ghost" | "accent";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const {
+  id,
   href,
   type = "button",
   variant = "primary",
@@ -47,6 +49,7 @@ const Tag = href ? "a" : "button";
 ---
 
 <Tag
+  id={id}
   href={href}
   type={!href ? type : undefined}
   target={target}

@@ -19,7 +19,7 @@ function makeSupabase() {
 
 // Instancié à la demande : certaines actions (ex. create_campaign) ne touchent pas Supabase
 // et ne doivent pas échouer si SUPABASE_SERVICE_ROLE_KEY est absente.
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _supabase: ReturnType<typeof makeSupabase> | null = null;
 function getSupabase() {
   return (_supabase ??= makeSupabase());
 }
