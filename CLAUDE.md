@@ -43,6 +43,9 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - **Aucun appel réseau réel** : Mailjet, Supabase, Anthropic, web-push sont remplacés par `vi.mock` et `fetch` par `vi.stubGlobal` ; faux client Mailjet réutilisable dans `tests/helpers/mailjet-mock.ts`
 - Lancer aussi `bun astro check` après avoir modifié un test : les erreurs de type des tests n'empêchent pas Vitest de passer
 - Non testés : `src/lib/supabase.js` (config) et `netlify/lib/staff-guide-content.generated.ts` (généré)
+- Avant de durcir une règle de validation, la rejouer en SQL sur les numéros en base (ne remonter que des comptes) pour vérifier l'absence de faux positifs
+- **Bloquant au déploiement** : la commande de build Netlify est `bun run test && bun run build` → un test cassé fait échouer le deploy
+- `vite` est épinglé en devDependency sur la **même version que celle d'Astro** : sinon Bun remonte une autre version pour Vitest et `astro check` casse (types `Plugin` en double). À réaligner quand on met à jour Astro
 
 ### Tests de bout en bout (Playwright)
 
@@ -50,15 +53,19 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` et `ADMIN_SESSION_SECRET` de test ; les tests posent un cookie `admin_session` **signé** avec ces secrets (`e2e/helpers/admin-session.ts`), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
 - Supabase (REST/RPC) et les fonctions `/api/*` sont simulés dans le navigateur (`e2e/helpers/mocks.ts` : `FakeSupabase`, `FakeApi`) → aucune réservation, aucun email, aucune réponse Google réellement créés. `FakeSupabase.unhandled` doit rester vide (vérifié après chaque test). Option `delayMs` pour simuler un réseau lent
 - Horloge du navigateur fixée (`setNow`) : les tests de réservation se placent le jeudi 1er octobre 2026 à 10:00 (Paris)
+- Fichiers (33 tests) :
+  - `e2e/admin-login.spec.ts` (3), `e2e/admin-avis.spec.ts` (7), `e2e/annulation.spec.ts` (10), `e2e/reservation.spec.ts` (13)
+  - `e2e/helpers/mocks.ts` : `FakeSupabase` (tables `config`, `durees_session`, `jours_fermeture`, `periodes_vacances`, `avis_google`, RPC `get_boxes_disponibles`, inserts `reservations` / `reservation_boxes` enregistrés dans `.inserts`), `FakeApi` (appels `/api/*` enregistrés, réponse par défaut `{ ok: true }`, handlers par chemin), `setNow`
+  - `e2e/helpers/admin-session.ts` : cookie de session admin signé pour les tests
+  - `e2e/global-setup.ts` : préchauffage (voir plus bas)
 - Couvert : `/admin/login` (cookie signé sans le mot de passe, mauvais mot de passe, ancien cookie en clair refusé), `/admin/avis` (publier, brouillon vide, confirmation annulée, régénérer, erreurs), `/reservation/annulation` (tous les états, modifier standard/anniversaire/MDJ), `/reservation` (parcours complet, créneaux, box insuffisantes, jours fermés, validation, modification, réseau lent)
 - `ASTRO_DEV_BACKGROUND=1` dans `webServer.env` : sinon Astro 7 détecte un agent IA et passe `astro dev` en arrière-plan, ce que Playwright prend pour un plantage
 - `e2e/global-setup.ts` précharge les pages jusqu'à ce que Vite ne les recharge plus (il re-prépare ses dépendances à chaque démarrage et recharge les pages ouvertes, ce qui cassait des tests au hasard)
-- Vérifier qu'un nouveau test n'est pas aléatoire : `bunx playwright test --repeat-each=5`
+- **Écrire un test** : installer `FakeSupabase` / `FakeApi` (et `setNow` si le calendrier intervient) **avant** `page.goto`, puis vérifier ce que la page a envoyé (`supabase.inserts`, `api.callsTo('/api/…')`) plutôt que seulement l'affichage ; toute nouvelle requête Supabase de la page doit être ajoutée au faux Supabase (sinon `unhandled` fait échouer le test)
+- **Lancer une partie** : `bunx playwright test e2e/reservation.spec.ts -g "modification"`
+- **Déboguer un échec** : la trace est gardée dans `test-results/` (ignoré par git) → `bunx playwright show-trace test-results/<test>/trace.zip` (DOM, réseau et console pas à pas)
+- Vérifier qu'un nouveau test n'est pas aléatoire : `bunx playwright test --repeat-each=5` (idéalement aussi après `rm -rf node_modules/.vite`, cache Vite vide)
 - **Datepicker** : une date cliquée avant l'arrivée de la configuration Supabase est revalidée puis ré-émise (ou effacée si fermée) à la réception de `datepicker:init` ; les formulaires doivent donc poser leur écoute `datepicker:select` **avant** de dispatcher `datepicker:init`
-
-- Avant de durcir une règle de validation, la rejouer en SQL sur les numéros en base (ne remonter que des comptes) pour vérifier l'absence de faux positifs
-- **Bloquant au déploiement** : la commande de build Netlify est `bun run test && bun run build` → un test cassé fait échouer le deploy
-- `vite` est épinglé en devDependency sur la **même version que celle d'Astro** : sinon Bun remonte une autre version pour Vitest et `astro check` casse (types `Plugin` en double). À réaligner quand on met à jour Astro
 
 ## Architecture
 
