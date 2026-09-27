@@ -39,3 +39,7 @@ deno.lock
 # Généré à partir de content/staff-guide.md par scripts/build-staff-guide.mjs
 # (voir package.json : "build" / "dev:netlify")
 netlify/lib/staff-guide-content.generated.ts
+
+# Playwright (tests e2e) : résultats et traces des tests en échec
+test-results/
+playwright-report/

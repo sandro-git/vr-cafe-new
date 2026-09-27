@@ -243,15 +243,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       return;
     }
 
-    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
-      id: 'dp',
-      datesFermees: [...datesFermees],
-      periodesVacances,
-      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
-      adminMode: (window.__anniversaireMode ?? 'client') === 'admin',
-      excludeToday: (window.__anniversaireMode ?? 'client') !== 'admin',
-    }}));
-
+    // Écoute posée AVANT datepicker:init : une date choisie pendant le chargement de la
+    // configuration est ré-émise par le datepicker à ce moment-là.
     // `document` persiste entre navigations View Transitions : on retire l'ancien
     // listener (d'une précédente exécution du script) avant d'en poser un nouveau.
     if (window.__anniversaireDatepickerHandler) {
@@ -265,6 +258,15 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       checkStep1Valid();
     };
     document.addEventListener('datepicker:select', window.__anniversaireDatepickerHandler);
+
+    document.dispatchEvent(new CustomEvent('datepicker:init', { detail: {
+      id: 'dp',
+      datesFermees: [...datesFermees],
+      periodesVacances,
+      joursNormaux: [...JOURS_OUVERTURE_NORMAL],
+      adminMode: (window.__anniversaireMode ?? 'client') === 'admin',
+      excludeToday: (window.__anniversaireMode ?? 'client') !== 'admin',
+    }}));
 
     if ((window.__anniversaireMode ?? 'client') === 'client') {
       for (const [param, fieldId] of [['nom', 'client-nom'], ['email', 'client-email'], ['telephone', 'client-telephone']]) {

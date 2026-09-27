@@ -212,10 +212,30 @@ const { id = 'dp' } = Astro.props;
         calYear = d.getFullYear();
         calMonth = d.getMonth();
         selectDate(detail.selectedDate);
+      } else if (selectedDate) {
+        // Date choisie avant l'arrivée de la configuration (réseau lent) : le formulaire
+        // n'écoutait pas encore → on la revalide avec les vrais jours d'ouverture, puis on la
+        // ré-émet si elle reste réservable, sinon on l'efface.
+        const isPast = selectedDate < today || (excludeToday && selectedDate === today);
+        if (!isPast && estOuvert(selectedDate)) {
+          selectDate(selectedDate);
+        } else {
+          clearSelection();
+          render();
+        }
       } else {
         render();
       }
     });
+
+    function clearSelection() {
+      selectedDate = '';
+      (document.getElementById(`${rootId}-value`) as HTMLInputElement).value = '';
+      const display = document.getElementById(`${rootId}-display`)!;
+      display.textContent = 'Sélectionnez une date';
+      display.classList.remove('text-white');
+      display.classList.add('text-white/40');
+    }
 
     // Pilotage externe : set la date depuis du code parent (boutons prev/next/today, etc.)
     document.addEventListener('datepicker:setDate', (e: Event) => {
