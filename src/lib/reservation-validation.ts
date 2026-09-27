@@ -75,8 +75,13 @@ export function formatPhoneForStorage(v: string, country?: PhoneCountryCode): st
 // sélecteur de pays en édition. "OTHER" si le numéro ne correspond à aucun pays de la liste.
 export function detectPhoneCountry(v: string): PhoneCountryCode {
   const parsed = parsePhoneNumberFromString(v.trim());
-  const country = parsed?.country;
-  return country && COUNTRIES.some((c) => c.code === country) ? country : "OTHER";
+  if (!parsed) return "OTHER";
+  const country = parsed.country;
+  if (country && COUNTRIES.some((c) => c.code === country)) return country;
+  // Territoire hors liste partageant l'indicatif d'un pays de la liste (Guernesey, Jersey,
+  // île de Man en +44 → Royaume-Uni) : on retombe sur ce pays, qui valide aussi ces numéros.
+  const sameDial = COUNTRIES.find((c) => c.dial === `+${parsed.countryCallingCode}`);
+  return sameDial ? sameDial.code : "OTHER";
 }
 
 export function isFakePhone(v: string, country?: PhoneCountryCode): boolean {

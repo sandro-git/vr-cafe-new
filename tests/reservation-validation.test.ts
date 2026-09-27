@@ -139,6 +139,22 @@ describe("detectPhoneCountry", () => {
     expect(detectPhoneCountry("+32 475 12 34 56")).toBe("BE");
   });
 
+  it("territoires en +44 (Guernesey, Jersey, île de Man) → Royaume-Uni", () => {
+    expect(detectPhoneCountry("+44 7400 123456")).toBe("GB");
+    expect(detectPhoneCountry("+44 7911 123456")).toBe("GB"); // Guernesey
+    expect(detectPhoneCountry("+44 7797 123456")).toBe("GB"); // Jersey
+    expect(detectPhoneCountry("+44 7624 123456")).toBe("GB"); // île de Man
+  });
+
+  it("aller-retour : un numéro stocké reste valide pour le pays détecté", () => {
+    for (const [saisie, pays] of [["07911123456", "GB"], ["07797123456", "GB"], ["0671410695", "FR"], ["612345678", "ES"]] as const) {
+      const stocke = formatPhoneForStorage(saisie, pays);
+      const detecte = detectPhoneCountry(stocke);
+      expect(detecte, stocke).toBe(pays);
+      expect(isValidPhone(stocke, detecte), stocke).toBe(true);
+    }
+  });
+
   it("« Autre pays » hors liste ou illisible", () => {
     expect(detectPhoneCountry("+1 202 555 0100")).toBe("OTHER");
     expect(detectPhoneCountry("n'importe quoi")).toBe("OTHER");
