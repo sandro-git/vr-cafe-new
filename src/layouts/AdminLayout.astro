@@ -56,6 +56,18 @@ const isActive = (href: string) =>
           <span class="text-base leading-none">+</span>
           <span>Réserver</span>
         </a>
+
+        <form method="post" action="/admin/logout" class="shrink-0">
+          <button
+            type="submit"
+            title="Se déconnecter de cet appareil"
+            aria-label="Déconnexion"
+            class="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium text-white/55 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span class="hidden md:inline">Déconnexion</span>
+          </button>
+        </form>
       </div>
     </header>
 
