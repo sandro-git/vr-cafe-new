@@ -152,6 +152,7 @@ try {
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
+  import { adminRead } from '../../lib/admin-read.js';
   import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from '../../lib/pricing';
 
   let currentDate = localDateStr(new Date());
@@ -165,18 +166,10 @@ try {
     const start = new Date(dateStr + 'T00:00:00');
     const end = new Date(dateStr + 'T23:59:59');
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .select(`
-        *, type_reservation,
-        reservation_boxes (
-          box_id,
-          boxes ( nom, type )
-        )
-      `)
-      .gte('creneau_debut', start.toISOString())
-      .lte('creneau_debut', end.toISOString())
-      .order('creneau_debut');
+    const { data, error } = await adminRead('list_reservations', {
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
 
     if (error) {
       showState('error');

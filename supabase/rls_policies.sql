@@ -30,19 +30,15 @@ CREATE POLICY "anon_read" ON jours_fermeture
 CREATE POLICY "anon_read" ON periodes_vacances
   FOR SELECT TO anon, authenticated USING (true);
 
--- 3. Reservations : lecture publique (nécessaire pour vérifier les créneaux)
---    + insertion publique (formulaire de réservation)
+-- 3. Reservations : insertion publique (formulaire de réservation), AUCUNE lecture anon
+--    (données personnelles, la clé anon est publique). Lectures admin via /api/admin/db
+--    (service role), disponibilités via la RPC get_boxes_disponibles (SECURITY DEFINER).
+--    Voir supabase/rls_reservations_privees.sql (suppression des anciennes policies anon_read).
 --    Les écritures admin (UPDATE/DELETE) passent par la service role key côté serveur.
-CREATE POLICY "anon_read" ON reservations
-  FOR SELECT TO anon, authenticated USING (true);
-
 CREATE POLICY "anon_insert" ON reservations
   FOR INSERT TO anon WITH CHECK (true);
 
--- 4. Reservation_boxes : même logique
-CREATE POLICY "anon_read" ON reservation_boxes
-  FOR SELECT TO anon, authenticated USING (true);
-
+-- 4. Reservation_boxes : même logique (insertion seule)
 CREATE POLICY "anon_insert" ON reservation_boxes
   FOR INSERT TO anon WITH CHECK (true);
 

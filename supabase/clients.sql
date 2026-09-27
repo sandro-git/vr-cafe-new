@@ -103,9 +103,8 @@ WHERE r.client_id IS NULL
   AND r.client_email IS NOT NULL
   AND lower(r.client_email) = lower(c.email);
 
--- 5. RLS : lecture anon publique (cohérent avec reservations),
---    écritures via service role (admin-db) + trigger SECURITY DEFINER
+-- 5. RLS : aucun accès anon (données personnelles). Lectures et écritures
+--    via service role (/api/admin/db) + trigger SECURITY DEFINER à l'insertion
+--    d'une réservation. L'ancienne policy "anon_read" est supprimée par
+--    supabase/rls_reservations_privees.sql.
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "anon_read" ON clients
-  FOR SELECT TO anon, authenticated USING (true);

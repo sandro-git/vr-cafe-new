@@ -295,6 +295,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
+  import { adminRead, fetchClientSuggestions as fetchClientSuggestionsEdit } from '../../lib/admin-read.js';
   import { isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
 
   // Helper : toutes les écritures admin passent par la fonction serveur
@@ -497,17 +498,11 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
   }
 
   async function loadReservationsForRange(start, end) {
-    const { data, error } = await supabase
-      .from('reservations')
-      .select(`
-        id, creneau_debut, creneau_fin, duree_minutes,
-        client_nom, client_email, client_telephone, nb_personnes, statut, notes, type_reservation,
-        reservation_boxes ( box_id, boxes ( nom, type ) )
-      `)
-      .gte('creneau_debut', start.toISOString())
-      .lte('creneau_debut', end.toISOString())
-      .not('statut', 'in', '("annulée","no_show")')
-      .order('creneau_debut');
+    const { data, error } = await adminRead('list_reservations', {
+      start: start.toISOString(),
+      end: end.toISOString(),
+      active_only: true,
+    });
     return { data: data ?? [], error };
   }
 
@@ -830,24 +825,6 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
   // ── Autocomplete clients (admin) ──────────────────────────────────────────
   let acEditTimer = null;
 
-  async function fetchClientSuggestionsEdit(field, value) {
-    if (value.length < 2) return [];
-    const col = field === 'nom' ? 'client_nom' : field === 'email' ? 'client_email' : 'client_telephone';
-    const { data } = await supabase
-      .from('reservations')
-      .select('client_nom, client_email, client_telephone')
-      .ilike(col, `%${value}%`)
-      .order('created_at', { ascending: false })
-      .limit(20);
-    if (!data) return [];
-    const seen = new Set();
-    return data.filter(r => {
-      const key = r.client_email || r.client_nom;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }
 
   function fillEditClient(s) {
     document.getElementById('edit-nom').value = s.client_nom ?? '';

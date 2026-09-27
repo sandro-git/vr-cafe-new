@@ -2,6 +2,7 @@ import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { updateClientInMailjet, deleteClientFromMailjet, createSegmentCampaign } from "../lib/mailjet-contacts.ts";
 import { isAdminRequest } from "../lib/admin-session.ts";
+import { isAdminReadAction, runAdminRead } from "../lib/admin-reads.ts";
 
 function mailjetCreds(): { apiKey: string; apiSecret: string } | null {
   const apiKey = process.env.MAILJET_API_KEY;
@@ -47,6 +48,12 @@ export default async (req: Request, _context: Context) => {
   }
 
   const { action } = body;
+
+  // Lectures (réservations, clients) : la clé anon n'y a pas accès
+  if (isAdminReadAction(action)) {
+    const { status, body: result } = await runAdminRead(getSupabase(), action, body);
+    return json(result, status);
+  }
 
   switch (action) {
     // ── Réservations ────────────────────────────────────────────────────────

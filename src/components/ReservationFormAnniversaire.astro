@@ -197,6 +197,8 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   // @ts-nocheck
   import { validateClientInfo, formatPhoneForStorage } from '../lib/reservation-validation';
   import { headsetBadgeHtml } from '../lib/headsetBadge';
+  import { newReservationId } from '../lib/uuid';
+  import { fetchClientSuggestions } from '../lib/admin-read.js';
   // Supabase en import dynamique : le rendu de l'étape 1 ne dépend pas du chunk.
   let supabase;
   async function ensureSupabase() {
@@ -658,23 +660,22 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
       }
 
       // Créer la réservation
-      const { data: res, error: resErr } = await supabase
-        .from('reservations')
-        .insert({
-          client_nom: nom,
-          client_email: email || null,
-          client_telephone: telFormatted,
-          nb_personnes: selectedNb,
-          duree_minutes: selectedDuree.duree_minutes,
-          creneau_debut: selectedSlot.debut.toISOString(),
-          creneau_fin: selectedSlot.fin.toISOString(),
-          creneau_fin_blocage: selectedSlot.finBlocage.toISOString(),
-          statut: 'confirmée',
-          type_reservation: 'anniversaire',
-          notes: notes || null,
-        })
-        .select()
-        .single();
+      // Sans .select() : la clé anon n'a pas le droit de relire la réservation
+      const res = {
+        id: newReservationId(),
+        client_nom: nom,
+        client_email: email || null,
+        client_telephone: telFormatted,
+        nb_personnes: selectedNb,
+        duree_minutes: selectedDuree.duree_minutes,
+        creneau_debut: selectedSlot.debut.toISOString(),
+        creneau_fin: selectedSlot.fin.toISOString(),
+        creneau_fin_blocage: selectedSlot.finBlocage.toISOString(),
+        statut: 'confirmée',
+        type_reservation: 'anniversaire',
+        notes: notes || null,
+      };
+      const { error: resErr } = await supabase.from('reservations').insert(res);
 
       if (resErr) throw resErr;
 
@@ -853,25 +854,6 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   const mode = window.__anniversaireMode ?? 'client';
   if (mode === 'admin') {
     let acTimer = null;
-
-    async function fetchClientSuggestions(field, value) {
-      if (value.length < 2) return [];
-      const col = field === 'nom' ? 'client_nom' : field === 'email' ? 'client_email' : 'client_telephone';
-      const { data } = await supabase
-        .from('reservations')
-        .select('client_nom, client_email, client_telephone')
-        .ilike(col, `%${value}%`)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (!data) return [];
-      const seen = new Set();
-      return data.filter(r => {
-        const key = r.client_email || r.client_nom;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    }
 
     function showSuggestions(ulId, suggestions, onSelect) {
       const ul = document.getElementById(ulId);

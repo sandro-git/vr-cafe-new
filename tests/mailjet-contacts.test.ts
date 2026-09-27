@@ -7,9 +7,10 @@ const { state, FakeMailjet } = await vi.hoisted(async () => {
 vi.mock("node-mailjet", () => ({ default: FakeMailjet }));
 
 // Supabase : seul le comptage des réservations confirmées est utilisé
-const supa = vi.hoisted(() => ({ count: 0 as number | null, filters: [] as [string, unknown][] }));
+const supa = vi.hoisted(() => ({ count: 0 as number | null, filters: [] as [string, unknown][], key: "" }));
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: () => {
+  createClient: (_url: string, key: string) => {
+    supa.key = key;
     const q: any = {
       from: () => q,
       select: () => q,
@@ -38,9 +39,10 @@ beforeEach(() => {
   state.respond = () => ({ body: { Data: [] } });
   supa.count = 0;
   supa.filters.length = 0;
+  supa.key = "";
   vi.stubEnv("MAILJET_LIST_ID", "42");
   vi.stubEnv("PUBLIC_SUPABASE_URL", "https://x.supabase.co");
-  vi.stubEnv("PUBLIC_SUPABASE_ANON_KEY", "anon");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role");
   fetchMock = vi.fn(async () => new Response("", { status: 200 }));
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -80,6 +82,8 @@ describe("syncClientToMailjet", () => {
     ]);
     // Compte limité aux réservations confirmées du client
     expect(supa.filters).toEqual([["client_email", "test@vr-cafe.fr"], ["statut", "confirmée"]]);
+    // La clé anon ne lit plus les réservations (RLS) : comptage avec la service role
+    expect(supa.key).toBe("service-role");
 
     const list = calls("contactslist")[0];
     expect(list).toMatchObject({ id: 42, action: "managecontact" });

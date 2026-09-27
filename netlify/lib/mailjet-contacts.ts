@@ -8,10 +8,11 @@ function getEnv(key: string): string | undefined {
 
 async function getReservationCount(email: string): Promise<number> {
   const url = getEnv("PUBLIC_SUPABASE_URL");
-  const anonKey = getEnv("PUBLIC_SUPABASE_ANON_KEY");
-  if (!url || !anonKey) return 0;
+  // Service role : la clé anon ne peut pas lire les réservations (données personnelles)
+  const serviceRoleKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !serviceRoleKey) return 0;
   try {
-    const supabase = createClient(url, anonKey);
+    const supabase = createClient(url, serviceRoleKey);
     const { count } = await supabase
       .from("reservations")
       .select("*", { count: "exact", head: true })

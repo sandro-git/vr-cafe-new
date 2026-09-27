@@ -21,7 +21,6 @@ export type FakeSupabaseOptions = {
   periodesVacances?: { date_debut: string; date_fin: string }[];
   boxes?: Box[];
   avis?: Record<string, unknown>[];
-  reservationId?: string;
   /** Délai (ms) avant chaque réponse, pour simuler un réseau lent */
   delayMs?: number;
 };
@@ -53,7 +52,6 @@ export class FakeSupabase {
     const url = new URL(req.url());
     const path = url.pathname.replace(/^\/rest\/v1\//, "");
     const method = req.method();
-    const single = (req.headers()["accept"] ?? "").includes("vnd.pgrst.object");
 
     if (method === "GET") {
       const tables: Record<string, unknown[]> = {
@@ -65,6 +63,7 @@ export class FakeSupabase {
         jours_fermeture: this.opts.joursFermeture ?? [],
         periodes_vacances: this.opts.periodesVacances ?? [],
         avis_google: this.opts.avis ?? [],
+        boxes: this.boxes.map((b) => ({ id: b.box_id, nom: b.box_nom, type: "filaire" })),
       };
       if (path in tables) return this.json(route, tables[path]);
     }
@@ -77,11 +76,13 @@ export class FakeSupabase {
 
     if (method === "POST" && (path === "reservations" || path === "reservation_boxes")) {
       const body = req.postDataJSON();
-      this.inserts.push({ table: path, body });
-      if (path === "reservations") {
-        const row = { id: this.opts.reservationId ?? "a1b2c3d4-0000-4000-8000-000000000001", ...(Array.isArray(body) ? body[0] : body) };
-        return this.json(route, single ? row : [row], 201);
+      // Comme en prod : la clé anon peut insérer mais pas relire (pas de policy SELECT),
+      // donc un insert avec RETURNING (`.select()`) est refusé par la RLS.
+      if ((req.headers()["prefer"] ?? "").includes("return=representation")) {
+        this.unhandled.push(`${method} ${url.pathname} avec RETURNING (refusé par la RLS)`);
+        return this.json(route, { code: "42501", message: `new row violates row-level security policy for table "${path}"` }, 401);
       }
+      this.inserts.push({ table: path, body });
       return route.fulfill({ status: 201, headers: CORS, body: "" });
     }
 

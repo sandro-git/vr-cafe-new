@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FakeApi, FakeSupabase, setNow } from "./helpers/mocks";
+import { chooseSlot } from "./helpers/reservation-steps";
 
 // « Maintenant » : jeudi 1er octobre 2026, 10:00 à Paris. Le samedi 3 est un jour d'ouverture.
 const NOW = "2026-10-01T10:00:00+02:00";
@@ -21,20 +22,6 @@ test.afterEach(() => {
   expect(supabase.unhandled).toEqual([]);
 });
 
-/** Étapes 1 et 2 : samedi 3 octobre, 3 joueurs, VR filaire, 1 h, créneau de 15:00. */
-async function chooseSlot(page: Page, { slot = "15:00", joueurs = "3" } = {}) {
-  await page.locator("#dp-trigger").click();
-  await expect(page.locator("#dp-title")).toHaveText("octobre 2026");
-  await page.locator("#dp-grid button:not([disabled])", { hasText: /^3$/ }).click();
-  await page.locator("#nb-personnes-grid").getByRole("button", { name: joueurs, exact: true }).click();
-  await page.locator("#vr-type-grid").getByRole("button", { name: /VR Filaire/ }).click();
-  await page.locator("#durees-list").getByRole("button", { name: "1 h" }).click();
-  await page.locator("#btn-search").click();
-  await expect(page.locator("#step-2")).toBeVisible();
-  await page.locator("#slots-grid").getByRole("button", { name: new RegExp(`^${slot}`) }).click();
-  await expect(page.locator("#step-3")).toBeVisible();
-}
-
 async function fillClient(page: Page, { nom = "Sandro TEST", email = "test@vr-cafe.fr", tel = "06 71 41 06 95" } = {}) {
   await page.locator("#client-nom").fill(nom);
   await page.locator("#client-email").fill(email);
@@ -53,13 +40,18 @@ test("réservation complète : base, montant, email de confirmation", async ({ p
   await page.locator("#btn-submit").click();
 
   await expect(page.locator("#step-4")).toBeVisible();
+  const [resa, boxes] = supabase.inserts;
+  // L'id est généré par le navigateur (l'insert anon ne peut pas le relire)
+  const id: string = resa.body.id;
+  expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  const ref = id.split("-")[0].toUpperCase();
+
   const card = page.locator("#confirmation-card");
-  await expect(card).toContainText("#A1B2C3D4");
+  await expect(card).toContainText(`#${ref}`);
   await expect(card).toContainText("Montant total");
   await expect(card).toContainText("81 €"); // 3 joueurs × 27 € (1 h)
   await expect(card).toContainText("Box 1, Box 2, Box 3");
 
-  const [resa, boxes] = supabase.inserts;
   expect(resa.table).toBe("reservations");
   expect(resa.body).toMatchObject({
     client_nom: "Sandro TEST",
@@ -75,18 +67,19 @@ test("réservation complète : base, montant, email de confirmation", async ({ p
   });
   expect(boxes.table).toBe("reservation_boxes");
   expect(boxes.body.map((b: any) => b.box_id)).toEqual([1, 2, 3]);
+  expect(boxes.body.every((b: any) => b.reservation_id === id)).toBe(true);
 
   await expect.poll(() => api.callsTo("/api/reservation-confirmation").length).toBe(1);
   expect(api.callsTo("/api/reservation-confirmation")[0].body).toMatchObject({
-    id: "a1b2c3d4-0000-4000-8000-000000000001",
-    ref: "A1B2C3D4",
+    id,
+    ref,
     vr_type: "filaire",
     box_names: "Box 1, Box 2, Box 3",
     remplace_id: null,
   });
   // Notification admin : uniquement l'id, le texte est construit côté serveur
   await expect.poll(() => api.callsTo("/api/push-notify").length).toBe(1);
-  expect(api.callsTo("/api/push-notify")[0].body).toEqual({ id: "a1b2c3d4-0000-4000-8000-000000000001" });
+  expect(api.callsTo("/api/push-notify")[0].body).toEqual({ id });
   expect(api.callsTo("/api/reservation-cancel-public")).toEqual([]);
 });
 

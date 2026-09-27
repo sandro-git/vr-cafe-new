@@ -39,6 +39,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
   - `netlify/lib/reservation-notice.ts` (règle des 24h)
   - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
   - `src/lib/seo.ts` (JSON-LD) et `src/lib/headsetBadge.ts`
+  - `netlify/lib/admin-reads.ts` (lectures admin : requêtes envoyées, validation des paramètres, erreurs) + `/api/admin/db` (401 sans session, service role avec session) ; `src/lib/uuid.ts` (UUID v4)
   - `netlify/lib/reservation-emails.ts` : destinataires, sujets, échappement HTML des saisies client, pas de flexbox
   - `netlify/lib/google-business.ts` (OAuth + cache du jeton, pagination, notes), `generate-review-reply.ts`, `mailjet-contacts.ts` (synchro, changement d'email, suppression RGPD, campagnes), `src/lib/notify.ts` (push, abonnements expirés)
 - **Aucun appel réseau réel** : Mailjet, Supabase, Anthropic, web-push sont remplacés par `vi.mock` et `fetch` par `vi.stubGlobal` ; faux client Mailjet réutilisable dans `tests/helpers/mailjet-mock.ts`
@@ -54,12 +55,13 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` et `ADMIN_SESSION_SECRET` de test ; les tests posent un cookie `admin_session` **signé** avec ces secrets (`e2e/helpers/admin-session.ts`), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
 - Supabase (REST/RPC) et les fonctions `/api/*` sont simulés dans le navigateur (`e2e/helpers/mocks.ts` : `FakeSupabase`, `FakeApi`) → aucune réservation, aucun email, aucune réponse Google réellement créés. `FakeSupabase.unhandled` doit rester vide (vérifié après chaque test). Option `delayMs` pour simuler un réseau lent
 - Horloge du navigateur fixée (`setNow`) : les tests de réservation se placent le jeudi 1er octobre 2026 à 10:00 (Paris)
-- Fichiers (35 tests) :
-  - `e2e/admin-login.spec.ts` (5), `e2e/admin-avis.spec.ts` (7), `e2e/annulation.spec.ts` (10), `e2e/reservation.spec.ts` (13)
-  - `e2e/helpers/mocks.ts` : `FakeSupabase` (tables `config`, `durees_session`, `jours_fermeture`, `periodes_vacances`, `avis_google`, RPC `get_boxes_disponibles`, inserts `reservations` / `reservation_boxes` enregistrés dans `.inserts`), `FakeApi` (appels `/api/*` enregistrés, réponse par défaut `{ ok: true }`, handlers par chemin), `setNow`
+- Fichiers (41 tests) :
+  - `e2e/admin-login.spec.ts` (5), `e2e/admin-avis.spec.ts` (7), `e2e/admin-donnees.spec.ts` (6), `e2e/annulation.spec.ts` (10), `e2e/reservation.spec.ts` (13)
+  - `e2e/helpers/mocks.ts` : `FakeSupabase` (tables `config`, `durees_session`, `jours_fermeture`, `periodes_vacances`, `avis_google`, `boxes`, RPC `get_boxes_disponibles`, inserts `reservations` / `reservation_boxes` enregistrés dans `.inserts`), `FakeApi` (appels `/api/*` enregistrés, réponse par défaut `{ ok: true }`, handlers par chemin), `setNow`. Comme en prod, `FakeSupabase` **ne sert pas** `reservations` / `clients` en lecture et **refuse un insert avec `RETURNING`** (`.select()` après `.insert()`)
+  - `e2e/helpers/reservation-steps.ts` : `chooseSlot` (étapes 1 et 2 du formulaire standard)
   - `e2e/helpers/admin-session.ts` : cookie de session admin signé pour les tests
   - `e2e/global-setup.ts` : préchauffage (voir plus bas)
-- Couvert : `/admin/login` (cookie signé sans le mot de passe, mauvais mot de passe, ancien cookie en clair refusé, déconnexion, déconnexion refusée en GET), `/admin/avis` (publier, brouillon vide, confirmation annulée, régénérer, erreurs), `/reservation/annulation` (tous les états, modifier standard/anniversaire/MDJ), `/reservation` (parcours complet, créneaux, box insuffisantes, jours fermés, validation, modification, réseau lent)
+- Couvert : `/admin/login` (cookie signé sans le mot de passe, mauvais mot de passe, ancien cookie en clair refusé, déconnexion, déconnexion refusée en GET), lectures admin via `/api/admin/db` (`/admin/reservations`, `/admin/planning`, `/admin/clients`, `/admin/marketing`, autocomplete de `/admin/reservation`), `/admin/avis` (publier, brouillon vide, confirmation annulée, régénérer, erreurs), `/reservation/annulation` (tous les états, modifier standard/anniversaire/MDJ), `/reservation` (parcours complet, créneaux, box insuffisantes, jours fermés, validation, modification, réseau lent)
 - `ASTRO_DEV_BACKGROUND=1` dans `webServer.env` : sinon Astro 7 détecte un agent IA et passe `astro dev` en arrière-plan, ce que Playwright prend pour un plantage
 - `e2e/global-setup.ts` précharge les pages jusqu'à ce que Vite ne les recharge plus (il re-prépare ses dépendances à chaque démarrage et recharge les pages ouvertes, ce qui cassait des tests au hasard)
 - **Écrire un test** : installer `FakeSupabase` / `FakeApi` (et `setNow` si le calendrier intervient) **avant** `page.goto`, puis vérifier ce que la page a envoyé (`supabase.inserts`, `api.callsTo('/api/…')`) plutôt que seulement l'affichage ; toute nouvelle requête Supabase de la page doit être ajoutée au faux Supabase (sinon `unhandled` fait échouer le test)
@@ -99,7 +101,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
      - **Faux numéros** (`isFakePhone`) : placeholders connus (dont l'exemple FR `06 12 34 56 78`, refusé volontairement), puis sur le numéro **sans son chiffre de préfixe** : chiffres tous identiques, et à partir de 6 chiffres paire répétée (`06 12 12 12 12`) ou suite croissante/décroissante (`07 12 34 56 78`)
      - **Pays d'un numéro stocké** (`detectPhoneCountry`, pour préremplir le sélecteur en édition admin) : un territoire hors liste qui partage l'indicatif d'un pays de la liste retombe sur ce pays (Guernesey/Jersey/île de Man en `+44` → Royaume-Uni)
 4. **Étape 4 — Confirmation** :
-   - Insert `reservations` + `reservation_boxes` dans Supabase
+   - Insert `reservations` + `reservation_boxes` dans Supabase (clé anon). L'`id` est généré par le navigateur (`newReservationId()`, `src/lib/uuid.ts`) et l'insert se fait **sans `.select()`** : la clé anon peut insérer mais pas relire les réservations (voir « Données personnelles et RLS »). Les champs envoyés à l'email et au push viennent des valeurs locales
    - POST `/api/reservation-confirmation` → email Mailjet client + sync contact Mailjet
    - POST `/api/push-notify {id}` → notification push aux admins abonnés (texte construit côté serveur, une seule fois par réservation, voir « Notifications push web »)
    - Client : page de confirmation | Admin : redirect `/admin/planning`
@@ -121,7 +123,16 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - `periodes_vacances` — périodes de vacances scolaires
 - `push_subscriptions` — abonnements Web Push admin
 
-**RPC Supabase :** `get_boxes_disponibles(p_debut, p_fin, p_type_vr)` — retourne les boxes libres pour un créneau
+**RPC Supabase :** `get_boxes_disponibles(p_debut, p_fin_blocage, p_vr_type)` — retourne les boxes libres pour un créneau (`box_id`, `box_nom` uniquement). Doit être `SECURITY DEFINER` : sans lecture anon de `reservations`, une version `SECURITY INVOKER` ne verrait aucune réservation et annoncerait toutes les box libres
+
+### Données personnelles et RLS
+
+La clé anon est publique (intégrée au JS du site) : **aucune table contenant des données personnelles ne doit être lisible en anon**.
+- `reservations`, `reservation_boxes`, `clients` : pas de policy SELECT anon (cible, voir `supabase/rls_reservations_privees.sql`). Policies `anon_insert` conservées sur `reservations` et `reservation_boxes` (formulaires publics)
+- Lectures admin : `src/lib/admin-read.js` (`adminRead(action, params)` → `{ data, error }`, `fetchClientSuggestions`) → `POST /api/admin/db` → `netlify/lib/admin-reads.ts` (session admin vérifiée, service role, requêtes fixes, paramètres validés). Actions : `list_reservations {start, end, active_only?}` (62 jours max), `client_suggestions {field: nom|email|telephone, value}`, `list_clients`, `client_reservations {client_id}`, `marketing_reservations`
+- Côté serveur, toute lecture de ces tables utilise la service role (y compris `getReservationCount` de `mailjet-contacts.ts`)
+- Vue `vue_reservations` : `security_invoker=true` (suit la RLS des tables), à garder ainsi
+- Ne jamais réintroduire `.select()` après un insert anon, ni une lecture de `reservations` / `clients` avec `src/lib/supabase.js`
 
 ### Modification et annulation par le client
 
@@ -175,7 +186,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `GET /api/contact-token` | — | Jeton CSRF + horodatage pour le formulaire contact (récupéré côté client : `/contact` est statique) |
 | `POST /api/push-notify` | `id` d'une réservation créée il y a < 10 min, jamais notifiée | Notification push admin ; texte construit côté serveur depuis la base |
 | `POST /api/push/subscribe` | Cookie `admin_session` | Enregistre un abonnement push dans Supabase |
-| `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : update résa, vacances, fermetures, boxes |
+| `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : lectures réservations/clients (service role), update résa, vacances, fermetures, boxes |
 | `POST /api/admin/chat` | Cookie `admin_session` | Chat d'aide opérationnelle (Claude Haiku 4.5), répond à partir de `content/staff-guide.md` compilé au build |
 | `POST /api/reservation-annulation` | Cookie `admin_session` | Annulation réservation (admin) |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
@@ -250,6 +261,7 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 - Client importé depuis `src/lib/supabase.js`
 - Pour les fonctions Netlify : utiliser `SUPABASE_SERVICE_ROLE_KEY` (accès service role)
 - RPC `get_boxes_disponibles` pour vérifier la disponibilité des boxes
+- Réservations et clients : jamais lus avec ce client (clé anon) → `adminRead()` de `src/lib/admin-read.js`
 
 **SEO / données structurées (JSON-LD) :**
 - Helpers centralisés dans `src/lib/seo.ts` (`businessNode`, `graph`, `breadcrumb`, `service`, `product`, `faqPage`, `itemList`, `gameListSchema`)
@@ -322,5 +334,6 @@ Sécurité (relevé le 27/09/2026) :
 - **Changer `ADMIN_PASSWORD`** (valeur faible, et elle circulait en clair dans l'ancien cookie `admin_session` et dans le bundle serveur). ⚠️ Invalide tous les liens d'annulation/modification déjà envoyés par email (`netlify/lib/reservation-token.ts`) et les sessions admin. La recréer directement en variable **secrète** sur Netlify
 - **Secret dédié pour les liens d'annulation et le CSRF contact** : `reservation-token.ts`, `contact-token.mts` et `contact.mts` signent encore avec `ADMIN_PASSWORD`. Passer à une variable dédiée (même contrainte : invalide les liens déjà envoyés), idéalement en même temps que le changement de mot de passe
 - **`WEBHOOK_VERIFY_TOKEN`** (webhook WhatsApp, `netlify/functions/whatsapp-webhook.mts`) : valeur facile à deviner, la remplacer par une valeur aléatoire sur Netlify **et** dans la configuration du webhook côté Meta
-- **Lecture anon de `reservations`** : la policy RLS `anon_read` (`USING (true)`) expose noms, emails et téléphones de tous les clients via la clé anon publique. Tâche lancée séparément — vérifier qu'elle a été menée à bout (policy retirée en prod)
+- **Lecture anon de `reservations` et `clients`** : les policies RLS `anon_read` (`USING (true)`) exposent noms, emails et téléphones de tous les clients via la clé anon publique. Code corrigé (lectures admin via `/api/admin/db`, insert sans `RETURNING`). **Reste à faire** : déployer ce code, puis appliquer `supabase/rls_reservations_privees.sql` en prod (RPC en `SECURITY DEFINER` + suppression des `anon_read` de `reservations`, `reservation_boxes`, `clients`) et vérifier avec la clé anon qu'une lecture de `reservations` renvoie `[]`
+- `avis_google` reste lisible en anon (avis publics, mais aussi brouillons de réponse) : à passer par l'API admin si besoin
 - Variables Netlify (plan gratuit) : une variable non secrète garde obligatoirement les 4 scopes ; une secrète n'accepte pas `post_processing` ; on ne peut pas passer une variable existante en secret, il faut la supprimer puis la recréer

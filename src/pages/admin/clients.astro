@@ -144,7 +144,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
 
 <script>
   // @ts-nocheck
-  import { supabase } from '../../lib/supabase.js';
+  import { adminRead } from '../../lib/admin-read.js';
   import { isValidEmail, isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
 
   // ── État ──────────────────────────────────────────────────────────────────
@@ -156,26 +156,15 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
 
   // ── Chargement initial de tous les clients ────────────────────────────────
   async function loadAllClients() {
-    // Les clients (source de vérité) et les réservations (pour les stats) sont indépendants
-    const [
-      { data: clients, error: cErr },
-      { data: resas, error: rErr },
-    ] = await Promise.all([
-      supabase.from('clients').select('id, nom, email, telephone'),
-      supabase.from('reservations').select('client_id, statut, creneau_debut'),
-    ]);
+    // Les clients (source de vérité) et les réservations (pour les stats)
+    const { data: loaded, error: loadErr } = await adminRead('list_clients');
 
-    if (cErr) {
+    if (loadErr) {
       document.getElementById('state-loading').classList.add('hidden');
-      showError('Erreur de chargement : ' + cErr.message);
+      showError('Erreur de chargement : ' + loadErr.message);
       return;
     }
-
-    if (rErr) {
-      document.getElementById('state-loading').classList.add('hidden');
-      showError('Erreur de chargement : ' + rErr.message);
-      return;
-    }
+    const { clients, reservations: resas } = loaded;
 
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -302,11 +291,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
     const resContainer = document.getElementById('client-reservations');
     resContainer.innerHTML = '<p class="text-white/55 text-sm">Chargement...</p>';
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*, reservation_boxes(box_id, boxes(nom, type))')
-      .eq('client_id', client.id)
-      .order('creneau_debut', { ascending: false });
+    const { data, error } = await adminRead('client_reservations', { client_id: client.id });
 
     if (error || !data?.length) {
       resContainer.innerHTML = '<p class="text-white/55 text-sm">Aucune réservation trouvée.</p>';
