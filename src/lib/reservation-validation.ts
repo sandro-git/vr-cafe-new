@@ -17,7 +17,7 @@ export const COUNTRIES: CountryOption[] = [
   { code: "AD", name: "Andorre", dial: "+376", flag: "🇦🇩", placeholder: "312 345" },
   { code: "BE", name: "Belgique", dial: "+32", flag: "🇧🇪", placeholder: "0475 12 34 56" },
   { code: "DE", name: "Allemagne", dial: "+49", flag: "🇩🇪", placeholder: "0151 23456789" },
-  { code: "GB", name: "Royaume-Uni", dial: "+44", flag: "🇬🇧", placeholder: "07911 123456" },
+  { code: "GB", name: "Royaume-Uni", dial: "+44", flag: "🇬🇧", placeholder: "07400 123456" },
   { code: "IT", name: "Italie", dial: "+39", flag: "🇮🇹", placeholder: "312 345 6789" },
   { code: "PT", name: "Portugal", dial: "+351", flag: "🇵🇹", placeholder: "912 345 678" },
   { code: "CH", name: "Suisse", dial: "+41", flag: "🇨🇭", placeholder: "078 123 45 67" },

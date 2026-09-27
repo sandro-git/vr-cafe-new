@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import {
+  COUNTRIES,
   detectPhoneCountry,
   formatPhoneForStorage,
   isFakeEmail,
@@ -183,5 +185,16 @@ describe("validateClientInfo", () => {
     expect(validateClientInfo("a@example.com", "abc", "FR")).toBe("Merci de renseigner une vraie adresse email.");
     expect(validateClientInfo("test@vr-cafe.fr", "abc", "FR")).toBe("Numéro de téléphone invalide pour le pays sélectionné.");
     expect(validateClientInfo("test@vr-cafe.fr", "0612345678", "FR")).toBe("Merci de renseigner votre vrai numéro de téléphone.");
+  });
+});
+
+describe("COUNTRIES (exemples affichés dans le champ téléphone)", () => {
+  it("chaque exemple est un numéro valide, détecté dans son propre pays", () => {
+    for (const c of COUNTRIES.filter((c) => c.code !== "OTHER")) {
+      expect(isValidPhone(c.placeholder, c.code), c.name).toBe(true);
+      expect(detectPhoneCountry(formatPhoneForStorage(c.placeholder, c.code)), c.name).toBe(c.code);
+      // Pays exact, sans le repli par indicatif (ex. un numéro de Guernesey pour le Royaume-Uni)
+      expect(parsePhoneNumberFromString(c.placeholder, c.code)?.country, c.name).toBe(c.code);
+    }
   });
 });
