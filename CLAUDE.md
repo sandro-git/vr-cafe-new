@@ -151,7 +151,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 - Côté Astro, les variables sont lues via `getSecret()` d'`astro:env/server` (`src/lib/admin-env.ts`), **jamais `import.meta.env`** pour un secret : Vite en inlinerait la valeur en clair dans le bundle serveur au build
 - ⚠️ Les fonctions Netlify doivent faire `if (!(await isAdminRequest(req)))` — sans `await`, la Promise est toujours « vraie » et l'auth saute
 - **État en production** : `ADMIN_SESSION_SECRET` est défini sur Netlify depuis le 27/09/2026 (valeur aléatoire de 64 caractères, marquée **secret**, contexte **production** uniquement : Netlify refuse une variable secrète pour tous les contextes). Personne ne connaît sa valeur, et il n'y a pas besoin de la connaître. Les aperçus de déploiement et le dev local ne l'ont pas → repli sur `ADMIN_PASSWORD` (prévu par le code)
-- **Déconnexion** : bouton « Déconnexion » dans le header admin (icône seule sur mobile) → `POST /admin/logout` (`src/pages/admin/logout.ts`) efface le cookie de **cet appareil** et renvoie vers `/admin/login`. En POST uniquement : un simple lien (GET) ne déconnecte pas
+- **Déconnexion** : bouton « Déconnexion » dans le header admin (icône seule sur mobile) → `POST /admin/logout` (`src/pages/admin/logout.ts`) efface le cookie de **cet appareil** et renvoie vers `/admin/login`. En POST uniquement : un simple lien (GET) ne déconnecte pas (testé en production le 27/09/2026)
 - Le jeton étant sans état, un cookie copié reste valable jusqu'à son expiration même après déconnexion. Pour déconnecter **tous** les appareils (appareil perdu, départ d'un employé) : remplacer `ADMIN_SESSION_SECRET` sur Netlify par une nouvelle valeur aléatoire (`netlify env:set ADMIN_SESSION_SECRET "$(openssl rand -base64 48)" --secret --context production --force`) puis redéployer (un redéploiement est nécessaire pour toute modification de variable). Changer `ADMIN_PASSWORD` fonctionne aussi mais invalide en plus tous les liens d'annulation/modification déjà envoyés aux clients
 - Historique : jusqu'au 27/09/2026 le cookie contenait le mot de passe en clair ; le passage au jeton signé a déconnecté toutes les sessions (reconnexion nécessaire sur chaque appareil, y compris pour les notifications push admin)
 
@@ -161,8 +161,9 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 - `/admin/clients` — CRM : liste clients filtrée (fidèles, inactifs, tous) + historique des réservations
 - `/admin/marketing` — stats (fidèles, inactifs, nouveaux) + liens vers Mailjet
 - `/admin/aide` — chat d'aide opérationnelle pour les collaborateurs (questions suggérées + saisie libre), répond uniquement à partir de `content/staff-guide.md` via Claude Haiku 4.5
+- `/admin/login` — connexion (seule page admin accessible sans session) ; `/admin/logout` — déconnexion de l'appareil, en `POST` uniquement (bouton « Déconnexion » du header)
 
-`AdminLayout.astro` enregistre le service worker et demande la permission push à chaque chargement de page admin.
+`AdminLayout.astro` enregistre le service worker et demande la permission push à chaque chargement de page admin. ⚠️ La déconnexion ne supprime pas l'abonnement push de l'appareil : il continue de recevoir les notifications de nouvelles réservations (à retirer à la main dans la table `push_subscriptions` si besoin, ou via les réglages de notifications du navigateur).
 
 ### Endpoints API (Netlify Functions)
 
