@@ -27,11 +27,17 @@ async function verifyCsrf(token: string, ts: string, secret: string): Promise<bo
   const age = Date.now() - tsNum;
   if (age < 0 || age > MAX_TOKEN_AGE_MS) return false;
 
+  // Signature attendue (base64 standard, cf. contact-token.mts) vérifiée par crypto.subtle.verify :
+  // comparaison en temps constant, contrairement à `token === expected`
+  let sig: Uint8Array<ArrayBuffer>;
+  try {
+    sig = Uint8Array.from(atob(token), (c) => c.charCodeAt(0));
+  } catch {
+    return false; // pas du base64
+  }
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(ts));
-  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
-  return token === expected;
+  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+  return crypto.subtle.verify("HMAC", key, sig, enc.encode(ts));
 }
 
 export default async (req: Request, _context: Context) => {
@@ -160,13 +166,11 @@ export default async (req: Request, _context: Context) => {
     return Response.redirect(redirectUrl.toString(), 303);
 
   } catch (error) {
+    // Détail de l'erreur (Mailjet, config…) dans les journaux Netlify uniquement, jamais renvoyé au visiteur
     console.error("Error sending email:", error);
 
     return new Response(
-      JSON.stringify({
-        error: "Failed to send email",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }),
+      JSON.stringify({ error: "Failed to send email" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

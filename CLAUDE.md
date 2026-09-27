@@ -165,12 +165,13 @@ La clé anon est publique (intégrée au JS du site) : **aucune table contenant 
   - `Origin` absente ou hors de `ALLOWED_ORIGINS` (dont `localhost:4321` et `:8888`) → 403
   - `website` rempli → redirection silencieuse vers `/contact/merci`, aucun email
   - envoi moins de 3 s après l'émission du jeton → idem (redirection silencieuse). Côté client, un jeton obtenu au moment du clic fait donc attendre **3,1 s** avant l'envoi
-  - jeton absent, invalide, expiré (> 1 h) → 403
+  - jeton absent, invalide, expiré (> 1 h) → 403 (signature vérifiée par `crypto.subtle.verify`, en temps constant)
   - `email`, `subject` ou `message` manquant → 400
 - **Côté client** : envoi en `fetch` (`redirect: "manual"` : la réponse 303 arrive en `opaqueredirect`, puis navigation vers `/contact/merci`). Le bouton `#contact-submit` est **désactivé pendant l'envoi** (évite les doublons pendant l'attente de 3,1 s) ; en cas d'échec, message `#contact-error` et bouton réactivé
 - ⚠️ Le bouton est un composant `Button` : il doit transmettre la prop `id` (sinon le script ne trouve pas `#contact-submit` et ne le désactive jamais — bug corrigé le 27/09/2026)
 - Script réattaché à `astro:page-load` avec le drapeau `data-fetch-bound` (View Transitions)
-- Tests : `e2e/contact.spec.ts` (Playwright, fonctions simulées). La fonction `contact.mts` n'a pas encore de test unitaire
+- Erreur d'envoi (Mailjet, config) → 500 `{ error: "Failed to send email" }` : le détail reste dans les journaux Netlify, **jamais renvoyé au visiteur**
+- Tests : `tests/contact.test.ts` (Vitest : jetons émis par la vraie fonction `contact-token`, jeton modifié/tronqué/expiré/autre secret, Origin, piège à robots, envoi < 3 s, champs manquants, échappement HTML, erreur Mailjet sans fuite) et `e2e/contact.spec.ts` (Playwright, fonctions simulées)
 
 ### Section admin
 
