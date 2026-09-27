@@ -34,6 +34,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Couvert :
   - `src/lib/pricing.ts` (grille + anniversaire)
   - `netlify/lib/reservation-token.ts` (HMAC)
+  - `netlify/lib/reservation-push.ts` (message, une seule notification par réservation, fenêtre de 10 min, id invalide)
   - `netlify/lib/admin-session.ts` (jeton de session admin : valide, expiré, falsifié, secret ou mot de passe changé, lecture du cookie, mot de passe)
   - `netlify/lib/reservation-notice.ts` (règle des 24h)
   - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
@@ -100,7 +101,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 4. **Étape 4 — Confirmation** :
    - Insert `reservations` + `reservation_boxes` dans Supabase
    - POST `/api/reservation-confirmation` → email Mailjet client + sync contact Mailjet
-   - POST `/api/push-notify` → notification push aux admins abonnés
+   - POST `/api/push-notify {id}` → notification push aux admins abonnés (texte construit côté serveur, une seule fois par réservation, voir « Notifications push web »)
    - Client : page de confirmation | Admin : redirect `/admin/planning`
 
 **Tarification standard et MDJ** — grille codée en dur dans `calcMontant()` (`src/lib/pricing.ts`), utilisée directement par `ReservationForm` (écran de confirmation) et, via `calcMontantReservation()`, par `reservation-confirmation.mts` (email) et le CA de `/admin/reservations` :
@@ -172,7 +173,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `POST /api/reservation-confirmation` | CORS origin | Email confirmation client + sync contact Mailjet |
 | `POST /api/contact` | CORS + CSRF HMAC-SHA256 | Email formulaire contact via Mailjet |
 | `GET /api/contact-token` | — | Jeton CSRF + horodatage pour le formulaire contact (récupéré côté client : `/contact` est statique) |
-| `POST /api/push-notify` | — | Envoi notification push (web-push VAPID) |
+| `POST /api/push-notify` | `id` d'une réservation créée il y a < 10 min, jamais notifiée | Notification push admin ; texte construit côté serveur depuis la base |
 | `POST /api/push/subscribe` | Cookie `admin_session` | Enregistre un abonnement push dans Supabase |
 | `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : update résa, vacances, fermetures, boxes |
 | `POST /api/admin/chat` | Cookie `admin_session` | Chat d'aide opérationnelle (Claude Haiku 4.5), répond à partir de `content/staff-guide.md` compilé au build |
@@ -184,7 +185,8 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 
 ### Notifications push web
 
-- `src/lib/notify.ts` — `notifyNewReservation()` diffuse à tous les abonnements Supabase (`push_subscriptions`)
+- `src/lib/notify.ts` — `notifyNewReservation()` diffuse à tous les abonnements Supabase (`push_subscriptions`), lus avec la clé **service role** (la table est sous RLS sans policy anon : la clé anon n'y lit rien)
+- `netlify/lib/reservation-push.ts` — `notifyReservationOnce(id)` : utilisé par `/api/push-notify` (formulaires publics) et le serveur MCP. Marque `reservations.push_notifie_le` par un UPDATE atomique (`WHERE push_notifie_le IS NULL AND created_at > now() - 10 min`) avant d'envoyer → au plus une notification par réservation réelle, texte construit depuis la base (heure de Paris). Colonne ajoutée par `supabase/push_notification.sql`
 - Supprime automatiquement les abonnements expirés (réponses HTTP 410/404)
 - `public/sw.js` — Service Worker (enregistré par `AdminLayout.astro`)
 - Clés VAPID : `PUBLIC_VAPID_KEY`, `PRIVATE_VAPID_KEY`, `VAPID_EMAIL`

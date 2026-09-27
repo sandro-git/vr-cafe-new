@@ -727,15 +727,11 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
         }),
       }).catch(err => console.error('Email notification failed:', err));
 
-      const h1 = selectedSlot.debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      // Texte construit côté serveur depuis la réservation (une seule notification par id)
       fetch('/api/push-notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: '🎂 Réservation anniversaire',
-          body: `${nom} — ${selectedNb} pers. — ${h1}`,
-          url: '/admin/reservations',
-        }),
+        body: JSON.stringify({ id: res.id }),
       }).catch(() => {});
 
       if (window.__anniversaireSuccessRedirect) {

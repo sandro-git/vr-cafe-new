@@ -84,6 +84,9 @@ test("réservation complète : base, montant, email de confirmation", async ({ p
     box_names: "Box 1, Box 2, Box 3",
     remplace_id: null,
   });
+  // Notification admin : uniquement l'id, le texte est construit côté serveur
+  await expect.poll(() => api.callsTo("/api/push-notify").length).toBe(1);
+  expect(api.callsTo("/api/push-notify")[0].body).toEqual({ id: "a1b2c3d4-0000-4000-8000-000000000001" });
   expect(api.callsTo("/api/reservation-cancel-public")).toEqual([]);
 });
 

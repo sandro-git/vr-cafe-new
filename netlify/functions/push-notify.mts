@@ -1,6 +1,10 @@
 import type { Context, Config } from "@netlify/functions";
-import { notifyNewReservation } from "../../src/lib/notify.js";
+import { notifyReservationOnce } from "../lib/reservation-push.ts";
 
+// Appelé par les formulaires de réservation publics : seul l'id de la réservation est
+// accepté, le texte est construit côté serveur et une réservation n'est notifiée qu'une
+// fois (cf. netlify/lib/reservation-push.ts). Réponse identique que la notification parte
+// ou non, pour ne rien révéler sur l'id reçu.
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -9,7 +13,7 @@ export default async (req: Request, _context: Context) => {
     });
   }
 
-  let body: { title: string; body: string; url: string };
+  let body: { id?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -20,7 +24,7 @@ export default async (req: Request, _context: Context) => {
   }
 
   try {
-    await notifyNewReservation(body);
+    await notifyReservationOnce(body?.id);
   } catch (err) {
     console.error("push-notify error:", err);
   }

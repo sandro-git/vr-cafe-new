@@ -21,9 +21,10 @@ export async function notifyNewReservation({
 
   webpush.setVapidDetails(vapidEmail, publicVapidKey, privateVapidKey);
 
+  // Service role : push_subscriptions est sous RLS sans policy anon (la clé anon n'y lit rien)
   const supabase = createClient(
     process.env.PUBLIC_SUPABASE_URL!,
-    process.env.PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data: subscriptions, error } = await supabase

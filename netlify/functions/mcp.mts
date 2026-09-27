@@ -1,6 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient as createSanityClient } from "@sanity/client";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { notifyReservationOnce } from "../lib/reservation-push.ts";
 
 const PROTOCOL_VERSION = "2025-03-26";
 
@@ -303,16 +304,8 @@ async function toolCreateReservation(args: Record<string, unknown>) {
     }),
   }).catch(() => {});
 
-  // Push notification admin (fire-and-forget)
-  fetch("https://vr-cafe.fr/api/push-notify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: "Nouvelle réservation 🎮",
-      body: `${args.client_nom} — ${nb_personnes} pers. — ${debut.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
-      url: "/admin/reservations",
-    }),
-  }).catch(() => {});
+  // Push notification admin (erreurs ignorées : la réservation est déjà créée)
+  await notifyReservationOnce(resa.id).catch(() => {});
 
   return text(
     `✅ Réservation confirmée !\n\n` +
