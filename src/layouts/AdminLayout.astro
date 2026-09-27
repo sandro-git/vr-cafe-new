@@ -57,7 +57,7 @@ const isActive = (href: string) =>
           <span>Réserver</span>
         </a>
 
-        <form method="post" action="/admin/logout" class="shrink-0">
+        <form id="admin-logout" method="post" action="/admin/logout" class="shrink-0">
           <button
             type="submit"
             title="Se déconnecter de cet appareil"
@@ -93,13 +93,14 @@ const isActive = (href: string) =>
       const permission = await Notification.requestPermission();
       if (permission !== "granted") return;
 
-      const existing = await registration.pushManager.getSubscription();
-      if (existing) return; // Already subscribed
-
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: PUBLIC_VAPID_KEY,
-      });
+      // Abonnement existant renvoyé aussi (upsert idempotent) : si sa ligne a disparu de
+      // push_subscriptions (suppression manuelle, purge), l'appareil est ré-enregistré.
+      const sub =
+        (await registration.pushManager.getSubscription()) ??
+        (await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: PUBLIC_VAPID_KEY,
+        }));
 
       await fetch("/api/push/subscribe", {
         method: "POST",
@@ -107,5 +108,41 @@ const isActive = (href: string) =>
         body: JSON.stringify(sub.toJSON()),
       }).catch(() => {});
     }).catch(() => {});
+  }
+
+  // Déconnexion : l'appareil cesse de recevoir les notifications admin. Le navigateur se
+  // désabonne d'abord (l'endpoint devient invalide : même si la suppression serveur échoue,
+  // push-notify purgera la ligne au prochain envoi, erreur 410), puis la ligne est supprimée
+  // tant que la session est encore valide. Jamais bloquant : au bout de 2 s on déconnecte quand même.
+  const logoutForm = document.getElementById("admin-logout");
+  if (logoutForm && !logoutForm.dataset.bound) {
+    logoutForm.dataset.bound = "true";
+    logoutForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (logoutForm.dataset.pending) return;
+      logoutForm.dataset.pending = "true";
+
+      const unsubscribe = async () => {
+        if (!("serviceWorker" in navigator)) return;
+        const registration = await navigator.serviceWorker.getRegistration();
+        const sub = await registration?.pushManager.getSubscription();
+        if (!sub) return;
+        const { endpoint } = sub;
+        if (!(await sub.unsubscribe())) return;
+        await fetch("/api/push/subscribe", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint }),
+          keepalive: true,
+        });
+      };
+
+      try {
+        await Promise.race([unsubscribe(), new Promise((r) => setTimeout(r, 2000))]);
+      } catch {
+        // désabonnement impossible : la déconnexion a lieu quand même
+      }
+      logoutForm.submit();
+    });
   }
 </script>
