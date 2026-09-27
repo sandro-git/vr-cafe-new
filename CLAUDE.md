@@ -34,6 +34,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Couvert :
   - `src/lib/pricing.ts` (grille + anniversaire)
   - `netlify/lib/reservation-token.ts` (HMAC)
+  - `netlify/lib/admin-session.ts` (jeton de session admin : valide, expiré, falsifié, secret ou mot de passe changé, lecture du cookie, mot de passe)
   - `netlify/lib/reservation-notice.ts` (règle des 24h)
   - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
   - `src/lib/seo.ts` (JSON-LD) et `src/lib/headsetBadge.ts`
@@ -46,10 +47,10 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 ### Tests de bout en bout (Playwright)
 
 - `e2e/*.spec.ts`, config `playwright.config.ts` ; utilise le **Chrome installé** (`channel: "chrome"`), pas de navigateur à télécharger. **Pas lancés au build Netlify** (serveur + navigateur) : à lancer en local
-- Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` de test (cookie `admin_session` posé par les tests), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
+- Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` et `ADMIN_SESSION_SECRET` de test ; les tests posent un cookie `admin_session` **signé** avec ces secrets (`e2e/helpers/admin-session.ts`), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
 - Supabase (REST/RPC) et les fonctions `/api/*` sont simulés dans le navigateur (`e2e/helpers/mocks.ts` : `FakeSupabase`, `FakeApi`) → aucune réservation, aucun email, aucune réponse Google réellement créés. `FakeSupabase.unhandled` doit rester vide (vérifié après chaque test). Option `delayMs` pour simuler un réseau lent
 - Horloge du navigateur fixée (`setNow`) : les tests de réservation se placent le jeudi 1er octobre 2026 à 10:00 (Paris)
-- Couvert : `/admin/avis` (publier, brouillon vide, confirmation annulée, régénérer, erreurs), `/reservation/annulation` (tous les états, modifier standard/anniversaire/MDJ), `/reservation` (parcours complet, créneaux, box insuffisantes, jours fermés, validation, modification, réseau lent)
+- Couvert : `/admin/login` (cookie signé sans le mot de passe, mauvais mot de passe, ancien cookie en clair refusé), `/admin/avis` (publier, brouillon vide, confirmation annulée, régénérer, erreurs), `/reservation/annulation` (tous les états, modifier standard/anniversaire/MDJ), `/reservation` (parcours complet, créneaux, box insuffisantes, jours fermés, validation, modification, réseau lent)
 - `ASTRO_DEV_BACKGROUND=1` dans `webServer.env` : sinon Astro 7 détecte un agent IA et passe `astro dev` en arrière-plan, ce que Playwright prend pour un plantage
 - `e2e/global-setup.ts` précharge les pages jusqu'à ce que Vite ne les recharge plus (il re-prépare ses dépendances à chaque démarrage et recharge les pages ouvertes, ce qui cassait des tests au hasard)
 - Vérifier qu'un nouveau test n'est pas aléatoire : `bunx playwright test --repeat-each=5`
@@ -135,7 +136,13 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 
 ### Section admin
 
-Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, 30j, comparé à `ADMIN_PASSWORD`).
+Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: strict`, 30j).
+
+**Session admin** (`netlify/lib/admin-session.ts`, partagé par le middleware, `/admin/login` et les fonctions `admin-avis`, `admin-chat`, `admin-db`, `push-subscribe`, `reservation-annulation` via `isAdminRequest(req)`) :
+- Le cookie contient un **jeton signé**, jamais le mot de passe : `v1.<émis_le>.<expire_le>.<HMAC-SHA256 base64url>` (secondes), vérifié par `crypto.subtle.verify` (temps constant) ; mot de passe saisi comparé en temps constant (`checkAdminPassword`)
+- Clé = HMAC(`ADMIN_SESSION_SECRET`, à défaut `ADMIN_PASSWORD` ; libellé + `ADMIN_PASSWORD`) → changer **l'une ou l'autre** variable déconnecte toutes les sessions. Sans `ADMIN_PASSWORD` : aucune session acceptée
+- Côté Astro, les variables sont lues via `getSecret()` d'`astro:env/server` (`src/lib/admin-env.ts`), **jamais `import.meta.env`** pour un secret : Vite en inlinerait la valeur en clair dans le bundle serveur au build
+- ⚠️ Les fonctions Netlify doivent faire `if (!(await isAdminRequest(req)))` — sans `await`, la Promise est toujours « vraie » et l'auth saute
 
 - `/admin/reservations` — tableau des réservations du jour (filtré par date) + stats du jour (total, confirmées, annulées, joueurs, CA). **CA** = somme, sur les réservations `confirmée` uniquement, de `calcMontantReservation(type_reservation, duree_minutes, nb_personnes, prixAnniversaire)` : anniversaire = prix Sanity × joueurs, standard/MDJ = grille `calcMontant`. Le prix anniversaire est lu dans Sanity au rendu SSR de la page (repli 25 €) et transmis au script via l'attribut `data-prix-anniversaire` du `<main>`. Les annulées et no-show ne comptent pas ; c'est un CA théorique (tarifs), pas un encaissement réel.
 - `/admin/planning` — vue planning semaine/jour avec état des boxes + gestion vacances/jours fermés
@@ -184,6 +191,7 @@ SUPABASE_SERVICE_ROLE_KEY=...     # Fonctions Netlify uniquement
 
 # Admin
 ADMIN_PASSWORD=...
+ADMIN_SESSION_SECRET=...        # Signature des sessions admin (optionnel : repli sur ADMIN_PASSWORD)
 
 # Web Push
 PUBLIC_VAPID_KEY=...
@@ -238,7 +246,7 @@ PUBLIC_GA_ID=G-XXXXXXXXXX
 
 **Sécurité :**
 - CSRF via HMAC-SHA256 sur le formulaire contact
-- Cookie `admin_session` httpOnly + secure sur toutes les routes `/admin/*`
+- Cookie `admin_session` httpOnly + secure sur toutes les routes `/admin/*`, contenant un jeton de session signé (voir « Session admin »)
 - Validation CORS origin sur les endpoints API critiques
 
 ## Design System (refonte 2026)

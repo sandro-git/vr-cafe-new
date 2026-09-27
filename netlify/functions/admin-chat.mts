@@ -5,17 +5,10 @@
 import type { Context, Config } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
 import { STAFF_GUIDE } from "../lib/staff-guide-content.generated.ts";
+import { isAdminRequest } from "../lib/admin-session.ts";
 
 const QUESTION_MIN_LENGTH = 2;
 const QUESTION_MAX_LENGTH = 500;
-
-function checkAuth(req: Request): boolean {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
-  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-  return !!adminPassword && sessionValue === adminPassword;
-}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -48,7 +41,7 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  if (!checkAuth(req)) {
+  if (!(await isAdminRequest(req))) {
     return json({ error: "Unauthorized" }, 401);
   }
 

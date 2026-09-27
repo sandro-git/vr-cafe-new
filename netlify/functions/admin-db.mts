@@ -1,19 +1,12 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { updateClientInMailjet, deleteClientFromMailjet, createSegmentCampaign } from "../lib/mailjet-contacts.ts";
+import { isAdminRequest } from "../lib/admin-session.ts";
 
 function mailjetCreds(): { apiKey: string; apiSecret: string } | null {
   const apiKey = process.env.MAILJET_API_KEY;
   const apiSecret = process.env.MAILJET_API_SECRET;
   return apiKey && apiSecret ? { apiKey, apiSecret } : null;
-}
-
-function checkAuth(req: Request): boolean {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
-  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-  return !!adminPassword && sessionValue === adminPassword;
 }
 
 function makeSupabase() {
@@ -42,7 +35,7 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  if (!checkAuth(req)) {
+  if (!(await isAdminRequest(req))) {
     return json({ error: "Unauthorized" }, 401);
   }
 

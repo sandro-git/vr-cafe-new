@@ -1,10 +1,18 @@
 ---
 import BaseHead from "../../layouts/BaseHead.astro";
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  checkAdminPassword,
+  createAdminSession,
+  verifyAdminSession,
+} from "../../../netlify/lib/admin-session";
+import { astroAdminEnv } from "../../lib/admin-env";
+
+const env = astroAdminEnv();
 
 // If already logged in, redirect to admin
-const cookie = Astro.cookies.get("admin_session");
-const password = import.meta.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
-if (password && cookie?.value === password) {
+if (await verifyAdminSession(Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value, env)) {
   return Astro.redirect("/admin/reservations");
 }
 
@@ -13,13 +21,14 @@ let error = "";
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
   const submitted = form.get("password")?.toString() ?? "";
+  const session = (await checkAdminPassword(submitted, env)) ? await createAdminSession(env) : null;
 
-  if (submitted === password) {
-    Astro.cookies.set("admin_session", submitted, {
+  if (session) {
+    Astro.cookies.set(ADMIN_SESSION_COOKIE, session, {
       httpOnly: true,
       secure: import.meta.env.PROD,
       sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: ADMIN_SESSION_MAX_AGE,
       path: "/",
     });
     return Astro.redirect("/admin/reservations");

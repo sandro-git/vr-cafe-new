@@ -9,14 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { replyToReview } from "../lib/google-business.ts";
 import { generateDraftReply } from "../lib/generate-review-reply.ts";
 import { runPoll } from "./poll-google-reviews.mts";
-
-function checkAuth(req: Request): boolean {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
-  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-  return !!adminPassword && sessionValue === adminPassword;
-}
+import { isAdminRequest } from "../lib/admin-session.ts";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 // Cast en `any` : le projet n'a pas de type Database généré pour supabase-js,
@@ -41,7 +34,7 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  if (!checkAuth(req)) {
+  if (!(await isAdminRequest(req))) {
     return json({ error: "Unauthorized" }, 401);
   }
 

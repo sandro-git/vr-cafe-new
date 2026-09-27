@@ -1,5 +1,6 @@
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
+import { isAdminRequest } from "../lib/admin-session.ts";
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
@@ -10,12 +11,7 @@ export default async (req: Request, _context: Context) => {
   }
 
   // Auth: check admin_session cookie
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
-  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-
-  if (!adminPassword || sessionValue !== adminPassword) {
+  if (!(await isAdminRequest(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

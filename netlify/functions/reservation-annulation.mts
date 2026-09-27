@@ -1,13 +1,6 @@
 import type { Context, Config } from "@netlify/functions";
 import { sendCancellationAdminEmail } from "../lib/reservation-emails.ts";
-
-function checkAuth(req: Request): boolean {
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const adminPassword = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
-  const sessionMatch = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
-  const sessionValue = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-  return !!adminPassword && sessionValue === adminPassword;
-}
+import { isAdminRequest } from "../lib/admin-session.ts";
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
@@ -17,7 +10,7 @@ export default async (req: Request, _context: Context) => {
     );
   }
 
-  if (!checkAuth(req)) {
+  if (!(await isAdminRequest(req))) {
     return new Response(
       JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { "Content-Type": "application/json" } }

@@ -1,12 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Tests de bout en bout sur un `astro dev` dédié (port 4399), lancé avec :
-// - un mot de passe admin de test (jamais le vrai) ;
+// - un mot de passe admin et un secret de session de test (jamais les vrais) ;
 // - une URL Supabase bidon : tout appel non simulé échoue au lieu de toucher la base de prod.
 // Supabase et les fonctions Netlify (/api/*) sont simulés dans le navigateur (e2e/helpers/mocks.ts) :
 // aucune réservation, aucun email, aucune réponse Google n'est réellement créé.
 const PORT = 4399;
 export const E2E_ADMIN_PASSWORD = "e2e-admin-password";
+export const E2E_ADMIN_SESSION_SECRET = "e2e-admin-session-secret";
 export const E2E_SUPABASE_URL = "http://supabase.e2e.test";
 
 export default defineConfig({
@@ -37,6 +38,7 @@ export default defineConfig({
       // propres serveurs d'arrière-plan) le garde au premier plan.
       ASTRO_DEV_BACKGROUND: "1",
       ADMIN_PASSWORD: E2E_ADMIN_PASSWORD,
+      ADMIN_SESSION_SECRET: E2E_ADMIN_SESSION_SECRET,
       PUBLIC_SUPABASE_URL: E2E_SUPABASE_URL,
       PUBLIC_SUPABASE_ANON_KEY: "e2e-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "",

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_ADMIN_PASSWORD } from "../playwright.config";
+import { adminSessionCookie } from "./helpers/admin-session";
 import { FakeApi, FakeSupabase } from "./helpers/mocks";
 
 const avis = (over: Record<string, unknown> = {}) => ({
@@ -19,7 +19,7 @@ let supabase: FakeSupabase;
 let api: FakeApi;
 
 test.beforeEach(async ({ page, context, baseURL }) => {
-  await context.addCookies([{ name: "admin_session", value: E2E_ADMIN_PASSWORD, url: baseURL! }]);
+  await context.addCookies([await adminSessionCookie(baseURL!)]);
   supabase = new FakeSupabase({
     avis: [avis(), avis({ id: "avis-2", auteur_nom: "Bob", statut: "publie", brouillon_reponse: "Merci Bob" })],
   });
