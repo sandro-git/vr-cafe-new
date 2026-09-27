@@ -145,7 +145,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   function renderCard(a) {
     const card = document.createElement('div');
     card.className = 'card-glow p-5';
-    card.dataset.id = a.id;
+    card.dataset.avisCard = a.id;
 
     const badge = STATUT_BADGE[a.statut] ?? 'bg-white/5 text-white/55 border-white/10';
     const label = STATUT_LABEL[a.statut] ?? a.statut;
@@ -191,7 +191,9 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
     if (publishBtn) {
       const id = publishBtn.dataset.id;
-      const card = publishBtn.closest('[data-id]');
+      // [data-avis-card] et non [data-id] : le bouton porte lui-même un data-id,
+      // et closest() part de l'élément lui-même → la zone de texte n'était jamais trouvée
+      const card = publishBtn.closest('[data-avis-card]');
       const textarea = card?.querySelector('.draft-textarea');
       const texte = textarea?.value?.trim();
       if (!texte) {
