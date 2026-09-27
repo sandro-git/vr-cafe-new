@@ -155,6 +155,23 @@ La clé anon est publique (intégrée au JS du site) : **aucune table contenant 
 
 **Limites connues** : pendant le choix du nouveau créneau, l'ancienne réservation occupe encore ses boxes (un créneau qui la chevauche peut apparaître indisponible). Les annulations faites depuis l'admin (`/api/reservation-annulation`) n'envoient pas d'email au client.
 
+### Formulaire de contact
+
+**Flux** : `/contact` (page **statique**) → composant `src/components/ContactForm.astro` → `POST /api/contact` (`netlify/functions/contact.mts`) → email Mailjet à `sandro@vr-cafe.fr` (sujet `[Contact VR Café] <sujet>`, `Reply-To` = email du visiteur) → redirection 303 vers `/contact/merci`.
+
+- **Champs** : `email`, `subject`, `message` (obligatoires) + champs cachés `_csrf`, `_ts` et le piège à robots `website`
+- **Jeton CSRF** : récupéré côté client via `GET /api/contact-token` (`contact-token.mts`) → `{ csrf, ts }` = HMAC-SHA256 de l'horodatage d'émission, signé avec `ADMIN_PASSWORD` (repli `vrcafe-csrf-fallback`). Page statique → le jeton n'est pas dans le HTML ; il est redemandé s'il a plus de 50 min (le serveur le refuse au-delà d'1 h)
+- **Anti-robots** (côté serveur, dans cet ordre) :
+  - `Origin` absente ou hors de `ALLOWED_ORIGINS` (dont `localhost:4321` et `:8888`) → 403
+  - `website` rempli → redirection silencieuse vers `/contact/merci`, aucun email
+  - envoi moins de 3 s après l'émission du jeton → idem (redirection silencieuse). Côté client, un jeton obtenu au moment du clic fait donc attendre **3,1 s** avant l'envoi
+  - jeton absent, invalide, expiré (> 1 h) → 403
+  - `email`, `subject` ou `message` manquant → 400
+- **Côté client** : envoi en `fetch` (`redirect: "manual"` : la réponse 303 arrive en `opaqueredirect`, puis navigation vers `/contact/merci`). Le bouton `#contact-submit` est **désactivé pendant l'envoi** (évite les doublons pendant l'attente de 3,1 s) ; en cas d'échec, message `#contact-error` et bouton réactivé
+- ⚠️ Le bouton est un composant `Button` : il doit transmettre la prop `id` (sinon le script ne trouve pas `#contact-submit` et ne le désactive jamais — bug corrigé le 27/09/2026)
+- Script réattaché à `astro:page-load` avec le drapeau `data-fetch-bound` (View Transitions)
+- Tests : `e2e/contact.spec.ts` (Playwright, fonctions simulées). La fonction `contact.mts` n'a pas encore de test unitaire
+
 ### Section admin
 
 Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: strict`, 30j).
