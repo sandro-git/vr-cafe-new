@@ -316,3 +316,11 @@ Fonctionnalités à créer. Des brouillons existaient sur des branches aujourd'h
 
 - **Roue de récompense** (`/roue`, façon Riwil) : page publique de tirage + page admin `/admin/roue`, lots gérés dans Sanity (type `lotRoue`, déjà présent dans `vr-cafe-studio`), tirages stockés dans Supabase. Brouillon : tag `archive/roue-recompense`.
 - **Prospection** : relances email via Brevo (edge function Supabase `send-prospection`) + page admin `/admin/prospection` pour valider les relances avant envoi. Brouillon : tag `archive/prospection-brevo`.
+
+Sécurité (relevé le 27/09/2026) :
+
+- **Changer `ADMIN_PASSWORD`** (valeur faible, et elle circulait en clair dans l'ancien cookie `admin_session` et dans le bundle serveur). ⚠️ Invalide tous les liens d'annulation/modification déjà envoyés par email (`netlify/lib/reservation-token.ts`) et les sessions admin. La recréer directement en variable **secrète** sur Netlify
+- **Secret dédié pour les liens d'annulation et le CSRF contact** : `reservation-token.ts`, `contact-token.mts` et `contact.mts` signent encore avec `ADMIN_PASSWORD`. Passer à une variable dédiée (même contrainte : invalide les liens déjà envoyés), idéalement en même temps que le changement de mot de passe
+- **`WEBHOOK_VERIFY_TOKEN`** (webhook WhatsApp, `netlify/functions/whatsapp-webhook.mts`) : valeur facile à deviner, la remplacer par une valeur aléatoire sur Netlify **et** dans la configuration du webhook côté Meta
+- **Lecture anon de `reservations`** : la policy RLS `anon_read` (`USING (true)`) expose noms, emails et téléphones de tous les clients via la clé anon publique. Tâche lancée séparément — vérifier qu'elle a été menée à bout (policy retirée en prod)
+- Variables Netlify (plan gratuit) : une variable non secrète garde obligatoirement les 4 scopes ; une secrète n'accepte pas `post_processing` ; on ne peut pas passer une variable existante en secret, il faut la supprimer puis la recréer
