@@ -96,7 +96,7 @@ export function faqPage(
   };
 }
 
-type Offer = { price: number; priceCurrency?: string; description?: string };
+type Offer = { price: number; priceCurrency?: string; description?: string; path?: string };
 
 function toOffer(offer: Offer): SchemaNode {
   return {
@@ -104,7 +104,7 @@ function toOffer(offer: Offer): SchemaNode {
     price: offer.price,
     priceCurrency: offer.priceCurrency ?? "EUR",
     availability: "https://schema.org/InStock",
-    url: `${SITE_URL}/reservation`,
+    url: `${SITE_URL}${offer.path ?? "/reservation"}`,
     ...(offer.description ? { description: offer.description } : {}),
   };
 }

@@ -1,13 +1,15 @@
 ---
 import Logo from "../assets/logo.webp";
 import { Image } from "astro:assets";
+import { OFFRES_BON } from "../lib/bons-cadeaux";
 
 const currentPath = Astro.url.pathname;
 
 const isOccasionsSubmenu =
   currentPath === "/anniversaire" || currentPath === "/anniversaire/" ||
   currentPath === "/team-building" || currentPath === "/team-building/" ||
-  currentPath === "/evg-evjf" || currentPath === "/evg-evjf/";
+  currentPath === "/evg-evjf" || currentPath === "/evg-evjf/" ||
+  currentPath === "/cadeaux" || currentPath === "/cadeaux/";
 
 const isActive = (path: string) =>
   currentPath === path || currentPath === `${path}/`;
@@ -34,6 +36,13 @@ const occasionsItems = [
     desc: "Une soirée mémorable garantie",
     accent: "from-[var(--color-brand-500)] to-[var(--color-glow-pink)]",
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3h6l-1 7a3 3 0 11-4 0L9 3zM7 21h10M12 14v7"/>`,
+  },
+  {
+    href: "/cadeaux",
+    title: "Bon cadeau",
+    desc: `Offrez une session VR, dès ${Math.min(...OFFRES_BON.map((o) => o.prix))} €`,
+    accent: "from-[var(--color-glow-cyan)] to-[var(--color-brand-500)]",
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 11h16v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9zM3 7h18v4H3V7zm9 0v14M12 7c-1.5-3-5-3-5-1s3 1 5 1zm0 0c1.5-3 5-3 5-1s-3 1-5 1z"/>`,
   },
 ];
 ---

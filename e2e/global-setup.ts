@@ -5,7 +5,7 @@ import { adminSessionCookie } from "./helpers/admin-session";
 // ouvertes (« new dependencies optimized »), ce qui casse un test en cours (« Failed to fetch »,
 // étapes du formulaire perdues). On parcourt les pages testées jusqu'à ce qu'un tour complet
 // se fasse sans aucun rechargement de Vite.
-const PAGES = ["/reservation", "/reservation/annulation", "/reservation-anniversaire", "/contact", "/admin/avis"];
+const PAGES = ["/reservation", "/reservation/annulation", "/reservation-anniversaire", "/contact", "/admin/avis", "/cadeaux", "/cadeaux/merci", "/admin/bons"];
 const MAX_ROUNDS = 5;
 
 export default async function globalSetup(config: FullConfig) {

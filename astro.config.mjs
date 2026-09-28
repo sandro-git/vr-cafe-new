@@ -27,8 +27,7 @@ export default defineConfig({
     filter: (page) =>
       !page.includes('/admin') &&
       !page.includes('/contact/merci') &&
-      !page.includes('/cadeaux') &&
-      !page.includes('/giftCard'),
+      !page.includes('/cadeaux/merci'),
   })],
 
   vite: {

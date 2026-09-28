@@ -1,211 +1,251 @@
 ---
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Title from "../components/Title.astro";
+import PageHeader from "../components/PageHeader.astro";
 import FAQ from "../components/FAQ.astro";
 import JsonLd from "../components/JsonLd.astro";
-import { graph, businessNode, breadcrumb } from "../lib/seo";
+import { graph, businessNode, breadcrumb, product } from "../lib/seo";
+import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX } from "../lib/bons-cadeaux";
 
-// Pas de schéma Product : les cartes cadeaux ne sont plus proposées pour le moment
-// (voir noindex sur BaseLayout ci-dessous).
+const prixMin = Math.min(...OFFRES_BON.map((o) => o.prix));
+
 const schema = graph([
   businessNode,
   breadcrumb([
     { name: "Accueil", path: "/" },
-    { name: "Cartes cadeaux", path: "/cadeaux" },
+    { name: "Bons cadeaux", path: "/cadeaux" },
   ]),
+  product({
+    name: "Bon cadeau VR Café",
+    description:
+      "Bon cadeau pour une session de réalité virtuelle au VR Café de Canet-en-Roussillon, à 10 min de Perpignan : 30 min ou 1h, solo ou duo. Envoyé par email, valable 1 an.",
+    path: "/cadeaux",
+    offer: { price: prixMin, description: `Bon cadeau VR à partir de ${prixMin} €`, path: "/cadeaux" },
+  }),
 ]);
 
-const giftCardFAQs = [
+const faqs = [
   {
-    question: "Comment utiliser ma carte cadeau ?",
+    question: "Comment recevoir le bon cadeau ?",
     answer:
-      "Lors de votre réservation, indiquez simplement le code de votre carte cadeau. Le montant sera automatiquement déduit de votre total.",
+      "Dès le paiement validé, vous recevez le bon par email avec un code unique. Vous pouvez le transférer, l'imprimer ou le montrer sur votre téléphone.",
   },
   {
-    question: "Puis-je personnaliser le montant ?",
+    question: "Comment utiliser le bon cadeau ?",
     answer:
-      "Oui ! Vous pouvez choisir le montant de votre carte cadeau selon vos besoins et votre budget.",
+      "Le bénéficiaire réserve son créneau en ligne ou par téléphone en indiquant le code du bon dans les remarques, puis présente le bon à son arrivée. Il n'y a rien à payer pour la session offerte.",
   },
   {
-    question: "La carte cadeau est-elle remboursable ?",
-    answer:
-      "Les cartes cadeaux ne sont ni remboursables ni échangeables contre de l'argent, mais elles sont valables 1 an sur toutes nos expériences.",
+    question: "Quelle est la durée de validité ?",
+    answer: "Le bon cadeau est valable 1 an à partir de la date d'achat.",
   },
   {
-    question: "Quelle est la validité de la carte cadeau ?",
+    question: "Peut-on changer de formule sur place ?",
     answer:
-      "Nos cartes cadeaux sont valables pendant 1 an à partir de la date d'achat.",
+      "Oui : le bénéficiaire peut passer à une session plus longue ou ajouter des joueurs en réglant simplement la différence sur place.",
   },
   {
-    question: "Comment recevoir ma carte cadeau ?",
+    question: "Le bon cadeau est-il remboursable ?",
     answer:
-      "Vous recevrez votre carte cadeau par email immédiatement après l'achat, avec un code unique à utiliser lors de votre réservation.",
+      "Le bon est utilisable en une seule fois. Il n'est ni remboursable ni échangeable contre de l'argent.",
   },
   {
-    question: "Peut-on utiliser plusieurs cartes cadeaux pour une réservation ?",
+    question: "Le paiement est-il sécurisé ?",
     answer:
-      "Oui, vous pouvez cumuler plusieurs cartes cadeaux lors de votre réservation.",
+      "Oui. Le paiement se fait sur la page sécurisée de notre prestataire SumUp (carte bancaire, Apple Pay, Google Pay) : nous ne voyons jamais vos données bancaires.",
   },
 ];
+
+const fieldClass =
+  "bg-white/5 ring-1 ring-white/10 text-white text-base rounded-xl focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none block w-full p-3.5 placeholder:text-white/35 transition-all";
+const labelClass = "block mb-2 text-sm font-semibold text-white";
 ---
 
 <BaseLayout
-  title="Carte Cadeau VR — Idée Cadeau Original à Perpignan | VR Café"
-  description="Offrez une expérience VR inoubliable à Canet-en-Roussillon. Carte cadeau valable sur toutes nos formules. Livraison immédiate par email."
-  noindex={true}
+  title="Bon Cadeau Réalité Virtuelle à Perpignan | VR Café Canet-en-Roussillon"
+  description={`Offrez une session de réalité virtuelle au VR Café, à 10 min de Perpignan. Bons cadeaux 30 min ou 1h, solo ou duo, dès ${prixMin} €. Reçu par email, valable 1 an.`}
 >
   <JsonLd schema={schema} />
-  <Title title="Cartes Cadeaux" />
 
-  <div class="container mx-auto px-4 pb-12">
-    <!-- Section Hero -->
-    <div class="max-w-4xl mx-auto text-center mb-16">
-      <div class="mb-6 flex justify-center">
-        <svg
-          class="w-16 h-16 text-blue-600 dark:text-blue-400"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
+  <section class="bg-[var(--color-surface)]">
+    <div class="flex flex-col items-center">
+      <PageHeader
+        eyebrow="Bons cadeaux"
+        title="Offrez une aventure en réalité virtuelle"
+        highlight="aventure"
+        subtitle="Une idée cadeau originale pour un anniversaire, Noël ou juste pour faire plaisir. Choisissez la session, payez en ligne et recevez le bon par email tout de suite."
+      />
+    </div>
+  </section>
+
+  <section class="bg-[var(--color-surface)] pb-16 lg:pb-24 px-4">
+    <form id="bon-form" class="mx-auto max-w-4xl" novalidate>
+      <!-- Étape 1 : l'offre -->
+      <h2 class="font-display text-2xl font-extrabold tracking-tight text-white mb-4">
+        1. Choisissez le bon cadeau
+      </h2>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="radiogroup" aria-label="Bon cadeau">
+        {
+          OFFRES_BON.map((o, i) => (
+            <label class="bon-offre card-glow group relative cursor-pointer p-4 sm:p-5 text-center transition-transform hover:-translate-y-1 has-[:checked]:ring-2 has-[:checked]:ring-[var(--color-brand-400)]">
+              <input type="radio" name="offre" value={o.id} class="sr-only" checked={i === 3} aria-label={`${o.label}, ${o.prix} €`} />
+              <span class="block text-2xl mb-1" aria-hidden="true">{o.nb_personnes === 1 ? "🥽" : "🥽🥽"}</span>
+              <span class="block font-display text-lg font-bold text-white">{o.duree_minutes === 60 ? "1h" : "30 min"}</span>
+              <span class="block text-sm text-white/55">{o.nb_personnes === 1 ? "Solo · 1 joueur" : "Duo · 2 joueurs"}</span>
+              <span class="block mt-3 font-display text-2xl font-extrabold text-[var(--color-accent-400)]">{o.prix} €</span>
+            </label>
+          ))
+        }
+      </div>
+      <p id="err-offre" class="hidden mt-2 text-sm text-red-300"></p>
+
+      <!-- Étape 2 : les infos -->
+      <h2 class="font-display text-2xl font-extrabold tracking-tight text-white mt-10 mb-4">
+        2. Personnalisez-le
+      </h2>
+      <div class="card-glow p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Piège à robots (caché pour les humains) -->
+        <p class="hidden" aria-hidden="true">
+          <label>Ne pas remplir si vous êtes humain : <input name="website" tabindex="-1" autocomplete="off" /></label>
+        </p>
+
+        <div>
+          <label for="beneficiaire_nom" class={labelClass}>Pour qui ?</label>
+          <input id="beneficiaire_nom" name="beneficiaire_nom" type="text" maxlength={BON_NOM_MAX} class={fieldClass} placeholder="Prénom du bénéficiaire" required />
+          <p id="err-beneficiaire_nom" class="hidden mt-1.5 text-sm text-red-300"></p>
+        </div>
+        <div>
+          <label for="acheteur_nom" class={labelClass}>De la part de</label>
+          <input id="acheteur_nom" name="acheteur_nom" type="text" maxlength={BON_NOM_MAX} autocomplete="name" class={fieldClass} placeholder="Votre nom" required />
+          <p id="err-acheteur_nom" class="hidden mt-1.5 text-sm text-red-300"></p>
+        </div>
+        <div class="sm:col-span-2">
+          <label for="acheteur_email" class={labelClass}>Votre email</label>
+          <input id="acheteur_email" name="acheteur_email" type="email" autocomplete="email" class={fieldClass} placeholder="vous@email.fr" required />
+          <p class="mt-1.5 text-xs text-white/45">Le bon vous est envoyé à cette adresse : vous pourrez le transférer ou l'imprimer.</p>
+          <p id="err-acheteur_email" class="hidden mt-1.5 text-sm text-red-300"></p>
+        </div>
+        <div class="sm:col-span-2">
+          <label for="message" class={labelClass}>Petit mot <span class="font-normal text-white/45">(facultatif)</span></label>
+          <textarea id="message" name="message" rows="3" maxlength={BON_MESSAGE_MAX} class={fieldClass} placeholder="Joyeux anniversaire ! Prêt(e) pour l'aventure ?"></textarea>
+          <p id="err-message" class="hidden mt-1.5 text-sm text-red-300"></p>
+        </div>
+      </div>
+
+      <!-- Paiement -->
+      <div class="mt-8 flex flex-col items-center text-center gap-3">
+        <button
+          id="bon-submit"
+          type="submit"
+          class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-[var(--radius-pill)] bg-white text-[var(--color-brand-900)] font-bold text-lg shadow-lg hover:bg-[var(--color-brand-50)] transition-colors disabled:opacity-60 disabled:cursor-wait"
         >
-          <path
-            fill-rule="evenodd"
-            d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z"
-            clip-rule="evenodd"></path>
-          <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z"
-          ></path>
-        </svg>
+          <span id="bon-submit-label">Payer <span id="bon-total"></span></span>
+        </button>
+        <p class="text-sm text-white/55">
+          🔒 Paiement sécurisé par SumUp · Carte bancaire, Apple Pay, Google Pay
+        </p>
+        <p id="bon-error" role="alert" class="hidden max-w-xl p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></p>
       </div>
-      <h1
-        class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6"
-      >
-        Offrez l'Expérience VR
-      </h1>
-      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-        La carte cadeau parfaite pour surprendre vos proches avec une aventure
-        en réalité virtuelle inoubliable.
-      </p>
-    </div>
+    </form>
+  </section>
 
-    <!-- Avantages des cartes cadeaux -->
-    <div class="max-w-6xl mx-auto">
-      <h2
-        class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12"
-      >
-        Pourquoi choisir nos cartes cadeaux ?
-      </h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <!-- Avantage 1 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div
-            class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4"
-          >
-            <svg
-              class="w-6 h-6 text-blue-600 dark:text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
+  <section class="bg-[var(--color-surface-elevated)] pt-10 pb-12 lg:pt-14 lg:pb-16 px-4">
+    <div class="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      {
+        [
+          { icon: "⚡", title: "Reçu tout de suite", text: "Le bon arrive par email dès le paiement validé, prêt à être offert." },
+          { icon: "📅", title: "Valable 1 an", text: "Le bénéficiaire réserve quand il veut, sur toutes nos expériences VR." },
+          { icon: "🎮", title: "Plus de 50 jeux", text: "Escape games, jeux d'action, free-roaming sans fil : de 8 à 99 ans." },
+        ].map((a) => (
+          <div class="card-glow p-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-glow-blue)] to-[var(--color-brand-500)] flex items-center justify-center text-2xl mb-4" aria-hidden="true">{a.icon}</div>
+            <h3 class="text-lg font-bold text-white mb-1">{a.title}</h3>
+            <p class="text-white/70">{a.text}</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Flexibilité totale
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Valable sur toutes nos expériences VR : escapes games, jeux VR et
-            free-roaming.
-          </p>
-        </div>
-
-        <!-- Avantage 2 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div
-            class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4"
-          >
-            <svg
-              class="w-6 h-6 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Validité prolongée
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Nos cartes cadeaux sont valables pendant 1 an à partir de la date
-            d'achat.
-          </p>
-        </div>
-
-        <!-- Avantage 3 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div
-            class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4"
-          >
-            <svg
-              class="w-6 h-6 text-purple-600 dark:text-purple-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              ></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Livraison instantanée
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Recevez votre carte cadeau par email immédiatement après l'achat.
-          </p>
-        </div>
-      </div>
+        ))
+      }
     </div>
+  </section>
 
-    <!-- Call to Action -->
-    <div
-      class="max-w-3xl mx-auto bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-center shadow-2xl mt-20"
-    >
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
-        Prêt à offrir l'aventure ?
-      </h2>
-      <p class="text-blue-100 text-lg mb-8">
-        Commandez votre carte cadeau dès maintenant et faites plaisir à vos
-        proches !
-      </p>
-      <a
-        href="/giftCard"
-        class="inline-block bg-white text-blue-600 font-bold text-lg px-8 py-4 rounded-full hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg"
-      >
-        Commander une carte cadeau
-      </a>
-    </div>
-
-  </div>
-
-  <!-- Section FAQ -->
   <FAQ
     title="Questions fréquentes"
-    subtitle="Tout ce que vous devez savoir sur nos cartes cadeaux"
-    faqs={giftCardFAQs}
+    subtitle="Tout ce qu'il faut savoir sur nos bons cadeaux"
+    faqs={faqs}
     ctaText="Une autre question ?"
-    ctaButtonText="Commander une carte cadeau"
-    ctaLink="/giftCard"
+    ctaButtonText="Nous contacter"
+    ctaLink="/contact"
   />
 </BaseLayout>
+
+<script>
+  import { OFFRES_BON, validateBonAchat } from "../lib/bons-cadeaux";
+
+  // Ordre d'affichage : le premier champ en erreur reçoit le focus
+  const FIELDS = ["offre", "beneficiaire_nom", "acheteur_nom", "acheteur_email", "message"];
+
+  function setup() {
+    const form = document.getElementById("bon-form") as HTMLFormElement | null;
+    if (!form || form.dataset.bonBound) return;
+    form.dataset.bonBound = "1";
+
+    const submit = document.getElementById("bon-submit") as HTMLButtonElement;
+    const total = document.getElementById("bon-total")!;
+    const errorBox = document.getElementById("bon-error")!;
+
+    const updateTotal = () => {
+      const id = (form.querySelector('input[name="offre"]:checked') as HTMLInputElement | null)?.value;
+      const offre = OFFRES_BON.find((o) => o.id === id);
+      total.textContent = offre ? `${offre.prix} €` : "";
+    };
+    form.addEventListener("change", updateTotal);
+    updateTotal();
+    // Retour arrière depuis SumUp : la page revient du cache avec le bouton encore désactivé
+    window.addEventListener("pageshow", (e) => { if (e.persisted) submit.disabled = false; });
+
+    const showErrors = (errors: Record<string, string>) => {
+      for (const f of FIELDS) {
+        const el = document.getElementById(`err-${f}`);
+        if (!el) continue;
+        el.textContent = errors[f] ?? "";
+        el.classList.toggle("hidden", !errors[f]);
+      }
+      const first = FIELDS.find((f) => errors[f]);
+      if (first) (document.getElementById(first) ?? form.querySelector(`[name="${first}"]`) as HTMLElement | null)?.focus();
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (submit.disabled) return;
+      errorBox.classList.add("hidden");
+
+      const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
+      const parsed = validateBonAchat(data);
+      if (!parsed.ok) return showErrors(parsed.errors);
+      showErrors({});
+
+      submit.disabled = true;
+      try {
+        const res = await fetch("/api/bon-cadeau/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (res.ok && body.url) {
+          window.location.href = body.url; // page de paiement SumUp
+          return;
+        }
+        if (body.errors) showErrors(body.errors);
+        throw new Error(body.error ?? "Le paiement n'a pas pu être lancé. Réessayez ou appelez-nous au 06 71 41 06 95.");
+      } catch (err) {
+        errorBox.textContent = err instanceof Error && err.message !== "Failed to fetch"
+          ? err.message
+          : "Connexion impossible. Vérifiez votre connexion internet et réessayez.";
+        errorBox.classList.remove("hidden");
+        submit.disabled = false;
+      }
+    });
+  }
+
+  document.addEventListener("astro:page-load", setup);
+</script>

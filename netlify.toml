@@ -183,3 +183,9 @@
   to = "/cyber-clash-tournament"
   status = 301
   force = true
+# Ancienne page du widget cartes cadeaux 4escape (remplacé par la vente SumUp sur /cadeaux)
+[[redirects]]
+  from = "/giftCard"
+  to = "/cadeaux"
+  status = 301
+  force = true

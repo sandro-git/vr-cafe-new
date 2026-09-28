@@ -42,6 +42,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
   - `netlify/lib/admin-reads.ts` (lectures admin : requêtes envoyées, validation des paramètres, erreurs) + `/api/admin/db` (401 sans session, service role avec session) ; `src/lib/uuid.ts` (UUID v4)
   - `netlify/lib/reservation-emails.ts` : destinataires, sujets, échappement HTML des saisies client, pas de flexbox
   - `netlify/lib/google-business.ts` (OAuth + cache du jeton, pagination, notes), `generate-review-reply.ts`, `mailjet-contacts.ts` (synchro, changement d'email, suppression RGPD, campagnes), `src/lib/notify.ts` (push, abonnements expirés)
+  - Bons cadeaux : `tests/bons-cadeaux.test.ts` (offres/prix, codes, validité, validation), `tests/bon-cadeau.test.ts` (fonctions `bon-cadeau/checkout`, `bon-cadeau/statut`, `sumup-webhook`, `admin/bons` avec table en mémoire et faux SumUp via `fetch`), `tests/bon-cadeau-emails.test.ts` (échappement, pas de flexbox)
 - **Aucun appel réseau réel** : Mailjet, Supabase, Anthropic, web-push sont remplacés par `vi.mock` et `fetch` par `vi.stubGlobal` ; faux client Mailjet réutilisable dans `tests/helpers/mailjet-mock.ts`
 - Lancer aussi `bun astro check` après avoir modifié un test : les erreurs de type des tests n'empêchent pas Vitest de passer. **Référence : 0 erreur, 0 avertissement** depuis le 27/09/2026 — toute erreur est nouvelle et doit être corrigée
 - Non testés : `src/lib/supabase.js` (config) et `netlify/lib/staff-guide-content.generated.ts` (généré)
@@ -55,7 +56,8 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` et `ADMIN_SESSION_SECRET` de test ; les tests posent un cookie `admin_session` **signé** avec ces secrets (`e2e/helpers/admin-session.ts`), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
 - Supabase (REST/RPC) et les fonctions `/api/*` sont simulés dans le navigateur (`e2e/helpers/mocks.ts` : `FakeSupabase`, `FakeApi`) → aucune réservation, aucun email, aucune réponse Google réellement créés. `FakeSupabase.unhandled` doit rester vide (vérifié après chaque test). Option `delayMs` pour simuler un réseau lent
 - Horloge du navigateur fixée (`setNow`) : les tests de réservation se placent le jeudi 1er octobre 2026 à 10:00 (Paris)
-- Fichiers (48 tests) :
+- Fichiers (58 tests) :
+  - `e2e/bons-cadeaux.spec.ts` (10) : `/cadeaux` (achat → redirection SumUp simulée, validation, vente indisponible), `/cadeaux/merci` (attente puis code, échec), `/admin/bons` (filtres, recherche par code, marquer utilisé, bon expiré, bon comptoir)
   - `e2e/admin-login.spec.ts` (5), `e2e/admin-logout-push.spec.ts` (5), `e2e/admin-avis.spec.ts` (7), `e2e/admin-donnees.spec.ts` (6), `e2e/annulation.spec.ts` (10), `e2e/contact.spec.ts` (2), `e2e/reservation.spec.ts` (13)
   - `e2e/helpers/mocks.ts` : `FakeSupabase` (tables `config`, `durees_session`, `jours_fermeture`, `periodes_vacances`, `avis_google`, `boxes`, RPC `get_boxes_disponibles`, inserts `reservations` / `reservation_boxes` enregistrés dans `.inserts`), `FakeApi` (appels `/api/*` enregistrés, réponse par défaut `{ ok: true }`, handlers par chemin), `setNow`. Comme en prod, `FakeSupabase` **ne sert pas** `reservations` / `clients` en lecture et **refuse un insert avec `RETURNING`** (`.select()` après `.insert()`)
   - `e2e/helpers/reservation-steps.ts` : `chooseSlot` (étapes 1 et 2 du formulaire standard)
@@ -87,7 +89,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - **Mailjet** — emails transactionnels (confirmation réservation, formulaire contact)
 - **Web Push (VAPID)** — notifications admin à chaque nouvelle réservation
 - **Google Analytics 4** — chargé via `<script async>` dans `BaseHead.astro` (var `PUBLIC_GA_ID`)
-- **Forescape** — widget externe cartes cadeaux (domaine `vrcafe.4escape.io`)
+- **SumUp** — paiement en ligne des bons cadeaux (Hosted Checkout, voir « Bons cadeaux »). Le widget Forescape/4escape est abandonné (`/giftCard` redirige vers `/cadeaux`)
 
 ### Système de réservation
 
@@ -173,6 +175,25 @@ La clé anon est publique (intégrée au JS du site) : **aucune table contenant 
 - Erreur d'envoi (Mailjet, config) → 500 `{ error: "Failed to send email" }` : le détail reste dans les journaux Netlify, **jamais renvoyé au visiteur**
 - Tests : `tests/contact.test.ts` (Vitest : jetons émis par la vraie fonction `contact-token`, jeton modifié/tronqué/expiré/autre secret, Origin, piège à robots, envoi < 3 s, champs manquants, échappement HTML, erreur Mailjet sans fuite) et `e2e/contact.spec.ts` (Playwright, fonctions simulées)
 
+### Bons cadeaux
+
+Un bon = **une expérience précise** (pas un montant), utilisable **en une fois**, valable **12 mois**. Offres et prix dans `src/lib/bons-cadeaux.ts` (`OFFRES_BON`, prix = `calcMontant()` de la grille des réservations : 30 min solo 18 €, duo 36 €, 1h solo 29 €, duo 58 €). Codes `VRC-XXXX-XXXX` (alphabet sans 0/O/1/I, `generateBonCode`).
+
+**Table `bons_cadeaux`** (`supabase/bons_cadeaux.sql`, appliqué en prod le 28/09/2026) : RLS sans aucune policy + `REVOKE` anon/authenticated → accès **service role uniquement** (`netlify/lib/bon-repo.ts`). Statuts `en_attente` → `valide` → `utilise` (ou `echec`, `annule`) ; « expiré » = `valide` + `expire_le` dépassé (`bonEtat`). `mode_paiement` `en_ligne` | `comptoir`, `sandbox` = payé avec un compte SumUp de test.
+
+**Vente en ligne (SumUp Hosted Checkout)** — logique dans `netlify/lib/bon-cadeau.ts`, client API `netlify/lib/sumup.ts` :
+1. `/cadeaux` (statique) → `POST /api/bon-cadeau/checkout` (Origin autorisée + piège à robots `website` + `validateBonAchat`) : insère le bon `en_attente` (id UUID serveur), crée le checkout SumUp (`checkout_reference` = id du bon, **prix recalculé depuis l'offre**, `redirect_url` = `<origin>/cadeaux/merci?bon=<id>`, `return_url` = `<URL>/api/sumup-webhook` sauf en local) → le navigateur part sur `hosted_checkout_url`
+2. Après paiement, SumUp affiche « Paiement réussi » ; le client **n'est renvoyé sur le site que s'il clique** « Retour sur le site du commerçant » (pas de paramètre ajouté à l'URL)
+3. `finalizeBon` est appelé par **le webhook** (`POST /api/sumup-webhook {event_type, id}`) **et** par la page merci (`GET /api/bon-cadeau/statut?bon=<id>`, sondée toutes les 2 s pendant 30 s) : il relit le checkout **via l'API SumUp** (le webhook n'est pas signé), vérifie référence, marchand, devise et montant, puis `UPDATE … WHERE statut = 'en_attente'` → code + `paye_le` + `expire_le`, email au client (le bon) + email admin `[Bon cadeau] …` + push « 🎁 Bon cadeau vendu », **une seule fois**. `FAILED`/`EXPIRED` → `echec`
+4. Garde-fou : un compte SumUp **sandbox** (`merchant_sandbox: true`) est refusé quand `CONTEXT=production` (bon passé en `echec`, 502) ; accepté en local et sur les aperçus
+5. En local (`netlify dev`), SumUp ne peut pas joindre le webhook : c'est la page merci qui active le bon
+
+**Admin `/admin/bons`** (`src/pages/admin/bons.astro` → `POST /api/admin/bons`, session admin) : `list`, `mark_used` (seulement depuis `valide`), `unmark_used`, `cancel`, `resend_email`, `create_comptoir` (bon payé au TPE, valide tout de suite, email si adresse, pas de push). Recherche par code tolérante (`normalizeBonCode` : minuscules, espaces, sans tirets). Les bons `sandbox` portent un badge TEST et sont exclus du CA du mois. Rendu en `textContent` uniquement (saisies publiques).
+
+**Utilisation** : pas encore de champ « code cadeau » dans le formulaire de réservation ; le bénéficiaire indique le code dans les remarques et on le marque utilisé depuis `/admin/bons`.
+
+**Tester avec le sandbox** : cartes de test SumUp (ex. Visa `4200 0000 0000 0091`, date future, CVV quelconque) : https://developer.sumup.com/online-payments/testing
+
 ### Section admin
 
 Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: strict`, 30j).
@@ -191,6 +212,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 - `/admin/planning` — vue planning semaine/jour avec état des boxes + gestion vacances/jours fermés
 - `/admin/reservation` — nouvelle réservation (même `ReservationForm` en mode `"admin"`, avec autocomplete client)
   - **Voulu** (commit `564e138`, confirmé le 27/09/2026) : en mode admin, le `DatePicker` accepte **tous les jours futurs**, y compris les jours fermés (`jours_fermeture`) et hors planning habituel ; les jours normalement fermés sont affichés **en ambre** (exception signalée, pas bloquée). Ne pas « corriger » (`DatePicker.astro`, `adminMode`)
+- `/admin/bons` — bons cadeaux (voir « Bons cadeaux »)
 - `/admin/clients` — CRM : liste clients filtrée (fidèles, inactifs, tous) + historique des réservations
 - `/admin/marketing` — stats (fidèles, inactifs, nouveaux) + liens vers Mailjet
 - `/admin/aide` — chat d'aide opérationnelle pour les collaborateurs (questions suggérées + saisie libre), répond uniquement à partir de `content/staff-guide.md` via Claude Haiku 4.5
@@ -210,6 +232,10 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `POST /api/admin-db` | Cookie `admin_session` | Multi-actions : lectures réservations/clients (service role), update résa, vacances, fermetures, boxes |
 | `POST /api/admin/chat` | Cookie `admin_session` | Chat d'aide opérationnelle (Claude Haiku 4.5), répond à partir de `content/staff-guide.md` compilé au build |
 | `POST /api/reservation-annulation` | Cookie `admin_session` | Annulation réservation (admin) |
+| `POST /api/bon-cadeau/checkout` | Origin + piège à robots | Crée le bon en attente + le paiement SumUp, renvoie l'URL de paiement |
+| `GET /api/bon-cadeau/statut?bon=<id>` | id du bon (UUID) | Vérifie le paiement chez SumUp et renvoie l'état (code si payé) |
+| `POST /api/sumup-webhook` | aucune (non signé) : paiement relu via l'API SumUp | Active le bon payé |
+| `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, renvoi d'email, bon vendu au comptoir |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
 | `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
@@ -255,6 +281,11 @@ ANTHROPIC_API_KEY=...
 
 # Google Analytics
 PUBLIC_GA_ID=G-XXXXXXXXXX
+
+# SumUp (bons cadeaux) — clé secrète : fonctions Netlify uniquement
+SUMUP_API_KEY=...
+SUMUP_MERCHANT_CODE=...
+SUMUP_WEBHOOK_URL=...             # Optionnel : par défaut <URL du site>/api/sumup-webhook
 ```
 
 ### Déploiement

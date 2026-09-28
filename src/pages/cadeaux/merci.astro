@@ -1,0 +1,105 @@
+---
+export const prerender = true;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Button from "../../components/Button.astro";
+---
+
+<BaseLayout title="Bon cadeau | VR Café" noindex={true}>
+  <section class="bg-[var(--color-surface)] py-16 md:py-24 min-h-[calc(100vh-var(--navHeight))] flex items-center px-4">
+    <div class="mx-auto max-w-2xl w-full">
+      <div class="card-glow p-8 md:p-12 text-center">
+        <!-- Vérification du paiement -->
+        <div data-state="loading">
+          <div class="inline-block w-12 h-12 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-6"></div>
+          <h1 class="font-display text-3xl font-extrabold tracking-tight text-white mb-2">Vérification du paiement…</h1>
+          <p class="text-white/70">Quelques secondes, nous préparons votre bon cadeau.</p>
+        </div>
+
+        <!-- Bon valide -->
+        <div data-state="valide" class="hidden">
+          <p class="text-5xl mb-4" aria-hidden="true">🎁</p>
+          <h1 class="font-display text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
+            Merci, votre bon est <span class="text-shimmer">prêt</span> !
+          </h1>
+          <p class="text-lg text-white/70 mb-8">
+            <span id="bon-offre" class="text-white font-semibold"></span> pour <span id="bon-beneficiaire" class="text-white font-semibold"></span>
+          </p>
+          <div class="mb-6 p-6 rounded-[var(--radius-card)] bg-white/5 ring-1 ring-[var(--color-brand-400)]/60 border-dashed">
+            <p class="text-xs uppercase tracking-widest text-white/55 mb-2">Code du bon</p>
+            <p id="bon-code" class="font-mono text-3xl font-bold tracking-widest text-white"></p>
+            <p class="mt-2 text-sm text-white/55">Valable jusqu'au <span id="bon-expire" class="text-white/80"></span></p>
+          </div>
+          <p id="bon-email" class="text-white/70 mb-8"></p>
+          <Button href="/" variant="secondary">Retour à l'accueil</Button>
+        </div>
+
+        <!-- Paiement pas encore confirmé -->
+        <div data-state="en_attente" class="hidden">
+          <p class="text-5xl mb-4" aria-hidden="true">⏳</p>
+          <h1 class="font-display text-3xl font-extrabold tracking-tight text-white mb-3">Paiement non confirmé</h1>
+          <p class="text-white/70 mb-8">
+            Nous n'avons pas encore reçu la confirmation de SumUp. Si vous avez bien payé, votre bon vous sera envoyé par email
+            dans quelques minutes. Sinon, vous pouvez recommencer.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button href="/cadeaux" variant="primary">Recommencer</Button>
+            <Button href="tel:0671410695" variant="secondary">06 71 41 06 95</Button>
+          </div>
+        </div>
+
+        <!-- Paiement refusé / bon introuvable -->
+        <div data-state="echec" class="hidden">
+          <p class="text-5xl mb-4" aria-hidden="true">😕</p>
+          <h1 class="font-display text-3xl font-extrabold tracking-tight text-white mb-3">Le paiement n'a pas abouti</h1>
+          <p class="text-white/70 mb-8">Aucun montant n'a été débité. Vous pouvez réessayer, ou nous appeler au 06 71 41 06 95.</p>
+          <Button href="/cadeaux" variant="primary">Réessayer</Button>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const POLL_MS = 2000;
+  const MAX_TRIES = 15; // ~30 s
+
+  function show(state: string) {
+    document.querySelectorAll<HTMLElement>("[data-state]").forEach((el) => el.classList.toggle("hidden", el.dataset.state !== state));
+  }
+  const setText = (id: string, text: string) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  async function check(id: string, tries = 1): Promise<void> {
+    let body: any = null;
+    try {
+      const res = await fetch(`/api/bon-cadeau/statut?bon=${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (res.status === 404) return show("echec");
+      if (res.ok) body = await res.json();
+    } catch { /* réseau : on retente */ }
+
+    if (body?.statut === "valide" || body?.statut === "utilise") {
+      setText("bon-offre", body.offre_label);
+      setText("bon-beneficiaire", body.beneficiaire_nom);
+      setText("bon-code", body.code);
+      setText("bon-expire", new Date(body.expire_le).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }));
+      setText("bon-email", body.email_envoye && body.acheteur_email
+        ? `Nous vous l'avons envoyé par email (${body.acheteur_email}). Pensez à vérifier vos spams.`
+        : "Notez bien ce code : l'email arrive dans quelques minutes, sinon appelez-nous au 06 71 41 06 95.");
+      return show("valide");
+    }
+    if (body?.statut === "echec" || body?.statut === "annule") return show("echec");
+    if (tries >= MAX_TRIES) return show("en_attente");
+    await new Promise((r) => setTimeout(r, POLL_MS));
+    return check(id, tries + 1);
+  }
+
+  function init() {
+    const root = document.querySelector<HTMLElement>("[data-state='loading']");
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = "1";
+    const id = new URLSearchParams(location.search).get("bon");
+    if (!id) return show("echec");
+    check(id);
+  }
+
+  document.addEventListener("astro:page-load", init);
+</script>

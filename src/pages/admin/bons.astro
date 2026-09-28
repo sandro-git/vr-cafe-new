@@ -1,0 +1,331 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX } from "../../lib/bons-cadeaux";
+
+const fieldClass =
+  "w-full bg-white/5 ring-1 ring-white/10 text-white text-sm rounded-xl p-3 focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none placeholder:text-white/35";
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-5xl mx-auto">
+      <!-- En-tête -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Bons cadeaux</h1>
+          <p class="text-white/55 text-sm mt-0.5">Vendus en ligne (SumUp) ou au comptoir · valables 1 an</p>
+        </div>
+        <button
+          id="btn-new"
+          type="button"
+          class="inline-flex items-center justify-center gap-1 px-4 py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] text-white text-sm font-semibold rounded-xl transition-colors"
+        >
+          + Bon vendu au comptoir
+        </button>
+      </div>
+
+      <!-- Statistiques -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">À utiliser</p>
+          <p id="stat-valides" class="text-2xl font-bold text-green-300">—</p>
+        </div>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Expirent sous 30 j</p>
+          <p id="stat-expirent" class="text-2xl font-bold text-amber-300">—</p>
+        </div>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">Vendus ce mois</p>
+          <p id="stat-mois" class="text-2xl font-bold text-white">—</p>
+        </div>
+        <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4">
+          <p class="text-white/55 text-xs mb-1 uppercase tracking-wide">CA ce mois</p>
+          <p id="stat-ca" class="text-2xl font-bold text-[var(--color-brand-300)]">—</p>
+        </div>
+      </div>
+
+      <!-- Recherche + filtres -->
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <input
+          id="search"
+          type="search"
+          placeholder="Code, nom ou email…"
+          autocomplete="off"
+          class={`${fieldClass} sm:flex-1 font-medium`}
+        />
+        <div id="filters" class="flex gap-1 bg-white/5 ring-1 ring-white/10 rounded-xl p-1 overflow-x-auto no-scrollbar">
+          <button type="button" data-filter="a_utiliser" class="filter-btn">À utiliser</button>
+          <button type="button" data-filter="utilises" class="filter-btn">Utilisés</button>
+          <button type="button" data-filter="tous" class="filter-btn">Tous</button>
+        </div>
+      </div>
+
+      <div id="admin-error" role="alert" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
+
+      <div id="admin-loading" class="py-16 text-center">
+        <div class="inline-block w-10 h-10 border-4 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin mb-4"></div>
+        <p class="text-white/55">Chargement...</p>
+      </div>
+
+      <div id="bons-list" class="hidden space-y-3"></div>
+      <p id="bons-empty" class="hidden py-16 text-center text-white/55">Aucun bon ne correspond.</p>
+    </div>
+  </main>
+
+  <!-- Modale : bon vendu au comptoir -->
+  <div id="modal-new" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+    <form id="form-new" class="w-full max-w-md bg-[var(--color-surface-card)] border border-white/10 rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div>
+        <h2 class="text-lg font-bold text-white">Bon vendu au comptoir</h2>
+        <p class="text-white/55 text-sm">Encaissé au TPE. Le bon est valide tout de suite ; il est envoyé par email si vous indiquez une adresse.</p>
+      </div>
+      <label class="block">
+        <span class="block text-sm font-semibold text-white mb-1.5">Offre</span>
+        <select name="offre" class={fieldClass} required>
+          {OFFRES_BON.map((o) => <option value={o.id} class="bg-[var(--color-surface-card)]">{o.label} · {o.prix} €</option>)}
+        </select>
+      </label>
+      <label class="block">
+        <span class="block text-sm font-semibold text-white mb-1.5">Bénéficiaire</span>
+        <input name="beneficiaire_nom" maxlength={BON_NOM_MAX} required class={fieldClass} placeholder="Prénom du bénéficiaire" />
+      </label>
+      <label class="block">
+        <span class="block text-sm font-semibold text-white mb-1.5">Acheteur</span>
+        <input name="acheteur_nom" maxlength={BON_NOM_MAX} required class={fieldClass} placeholder="Nom de l'acheteur" />
+      </label>
+      <label class="block">
+        <span class="block text-sm font-semibold text-white mb-1.5">Email de l'acheteur <span class="font-normal text-white/45">(facultatif)</span></span>
+        <input name="acheteur_email" type="email" class={fieldClass} placeholder="Pour lui envoyer le bon" />
+      </label>
+      <label class="block">
+        <span class="block text-sm font-semibold text-white mb-1.5">Petit mot <span class="font-normal text-white/45">(facultatif)</span></span>
+        <textarea name="message" rows="2" maxlength={BON_MESSAGE_MAX} class={fieldClass}></textarea>
+      </label>
+      <p id="new-error" class="hidden text-sm text-red-300"></p>
+      <div class="flex gap-3 justify-end pt-2">
+        <button type="button" id="new-cancel" class="px-4 py-2.5 text-sm text-white/70 hover:text-white rounded-xl hover:bg-white/5">Fermer</button>
+        <button type="submit" id="new-submit" class="px-4 py-2.5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] disabled:opacity-60 text-white text-sm font-semibold rounded-xl">Créer le bon</button>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<style>
+  .filter-btn {
+    flex-shrink: 0;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.6rem;
+    font-size: 0.875rem;
+    color: rgb(255 255 255 / 0.55);
+  }
+  .filter-btn[aria-pressed="true"] {
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+  }
+</style>
+
+<script>
+  import { bonEtat, normalizeBonCode } from "../../lib/bons-cadeaux";
+
+  type Bon = {
+    id: string; code: string | null; offre_label: string; montant: number;
+    acheteur_nom: string; acheteur_email: string | null; beneficiaire_nom: string; message: string | null;
+    statut: "en_attente" | "valide" | "utilise" | "annule" | "echec"; mode_paiement: "en_ligne" | "comptoir";
+    sandbox: boolean; paye_le: string | null; expire_le: string | null; utilise_le: string | null;
+    email_envoye_le: string | null; created_at: string;
+  };
+
+  const ETATS: Record<string, { label: string; cls: string }> = {
+    valide: { label: "Valide", cls: "bg-green-500/15 text-green-300 border-green-500/30" },
+    utilise: { label: "Utilisé", cls: "bg-white/10 text-white/70 border-white/20" },
+    expire: { label: "Expiré", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+    annule: { label: "Annulé", cls: "bg-red-500/15 text-red-300 border-red-500/30" },
+    en_attente: { label: "Paiement en attente", cls: "bg-white/5 text-white/45 border-white/10" },
+    echec: { label: "Paiement échoué", cls: "bg-white/5 text-white/45 border-white/10" },
+  };
+
+  let bons: Bon[] = [];
+  let filter: "a_utiliser" | "utilises" | "tous" = "a_utiliser";
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const dateFr = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—");
+  const euros = (n: number) => `${Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
+
+  /** Élément DOM ; le texte passe par textContent (saisies publiques : jamais d'innerHTML). */
+  function h(tag: string, cls = "", text?: string | null, attrs: Record<string, string> = {}) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text != null) el.textContent = text;
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  async function api(action: string, params: Record<string, unknown> = {}) {
+    const res = await fetch("/api/admin/bons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...params }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Erreur serveur (${res.status})`);
+    return body.data;
+  }
+
+  function showError(msg: string | null) {
+    const box = $("admin-error");
+    box.textContent = msg ?? "";
+    box.classList.toggle("hidden", !msg);
+  }
+
+  async function load() {
+    try {
+      bons = await api("list");
+      $("admin-loading").classList.add("hidden");
+      render();
+    } catch (err) {
+      $("admin-loading").classList.add("hidden");
+      showError(`Chargement impossible : ${(err as Error).message}`);
+    }
+  }
+
+  function stats() {
+    const now = Date.now();
+    const in30 = now + 30 * 86400_000;
+    const valides = bons.filter((b) => bonEtat(b) === "valide");
+    const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0, 0, 0, 0);
+    const vendusMois = bons.filter((b) => !b.sandbox && b.paye_le && Date.parse(b.paye_le) >= debutMois.getTime() && b.statut !== "annule");
+    $("stat-valides").textContent = String(valides.length);
+    $("stat-expirent").textContent = String(valides.filter((b) => b.expire_le && Date.parse(b.expire_le) < in30).length);
+    $("stat-mois").textContent = String(vendusMois.length);
+    $("stat-ca").textContent = euros(vendusMois.reduce((s, b) => s + Number(b.montant), 0));
+  }
+
+  function matches(b: Bon, q: string) {
+    if (!q) return true;
+    const code = normalizeBonCode(q);
+    const hay = [b.code, b.acheteur_nom, b.acheteur_email, b.beneficiaire_nom].filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(q.toLowerCase()) || (!!b.code && b.code === code);
+  }
+
+  function render() {
+    stats();
+    document.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.filter === filter)));
+    const q = $<HTMLInputElement>("search").value.trim();
+    const list = bons.filter((b) => {
+      const etat = bonEtat(b);
+      // Une recherche porte toujours sur tous les bons (on cherche souvent un code précis)
+      if (!q && filter === "a_utiliser" && etat !== "valide" && etat !== "expire") return false;
+      if (!q && filter === "utilises" && etat !== "utilise") return false;
+      return matches(b, q);
+    });
+
+    const container = $("bons-list");
+    container.replaceChildren(...list.map(card));
+    container.classList.toggle("hidden", list.length === 0);
+    $("bons-empty").classList.toggle("hidden", list.length > 0);
+  }
+
+  function card(b: Bon) {
+    const etat = bonEtat(b);
+    const root = h("article", "bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4 sm:p-5", null, { "data-bon": b.id });
+
+    const top = h("div", "flex flex-wrap items-center gap-2 mb-2");
+    top.append(h("span", "font-mono text-lg font-bold tracking-wider text-white", b.code ?? "—"));
+    const e = ETATS[etat];
+    top.append(h("span", `text-xs px-2 py-0.5 rounded-full border ${e.cls}`, e.label));
+    if (b.mode_paiement === "comptoir") top.append(h("span", "text-xs px-2 py-0.5 rounded-full border border-white/15 text-white/55", "Comptoir"));
+    if (b.sandbox) top.append(h("span", "text-xs px-2 py-0.5 rounded-full border border-fuchsia-500/40 text-fuchsia-300", "TEST"));
+    top.append(h("span", "ml-auto text-sm font-semibold text-[var(--color-brand-300)]", `${b.offre_label} · ${euros(b.montant)}`));
+    root.append(top);
+
+    const info = h("div", "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm");
+    const line = (label: string, value: string) => {
+      const p = h("p", "text-white/55");
+      p.append(`${label} `, h("span", "text-white/85", value));
+      return p;
+    };
+    info.append(line("Pour", b.beneficiaire_nom));
+    info.append(line("De", b.acheteur_email ? `${b.acheteur_nom} · ${b.acheteur_email}` : b.acheteur_nom));
+    info.append(line("Acheté le", dateFr(b.paye_le ?? b.created_at)));
+    info.append(line(etat === "utilise" ? "Utilisé le" : "Valable jusqu'au", etat === "utilise" ? dateFr(b.utilise_le) : dateFr(b.expire_le)));
+    root.append(info);
+    if (b.message) root.append(h("p", "mt-2 text-sm italic text-white/55 whitespace-pre-line", `« ${b.message} »`));
+
+    const actions = h("div", "flex flex-wrap gap-2 mt-4");
+    const btn = (label: string, action: string, style: "primary" | "ghost" | "danger", confirmMsg?: string) => {
+      const cls = {
+        primary: "bg-green-600 hover:bg-green-500 text-white font-semibold",
+        ghost: "bg-white/5 hover:bg-white/10 text-white/70 border border-white/10",
+        danger: "text-red-300 hover:bg-red-500/10 border border-red-500/30",
+      }[style];
+      const el = h("button", `px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 ${cls}`, label, { type: "button" }) as HTMLButtonElement;
+      el.addEventListener("click", () => run(el, b, action, confirmMsg));
+      return el;
+    };
+    if (etat === "valide") actions.append(btn("✓ Marquer comme utilisé", "mark_used", "primary"));
+    if (etat === "expire") actions.append(btn("✓ Marquer comme utilisé", "mark_used", "primary", "Ce bon est expiré. Le marquer quand même comme utilisé ?"));
+    if (etat === "utilise") actions.append(btn("Annuler l'utilisation", "unmark_used", "ghost"));
+    if ((b.statut === "valide" || b.statut === "utilise") && b.acheteur_email)
+      actions.append(btn(b.email_envoye_le ? "Renvoyer l'email" : "Envoyer l'email", "resend_email", "ghost"));
+    if (b.statut === "valide") actions.append(btn("Annuler le bon", "cancel", "danger", "Annuler ce bon ? (ex. après un remboursement). Il ne pourra plus être utilisé."));
+    if (actions.childElementCount) root.append(actions);
+    return root;
+  }
+
+  async function run(button: HTMLButtonElement, b: Bon, action: string, confirmMsg?: string) {
+    if (confirmMsg && !confirm(confirmMsg)) return;
+    button.disabled = true;
+    showError(null);
+    try {
+      const updated: Bon = await api(action, { id: b.id });
+      bons = bons.map((x) => (x.id === updated.id ? updated : x));
+      render();
+      if (action === "resend_email") alert(`Email envoyé à ${updated.acheteur_email}.`);
+    } catch (err) {
+      showError((err as Error).message);
+      button.disabled = false;
+    }
+  }
+
+  function setupModal() {
+    const modal = $("modal-new");
+    const form = $<HTMLFormElement>("form-new");
+    const close = () => modal.classList.add("hidden");
+    $("btn-new").addEventListener("click", () => {
+      form.reset();
+      $("new-error").classList.add("hidden");
+      modal.classList.remove("hidden");
+      form.querySelector<HTMLInputElement>('[name="beneficiaire_nom"]')?.focus();
+    });
+    $("new-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submit = $<HTMLButtonElement>("new-submit");
+      submit.disabled = true;
+      try {
+        const bon: Bon = await api("create_comptoir", Object.fromEntries(new FormData(form)));
+        bons = [bon, ...bons];
+        filter = "a_utiliser";
+        $<HTMLInputElement>("search").value = "";
+        render();
+        close();
+        alert(`Bon créé : ${bon.code}${bon.email_envoye_le ? `\nEnvoyé par email à ${bon.acheteur_email}.` : ""}`);
+      } catch (err) {
+        const box = $("new-error");
+        box.textContent = (err as Error).message;
+        box.classList.remove("hidden");
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  // ── Démarrage (pas de View Transitions dans l'admin : script exécuté une fois) ──
+  $("search").addEventListener("input", render);
+  document.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach((btn) =>
+    btn.addEventListener("click", () => { filter = btn.dataset.filter as typeof filter; render(); }),
+  );
+  setupModal();
+  load();
+</script>
