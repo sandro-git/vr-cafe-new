@@ -21,6 +21,7 @@ const bon = (over: Partial<Bon> = {}): Bon => ({
   expire_le: "2027-09-28T18:30:00Z",
   utilise_le: null,
   email_envoye_le: null,
+  reservation_id: null,
   created_at: "2026-09-28T18:29:00Z",
   ...over,
 });

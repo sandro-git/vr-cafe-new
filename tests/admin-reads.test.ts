@@ -46,7 +46,7 @@ describe("runAdminRead", () => {
     expect(r).toEqual({ status: 200, body: { data: [{ id: UUID }] } });
     expect(supa.queries[0]).toEqual([
       ["from", "reservations"],
-      ["select", "*, reservation_boxes ( box_id, boxes ( nom, type ) )"],
+      ["select", "*, reservation_boxes ( box_id, boxes ( nom, type ) ), bons_cadeaux ( code, offre_label, montant, statut )"],
       ["gte", "creneau_debut", "2026-09-28T00:00:00.000Z"],
       ["lte", "creneau_debut", "2026-10-04T23:59:59.000Z"],
       ["order", "creneau_debut"],

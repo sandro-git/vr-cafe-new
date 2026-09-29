@@ -8,6 +8,7 @@ import {
   getOffreBon,
   isBonCode,
   normalizeBonCode,
+  resteAPayer,
   validateBonAchat,
 } from "../src/lib/bons-cadeaux";
 
@@ -88,5 +89,20 @@ describe("validateBonAchat", () => {
     expect(r.ok).toBe(false);
     expect(Object.keys(!r.ok ? r.errors : {}).sort()).toEqual(["acheteur_email", "acheteur_nom", "beneficiaire_nom", "message", "offre"]);
     expect(validateBonAchat({ ...ok, acheteur_email: "pas-un-email" }).ok).toBe(false);
+  });
+});
+
+describe("resteAPayer", () => {
+  it("déduit la valeur des bons du prix de la session", () => {
+    expect(resteAPayer(108, [{ montant: 58 }])).toEqual({ deduction: 58, reste: 50 });
+    expect(resteAPayer(116, [{ montant: 58 }, { montant: 58 }])).toEqual({ deduction: 116, reste: 0 });
+  });
+
+  it("un bon qui vaut plus que la session ne rend pas la monnaie", () => {
+    expect(resteAPayer(18, [{ montant: 58 }])).toEqual({ deduction: 18, reste: 0 });
+  });
+
+  it("prix inconnu : pas de reste calculé", () => {
+    expect(resteAPayer(null, [{ montant: 29 }])).toEqual({ deduction: 29, reste: null });
   });
 });

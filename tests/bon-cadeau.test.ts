@@ -12,15 +12,24 @@ vi.mock("../src/lib/notify.ts", () => ({
   notifyNewReservation: async (msg: { title: string; body: string; url: string }) => { push.calls.push(msg); },
 }));
 
-const db = vi.hoisted(() => ({ rows: new Map<string, any>(), duplicateCodes: 0 }));
+const db = vi.hoisted(() => ({ rows: new Map<string, any>(), reservations: new Map<string, any>(), duplicateCodes: 0 }));
 vi.mock("../netlify/lib/bon-repo.ts", async (orig) => {
   const { DuplicateCodeError } = await orig<typeof import("../netlify/lib/bon-repo.ts")>();
   const repo = {
     async getById(id: string) { return db.rows.get(id) ?? null; },
     async getByCheckoutId(cid: string) { return [...db.rows.values()].find((b) => b.sumup_checkout_id === cid) ?? null; },
+    async getByCode(code: string) { const b = [...db.rows.values()].find((b) => b.code === code); return b ? { ...b } : null; },
+    async listByReservation(rid: string) { return [...db.rows.values()].filter((b) => b.reservation_id === rid); },
+    async getReservation(id: string) { return db.reservations.get(id) ?? null; },
+    async attachReservation(bonId: string, rid: string, from: string | null) {
+      const row = db.rows.get(bonId);
+      if (!row || row.statut !== "valide" || (row.reservation_id ?? null) !== from) return null;
+      row.reservation_id = rid;
+      return { ...row };
+    },
     async insert(bon: any) {
       if (bon.code && db.duplicateCodes > 0) { db.duplicateCodes--; throw new DuplicateCodeError("dup"); }
-      const row = { code: null, sumup_checkout_id: null, sumup_transaction_code: null, paye_le: null, expire_le: null, utilise_le: null,
+      const row = { code: null, reservation_id: null, sumup_checkout_id: null, sumup_transaction_code: null, paye_le: null, expire_le: null, utilise_le: null,
         email_envoye_le: null, sandbox: false, mode_paiement: "en_ligne", created_at: new Date().toISOString(), ...bon };
       db.rows.set(bon.id, row);
       return { ...row };
@@ -41,6 +50,8 @@ import checkout from "../netlify/functions/bon-cadeau-checkout.mts";
 import statut, { maskEmail } from "../netlify/functions/bon-cadeau-statut.mts";
 import webhook from "../netlify/functions/sumup-webhook.mts";
 import adminBons from "../netlify/functions/admin-bons.mts";
+import bonReservation from "../netlify/functions/bon-cadeau-reservation.mts";
+import { generateReservationToken } from "../netlify/lib/reservation-token";
 import { createAdminSession } from "../netlify/lib/admin-session";
 import { isBonCode } from "../src/lib/bons-cadeaux";
 
@@ -77,6 +88,7 @@ const ACHAT = { offre: "60_duo", acheteur_nom: "Marie Curie", acheteur_email: "m
 
 beforeEach(() => {
   db.rows.clear();
+  db.reservations.clear();
   db.duplicateCodes = 0;
   push.calls.length = 0;
   state.calls.length = 0;
@@ -349,5 +361,108 @@ describe("/api/admin/bons", () => {
   it("id invalide ou action inconnue → 400", async () => {
     expect((await post({ action: "mark_used", id: "1; drop table" })).status).toBe(400);
     expect((await post({ action: "delete_all", id: "00000000-0000-4000-8000-000000000000" })).status).toBe(400);
+  });
+});
+
+describe("bon cadeau dans une réservation (/api/bon-cadeau/verifier et /rattacher)", () => {
+  const RESA = "aaaaaaaa-0000-4000-8000-000000000001";
+  const RESA2 = "aaaaaaaa-0000-4000-8000-000000000002";
+  const resa = (id: string, over: Record<string, unknown> = {}) =>
+    db.reservations.set(id, { id, statut: "confirmée", created_at: new Date().toISOString(), type_reservation: "standard", duree_minutes: 60, nb_personnes: 2, ...over });
+
+  const call = async (action: "verifier" | "rattacher", body: Record<string, unknown>, origin: string | null = ORIGIN) => {
+    const res = await bonReservation(new Request(`https://vr-cafe.fr/api/bon-cadeau/${action}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(origin ? { origin } : {}) },
+      body: JSON.stringify(body),
+    }), {} as any);
+    return { status: res.status, body: await res.json() };
+  };
+  async function validBon() {
+    await buy();
+    await hook(pay().id);
+    return onlyBon();
+  }
+
+  it("vérifier : code saisi à la main accepté, infos publiques seulement (pas de nom ni d'email)", async () => {
+    const bon = await validBon();
+    const res = await call("verifier", { code: bon.code.toLowerCase().replace(/-/g, " ") });
+    expect(res.body).toEqual({
+      ok: true,
+      bon: { code: bon.code, offre_label: "1h duo", montant: 58, duree_minutes: 60, nb_personnes: 2, expire_le: bon.expire_le },
+    });
+  });
+
+  it("vérifier : code inconnu, en attente de paiement, utilisé, annulé, expiré → refus avec message", async () => {
+    expect((await call("verifier", { code: "VRC-2222-2222" })).body).toMatchObject({ ok: false, raison: "inconnu" });
+    expect((await call("verifier", { code: 42 })).body.raison).toBe("inconnu");
+    const bon = await validBon();
+    for (const [patch, raison] of [
+      [{ statut: "utilise" }, "utilise"],
+      [{ statut: "annule" }, "annule"],
+      [{ statut: "valide", expire_le: "2020-01-01T00:00:00Z" }, "expire"],
+      [{ statut: "en_attente" }, "inconnu"],
+    ] as const) {
+      Object.assign(db.rows.get(bon.id), patch);
+      const res = await call("verifier", { code: bon.code });
+      expect(res.body.raison).toBe(raison);
+      expect(res.body.error).toBeTruthy();
+    }
+  });
+
+  it("vérifier : origine inconnue → 403", async () => {
+    expect((await call("verifier", { code: "VRC-2222-2222" }, "https://evil.example")).status).toBe(403);
+  });
+
+  it("rattacher : le bon est lié à la réservation et ne peut plus servir ailleurs", async () => {
+    const bon = await validBon();
+    resa(RESA);
+    resa(RESA2);
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA })).body.ok).toBe(true);
+    expect(onlyBon().reservation_id).toBe(RESA);
+    // double envoi du même formulaire : sans effet
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA })).status).toBe(200);
+
+    expect((await call("verifier", { code: bon.code })).body.raison).toBe("deja_reserve");
+    const autre = await call("rattacher", { code: bon.code, reservation_id: RESA2 });
+    expect(autre).toMatchObject({ status: 409, body: { raison: "deja_reserve" } });
+    expect(onlyBon().reservation_id).toBe(RESA);
+  });
+
+  it("réservation annulée : le bon redevient utilisable (même si la base ne l'a pas encore libéré)", async () => {
+    const bon = await validBon();
+    resa(RESA, { statut: "annulée" });
+    db.rows.get(bon.id).reservation_id = RESA;
+    resa(RESA2);
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA2 })).body.ok).toBe(true);
+    expect(onlyBon().reservation_id).toBe(RESA2);
+  });
+
+  it("rattacher : seulement une réservation standard confirmée, créée il y a moins de 10 min", async () => {
+    const bon = await validBon();
+    resa(RESA, { created_at: new Date(Date.now() - 11 * 60_000).toISOString() });
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA })).body.raison).toBe("reservation");
+    resa(RESA, { type_reservation: "anniversaire" });
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA })).body.raison).toBe("reservation");
+    resa(RESA, { statut: "annulée" });
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA })).body.raison).toBe("reservation");
+    expect((await call("rattacher", { code: bon.code, reservation_id: "inconnue" })).body.raison).toBe("reservation");
+    expect((await call("rattacher", { code: bon.code })).status).toBe(400);
+    expect(onlyBon().reservation_id).toBeNull();
+  });
+
+  it("modification de réservation : le bon passe de l'ancienne à la nouvelle, avec un lien valide seulement", async () => {
+    const bon = await validBon();
+    resa(RESA);
+    resa(RESA2);
+    db.rows.get(bon.id).reservation_id = RESA;
+
+    const faux = await call("rattacher", { code: bon.code, reservation_id: RESA2, remplace_id: RESA, token: "faux" });
+    expect(faux.body.raison).toBe("deja_reserve");
+
+    const token = await generateReservationToken(RESA);
+    expect((await call("verifier", { code: bon.code, remplace_id: RESA, token })).body.ok).toBe(true);
+    expect((await call("rattacher", { code: bon.code, reservation_id: RESA2, remplace_id: RESA, token })).body.ok).toBe(true);
+    expect(onlyBon().reservation_id).toBe(RESA2);
   });
 });

@@ -7,7 +7,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type AdminReadResult = { status: number; body: Record<string, unknown> };
 
-const RESERVATION_WITH_BOXES = "*, reservation_boxes ( box_id, boxes ( nom, type ) )";
+// Bons cadeaux rattachés (champ « Bon cadeau » du formulaire) : badge dans /admin/reservations
+const RESERVATION_WITH_BOXES = "*, reservation_boxes ( box_id, boxes ( nom, type ) ), bons_cadeaux ( code, offre_label, montant, statut )";
 const SUGGESTION_COLUMNS = { nom: "client_nom", email: "client_email", telephone: "client_telephone" } as const;
 const MAX_RANGE_DAYS = 62;
 

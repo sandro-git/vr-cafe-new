@@ -106,3 +106,26 @@ export function validateBonAchat(input: Record<string, unknown>): { ok: true; va
     value: { offre: offreBon!, acheteur_nom, acheteur_email, beneficiaire_nom, message: message || null },
   };
 }
+
+// ── Utilisation d'un bon dans une réservation ────────────────────────────────
+
+export type BonRefus = "inconnu" | "utilise" | "expire" | "annule" | "deja_reserve";
+
+export const BON_REFUS_MESSAGES: Record<BonRefus, string> = {
+  inconnu: "Code inconnu. Vérifiez la saisie (ex. VRC-7K2M-9QXA).",
+  utilise: "Ce bon cadeau a déjà été utilisé.",
+  expire: "Ce bon cadeau a expiré.",
+  annule: "Ce bon cadeau n'est plus valable.",
+  deja_reserve: "Ce bon cadeau est déjà utilisé pour une autre réservation.",
+};
+
+/**
+ * Remise des bons sur le montant de la session. Un bon s'utilise en une fois :
+ * s'il vaut plus que la session, la différence est perdue (reste = 0).
+ */
+export function resteAPayer(total: number | null, bons: { montant: number }[]): { deduction: number; reste: number | null } {
+  const valeur = bons.reduce((s, b) => s + Number(b.montant), 0);
+  if (total === null) return { deduction: valeur, reste: null };
+  const deduction = Math.min(valeur, total);
+  return { deduction, reste: total - deduction };
+}

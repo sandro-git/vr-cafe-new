@@ -4,7 +4,7 @@
 //    paiement chez SumUp (le webhook n'est pas signé : on ne croit que l'API), vérifie montant,
 //    référence et marchand, puis passe le bon en « valide » par un UPDATE conditionnel
 //    (WHERE statut = 'en_attente') → le bon n'est activé, envoyé et notifié qu'une fois.
-import { bonExpiry, generateBonCode, getOffreBon, type BonAchat } from "../../src/lib/bons-cadeaux.ts";
+import { bonEtat, bonExpiry, generateBonCode, getOffreBon, isBonCode, normalizeBonCode, type BonAchat, type BonRefus } from "../../src/lib/bons-cadeaux.ts";
 import { notifyNewReservation } from "../../src/lib/notify.ts";
 import { DuplicateCodeError, type Bon, type BonRepo, type NewBon } from "./bon-repo.ts";
 import { sendBonAdminEmail, sendBonClientEmail } from "./bon-cadeau-emails.ts";
@@ -175,4 +175,69 @@ export async function createComptoirBon(repo: BonRepo, achat: Omit<BonAchat, "ac
       if (!(err instanceof DuplicateCodeError) || attempt >= CODE_ATTEMPTS) throw err;
     }
   }
+}
+
+// ── Utilisation d'un bon dans une réservation (formulaire /reservation) ──────
+
+/** Le rattachement n'est accepté que juste après la création de la réservation par le formulaire. */
+export const ATTACH_WINDOW_MINUTES = 10;
+
+export type BonCheck = { ok: true; bon: Bon; from: string | null } | { ok: false; raison: BonRefus };
+
+/**
+ * Le bon `rawCode` peut-il payer une réservation ?
+ * `remplaceId` : réservation en cours de modification (lien vérifié par l'appelant), dont
+ * les bons peuvent être repris par la nouvelle réservation.
+ */
+export async function checkBonUtilisable(
+  repo: BonRepo,
+  rawCode: unknown,
+  { remplaceId = null as string | null, reservationId = null as string | null, now = Date.now() } = {},
+): Promise<BonCheck> {
+  const code = typeof rawCode === "string" ? normalizeBonCode(rawCode) : "";
+  if (!isBonCode(code)) return { ok: false, raison: "inconnu" };
+  const bon = await repo.getByCode(code);
+  if (!bon || bon.statut === "en_attente" || bon.statut === "echec") return { ok: false, raison: "inconnu" };
+  const etat = bonEtat(bon, now);
+  if (etat === "utilise" || etat === "annule" || etat === "expire") return { ok: false, raison: etat };
+
+  if (bon.reservation_id) {
+    // Déjà rattaché à cette réservation (double envoi) ou à celle qu'elle remplace
+    if (bon.reservation_id === reservationId || (remplaceId && bon.reservation_id === remplaceId)) return { ok: true, bon, from: bon.reservation_id };
+    const resa = await repo.getReservation(bon.reservation_id);
+    if (resa && resa.statut !== "annulée") return { ok: false, raison: "deja_reserve" };
+  }
+  return { ok: true, bon, from: bon.reservation_id };
+}
+
+/** Infos d'un bon utilisable, montrées dans le formulaire (jamais les noms ni l'email). */
+export function bonPublic(bon: Bon) {
+  const offre = getOffreBon(bon.offre);
+  return {
+    code: bon.code,
+    offre_label: bon.offre_label,
+    montant: Number(bon.montant),
+    duree_minutes: offre?.duree_minutes ?? null,
+    nb_personnes: offre?.nb_personnes ?? null,
+    expire_le: bon.expire_le,
+  };
+}
+
+/** Rattache le bon à une réservation standard qui vient d'être créée par le formulaire. */
+export async function attachBonToReservation(
+  repo: BonRepo,
+  rawCode: unknown,
+  reservationId: string,
+  { remplaceId = null as string | null, now = Date.now() } = {},
+): Promise<{ ok: true; bon: Bon } | { ok: false; raison: BonRefus | "reservation" }> {
+  const resa = await repo.getReservation(reservationId);
+  const recente = resa && now - Date.parse(resa.created_at) < ATTACH_WINDOW_MINUTES * 60_000;
+  if (!resa || !recente || resa.statut !== "confirmée" || (resa.type_reservation ?? "standard") !== "standard") {
+    return { ok: false, raison: "reservation" };
+  }
+  const check = await checkBonUtilisable(repo, rawCode, { remplaceId, reservationId, now });
+  if (!check.ok) return check;
+  if (check.bon.reservation_id === reservationId) return { ok: true, bon: check.bon }; // déjà fait (double envoi)
+  const bon = await repo.attachReservation(check.bon.id, reservationId, check.from);
+  return bon ? { ok: true, bon } : { ok: false, raison: "deja_reserve" };
 }

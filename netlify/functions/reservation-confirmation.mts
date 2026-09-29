@@ -3,6 +3,7 @@ import Mailjet from "node-mailjet";
 import { createClient } from "@supabase/supabase-js";
 import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from "../../src/lib/pricing.ts";
+import { resteAPayer } from "../../src/lib/bons-cadeaux.ts";
 import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
 import { generateReservationToken } from "../lib/reservation-token.ts";
 import { hasMinNotice } from "../lib/reservation-notice.ts";
@@ -162,6 +163,19 @@ export default async (req: Request, _context: Context) => {
   const prixAnniversaire = typeReservation === "anniversaire" ? await getPrixAnniversaire() : undefined;
   const montant = calcMontantReservation(typeReservation, duree_minutes, nb_personnes, prixAnniversaire);
   const montantFmt = montant !== null ? `${montant} €` : null;
+
+  // Bons cadeaux rattachés à la réservation (lus en base, jamais fournis par le client)
+  let bons: { code: string; offre_label: string; montant: number }[] = [];
+  if (id && supabase) {
+    try {
+      const { data } = await supabase.from("bons_cadeaux").select("code, offre_label, montant").eq("reservation_id", id).eq("statut", "valide");
+      bons = (data ?? []).map((b: any) => ({ ...b, montant: Number(b.montant) }));
+    } catch (error) {
+      console.error("Lookup of gift vouchers failed:", error);
+    }
+  }
+  const remise = bons.length ? resteAPayer(montant, bons) : null;
+  const bonsCodes = bons.map((b) => b.code).join(", ");
   let actionButtonsHtml = "";
   if (canSelfManage) {
     const cancelToken = await generateReservationToken(id);
@@ -255,7 +269,15 @@ export default async (req: Request, _context: Context) => {
             </tr>
             ${montantFmt ? `<tr>
               <td style="padding: 8px 0; border-top: 1px solid #334155; color: #64748b; font-size: 14px;">💶 Montant total</td>
-              <td style="padding: 8px 0; border-top: 1px solid #334155; color: #4ade80; font-size: 16px; font-weight: bold; text-align: right;">${montantFmt}</td>
+              <td style="padding: 8px 0; border-top: 1px solid #334155; color: ${remise ? "#e2e8f0" : "#4ade80"}; font-size: ${remise ? "14px" : "16px; font-weight: bold"}; text-align: right;">${montantFmt}</td>
+            </tr>` : ""}
+            ${remise ? `<tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">🎁 Bon${bons.length > 1 ? "s" : ""} cadeau ${escHtml(bonsCodes)}</td>
+              <td style="padding: 8px 0; color: #e2e8f0; font-size: 14px; text-align: right;">−${remise.deduction} €</td>
+            </tr>` : ""}
+            ${remise && remise.reste !== null ? `<tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Reste à payer sur place</td>
+              <td style="padding: 8px 0; color: #4ade80; font-size: 16px; font-weight: bold; text-align: right;">${remise.reste} €</td>
             </tr>` : ""}
           </table>
         </div>
@@ -296,6 +318,7 @@ export default async (req: Request, _context: Context) => {
         <p style="margin: 4px 0;"><strong>Type VR :</strong> ${vrIcon} ${escHtml(vrLabel)}</p>
         <p style="margin: 4px 0;"><strong>Box :</strong> ${escHtml(box_names)}</p>
         ${montantFmt ? `<p style="margin: 4px 0;"><strong>Montant :</strong> ${escHtml(montantFmt)}</p>` : ""}
+        ${remise ? `<p style="margin: 4px 0;"><strong>🎁 Bon${bons.length > 1 ? "s" : ""} cadeau :</strong> ${escHtml(bons.map((b) => `${b.code} (${b.offre_label})`).join(", "))} → −${remise.deduction} €${remise.reste !== null ? `, reste à payer : <strong>${remise.reste} €</strong>` : ""}</p>` : ""}
         ${notes ? `<p style="margin: 4px 0;"><strong>Notes :</strong> ${escHtml(notes)}</p>` : ""}
       </div>
     </div>

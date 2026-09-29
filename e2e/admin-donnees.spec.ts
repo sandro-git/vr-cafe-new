@@ -60,6 +60,18 @@ test.afterEach(() => {
   expect(supabase.unhandled).toEqual([]);
 });
 
+test("/admin/reservations : badge 🎁 des bons cadeaux rattachés, lien vers /admin/bons", async ({ page }) => {
+  reads.list_reservations = () => [resa({ bons_cadeaux: [{ code: "VRC-7K2M-9QXA", offre_label: "1h duo", montant: 58, statut: "valide" }] })];
+  try {
+    await page.goto("/admin/reservations");
+    const badge = page.locator("#reservations-body [data-bon-badge]");
+    await expect(badge).toHaveText("🎁 VRC-7K2M-9QXA");
+    await expect(badge).toHaveAttribute("href", "/admin/bons?q=VRC-7K2M-9QXA");
+  } finally {
+    reads.list_reservations = () => [resa(), resa({ id: "b2", client_nom: "Bob Martin", statut: "annulée" })];
+  }
+});
+
 test("/admin/reservations : réservations du jour lues via l'API admin", async ({ page }) => {
   await page.goto("/admin/reservations");
   await expect(page.locator("#admin-table-wrap")).toBeVisible();

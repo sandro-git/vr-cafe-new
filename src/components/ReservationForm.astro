@@ -153,6 +153,24 @@ const {
 
         <PhoneCountryField mode={mode} />
 
+        <!-- Bon cadeau : vérifié à l'ajout (/api/bon-cadeau/verifier), rattaché après création -->
+        <div id="bon-section">
+          <label for="bon-code" class="block text-sm font-medium text-white/70 mb-1.5">🎁 Bon cadeau (optionnel)</label>
+          <div class="flex gap-2">
+            <input
+              type="text" id="bon-code" placeholder="VRC-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"
+              class="flex-1 min-w-0 bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35 placeholder:normal-case"
+            />
+            <button
+              type="button" id="btn-bon-apply"
+              class="shrink-0 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-wait"
+            >Appliquer</button>
+          </div>
+          <p id="bon-error" role="alert" class="hidden mt-1.5 text-sm text-red-300"></p>
+          <ul id="bon-list" class="mt-2 space-y-2"></ul>
+          <div id="bon-summary" class="hidden mt-3 p-3 rounded-xl bg-green-500/10 ring-1 ring-green-500/25 text-sm text-white/80 space-y-1"></div>
+        </div>
+
         <div>
           <label for="client-notes" class="block text-sm font-medium text-white/70 mb-1.5">Notes (optionnel)</label>
           <textarea
@@ -205,6 +223,7 @@ const {
   import { headsetBadgeHtml } from '../lib/headsetBadge';
   import { newReservationId } from '../lib/uuid';
   import { fetchClientSuggestions } from '../lib/admin-read.js';
+  import { normalizeBonCode, resteAPayer } from '../lib/bons-cadeaux';
 
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
@@ -251,6 +270,9 @@ const {
   const replaceId = prefillParams.get('remplace');
   const replaceToken = prefillParams.get('token');
   let replacing = null; // { id, token, ref } une fois le lien vérifié
+
+  // ── Bons cadeaux appliqués (infos publiques renvoyées par /api/bon-cadeau/verifier) ─
+  let appliedBons = [];
 
   // ── Initialisation ────────────────────────────────────────────────────────
   async function init() {
@@ -321,6 +343,9 @@ const {
       note.innerHTML = `✏️ Vous modifiez votre réservation <strong class="text-white">#${esc(replacing.ref)}</strong> du ${esc(dateFmt)} à ${esc(heure)}. `
         + `Elle reste valable jusqu'à la confirmation du nouveau créneau, puis sera annulée automatiquement.`;
       note.classList.remove('hidden');
+
+      // Bons de la réservation modifiée : repris d'office (ils suivent la nouvelle réservation)
+      for (const code of data.bons_cadeaux ?? []) await applyBon(code);
     } catch (err) {
       console.error('Replace lookup failed:', err);
     }
@@ -485,6 +510,102 @@ const {
     document.getElementById('btn-back-1').addEventListener('click', () => showStep(1));
     document.getElementById('btn-back-2').addEventListener('click', () => showStep(2));
     document.getElementById('reservation-form').addEventListener('submit', handleSubmit);
+    setupBons();
+  }
+
+  // ── Bons cadeaux ──────────────────────────────────────────────────────────
+  function replacingParams() {
+    return replacing ? { remplace_id: replacing.id, token: replacing.token } : {};
+  }
+
+  function setupBons() {
+    const input = /** @type {HTMLInputElement} */ (document.getElementById('bon-code'));
+    document.getElementById('btn-bon-apply').addEventListener('click', () => applyBon(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); applyBon(input.value); }
+    });
+  }
+
+  /** Vérifie un code et l'ajoute aux bons appliqués. Renvoie true si le bon est appliqué. */
+  async function applyBon(raw) {
+    const code = normalizeBonCode(raw ?? '');
+    const input = /** @type {HTMLInputElement} */ (document.getElementById('bon-code'));
+    const btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-bon-apply'));
+    hideError('bon-error');
+    if (!code) return true;
+    if (appliedBons.some(b => b.code === code)) { input.value = ''; return true; }
+
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/bon-cadeau/verifier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, ...replacingParams() }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.ok) {
+        showError('bon-error', body.error ?? 'Impossible de vérifier le bon. Réessayez.');
+        return false;
+      }
+      appliedBons.push(body.bon);
+      input.value = '';
+      renderBons();
+      return true;
+    } catch {
+      showError('bon-error', 'Impossible de vérifier le bon. Vérifiez votre connexion et réessayez.');
+      return false;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderBons() {
+    const list = document.getElementById('bon-list');
+    list.innerHTML = appliedBons.map((b, i) => `
+      <li class="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 ring-1 ring-white/10 text-sm" data-bon-code="${esc(b.code)}">
+        <span class="font-mono text-white">${esc(b.code)}</span>
+        <span class="text-white/55">${esc(b.offre_label)} · ${b.montant} €</span>
+        <button type="button" data-remove-bon="${i}" class="ml-auto text-white/45 hover:text-red-300 transition-colors" aria-label="Retirer le bon ${esc(b.code)}">Retirer</button>
+      </li>`).join('');
+    list.querySelectorAll('[data-remove-bon]').forEach(btn => btn.addEventListener('click', () => {
+      appliedBons.splice(Number(btn.getAttribute('data-remove-bon')), 1);
+      renderBons();
+    }));
+    renderBonSummary();
+  }
+
+  /** Remise des bons sur la session choisie (recalculée si on revient changer la durée ou les joueurs). */
+  function renderBonSummary() {
+    const box = document.getElementById('bon-summary');
+    if (!appliedBons.length || !selectedDuree) { box.classList.add('hidden'); return; }
+    const total = calcMontant(selectedDuree.duree_minutes, selectedNb);
+    const { deduction, reste } = resteAPayer(total, appliedBons);
+    const valeur = appliedBons.reduce((s, b) => s + b.montant, 0);
+    box.innerHTML = total === null
+      ? `<p>🎁 Bon${appliedBons.length > 1 ? 's' : ''} cadeau appliqué${appliedBons.length > 1 ? 's' : ''} : ${valeur} € déduits sur place.</p>`
+      : `<p class="flex justify-between"><span>Session</span><span>${total} €</span></p>
+         <p class="flex justify-between"><span>Bon${appliedBons.length > 1 ? 's' : ''} cadeau</span><span>−${deduction} €</span></p>
+         <p class="flex justify-between font-semibold text-white pt-1 border-t border-white/10"><span>Reste à payer sur place</span><span id="bon-reste">${reste} €</span></p>
+         ${valeur > total ? `<p class="text-amber-300 text-xs pt-1">La valeur des bons (${valeur} €) dépasse le prix de cette session : la différence n'est pas remboursée. Vous pouvez ajouter du temps ou des joueurs.</p>` : ''}`;
+    box.classList.remove('hidden');
+  }
+
+  /** Rattache les bons à la réservation créée. Renvoie les codes qui n'ont pas pu l'être. */
+  async function attachBons(reservationId) {
+    const failed = [];
+    for (const b of appliedBons) {
+      try {
+        const res = await fetch('/api/bon-cadeau/rattacher', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: b.code, reservation_id: reservationId, ...replacingParams() }),
+        });
+        if (!res.ok) failed.push(b.code);
+      } catch {
+        failed.push(b.code);
+      }
+    }
+    return failed;
   }
 
   function checkStep1Valid() {
@@ -645,6 +766,7 @@ const {
       `⏰ ${h1} → ${h2} (${selectedDuree.label})<br>` +
       `👥 ${selectedNb} joueur${selectedNb > 1 ? 's' : ''} &nbsp;·&nbsp; ${headsetBadgeHtml(selectedVrType)}`;
 
+    renderBonSummary();
     showStep(3);
   }
 
@@ -669,6 +791,13 @@ const {
       return;
     }
     const telFormatted = formatPhoneForStorage(tel, telCountry);
+
+    // Code saisi mais pas encore appliqué : on le vérifie avant de réserver
+    const pendingCode = /** @type {HTMLInputElement} */ (document.getElementById('bon-code')).value.trim();
+    if (pendingCode && !(await applyBon(pendingCode))) {
+      showError('form-error', 'Le bon cadeau saisi n\'est pas valable : corrigez-le ou videz le champ.');
+      return;
+    }
 
     const btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-submit'));
     btn.disabled = true;
@@ -717,6 +846,10 @@ const {
 
       if (boxErr) throw boxErr;
 
+      // Bons cadeaux : rattachés avant l'annulation de l'ancienne réservation (modification)
+      // et avant l'email, qui relit les bons de la réservation en base
+      const failedBons = appliedBons.length ? await attachBons(res.id) : [];
+
       // Modification : annuler l'ancienne réservation maintenant que la nouvelle existe
       let replaceResult = null;
       if (replacing) {
@@ -761,7 +894,7 @@ const {
         body: JSON.stringify({ id: res.id }),
       }).catch(() => {});
 
-      showConfirmation(res, assignedBoxes, replaceResult);
+      showConfirmation(res, assignedBoxes, replaceResult, failedBons);
     } catch (err) {
       console.error(err);
       showError('form-error', 'Une erreur est survenue. Veuillez réessayer.');
@@ -770,7 +903,7 @@ const {
     }
   }
 
-  function showConfirmation(res, boxes, replaceResult = null) {
+  function showConfirmation(res, boxes, replaceResult = null, failedBons = []) {
     if (mode === 'admin') {
       window.location.href = successRedirect;
       return;
@@ -820,13 +953,27 @@ const {
       </div>
       ${(() => {
         const montant = calcMontant(res.duree_minutes, res.nb_personnes);
-        return montant !== null
-          ? `<div class="flex justify-between pt-3 border-t border-white/10 mt-1">
+        if (montant === null) return '';
+        const bons = appliedBons.filter(b => !failedBons.includes(b.code));
+        const totalRow = `<div class="flex justify-between pt-3 border-t border-white/10 mt-1">
         <span class="text-white/55 font-medium">Montant total</span>
-        <span class="text-green-400 font-bold">${montant} €</span>
-      </div>`
-          : '';
+        <span class="${bons.length ? 'text-white' : 'text-green-400 font-bold'}">${montant} €</span>
+      </div>`;
+        if (!bons.length) return totalRow;
+        const { deduction, reste } = resteAPayer(montant, bons);
+        return totalRow + `
+      <div class="flex justify-between">
+        <span class="text-white/55">🎁 Bon${bons.length > 1 ? 's' : ''} ${esc(bons.map(b => b.code).join(', '))}</span>
+        <span class="text-white">−${deduction} €</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-white/55 font-medium">Reste à payer sur place</span>
+        <span id="confirmation-reste" class="text-green-400 font-bold">${reste} €</span>
+      </div>`;
       })()}
+      ${failedBons.length
+        ? `<p class="pt-3 border-t border-white/10 mt-1 text-amber-300">⚠️ Le bon ${esc(failedBons.join(', '))} n'a pas pu être rattaché à la réservation. Présentez-le à votre arrivée.</p>`
+        : ''}
       ${replaceResult === 'ok'
         ? `<p class="pt-3 border-t border-white/10 mt-1 text-white/70">✔️ Votre ancienne réservation <strong class="text-white">#${esc(replacing.ref)}</strong> a été annulée.</p>`
         : replaceResult === 'failed'

@@ -133,6 +133,7 @@ const fieldClass =
     statut: "en_attente" | "valide" | "utilise" | "annule" | "echec"; mode_paiement: "en_ligne" | "comptoir";
     sandbox: boolean; paye_le: string | null; expire_le: string | null; utilise_le: string | null;
     email_envoye_le: string | null; created_at: string;
+    reservation_id: string | null; reservation?: { creneau_debut: string; statut: string } | null;
   };
 
   const ETATS: Record<string, { label: string; cls: string }> = {
@@ -250,6 +251,10 @@ const fieldClass =
     info.append(line(etat === "utilise" ? "Utilisé le" : "Valable jusqu'au", etat === "utilise" ? dateFr(b.utilise_le) : dateFr(b.expire_le)));
     root.append(info);
     if (b.message) root.append(h("p", "mt-2 text-sm italic text-white/55 whitespace-pre-line", `« ${b.message} »`));
+    if (b.reservation && b.reservation.statut !== "annulée") {
+      const quand = new Date(b.reservation.creneau_debut).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+      root.append(h("p", "mt-2 text-sm text-green-300", `📅 Réservé pour le ${quand}`));
+    }
 
     const actions = h("div", "flex flex-wrap gap-2 mt-4");
     const btn = (label: string, action: string, style: "primary" | "ghost" | "danger", confirmMsg?: string) => {
@@ -322,6 +327,9 @@ const fieldClass =
   }
 
   // ── Démarrage (pas de View Transitions dans l'admin : script exécuté une fois) ──
+  // ?q=CODE : lien depuis le badge 🎁 d'une réservation (/admin/reservations)
+  const q = new URLSearchParams(location.search).get("q");
+  if (q) $<HTMLInputElement>("search").value = q;
   $("search").addEventListener("input", render);
   document.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach((btn) =>
     btn.addEventListener("click", () => { filter = btn.dataset.filter as typeof filter; render(); }),

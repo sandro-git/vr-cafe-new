@@ -48,6 +48,13 @@ export default async (req: Request, _context: Context) => {
     return json({ error: "Reservation not found" }, 404);
   }
 
+  // Bons cadeaux rattachés : repris par le formulaire en cas de modification
+  const { data: bons } = await supabase
+    .from("bons_cadeaux")
+    .select("code")
+    .eq("reservation_id", id)
+    .eq("statut", "valide");
+
   const vrType = ((reservation as any).reservation_boxes ?? [])[0]?.boxes?.type ?? "filaire";
 
   return json({
@@ -66,6 +73,7 @@ export default async (req: Request, _context: Context) => {
     },
     can_cancel: reservation.statut === "confirmée" && hasMinNotice(reservation.creneau_debut),
     already_cancelled: reservation.statut === "annulée",
+    bons_cadeaux: (bons ?? []).map((b: { code: string }) => b.code),
   });
 };
 
