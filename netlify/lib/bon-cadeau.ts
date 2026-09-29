@@ -7,8 +7,8 @@
 import { bonEtat, bonExpiry, generateBonCode, getOffreBon, isBonCode, normalizeBonCode, type BonAchat, type BonRefus } from "../../src/lib/bons-cadeaux.ts";
 import { notifyNewReservation } from "../../src/lib/notify.ts";
 import { DuplicateCodeError, type Bon, type BonRepo, type NewBon } from "./bon-repo.ts";
-import { sendBonAdminEmail, sendBonClientEmail } from "./bon-cadeau-emails.ts";
-import { createHostedCheckout, getCheckout, type SumUpConfig } from "./sumup.ts";
+import { sendBonAdminEmail, sendBonClientEmail, sendBonRefundAdminEmail } from "./bon-cadeau-emails.ts";
+import { createHostedCheckout, getCheckout, getTransaction, refundTransaction, refundedAmount, type SumUpConfig } from "./sumup.ts";
 
 const CODE_ATTEMPTS = 5;
 
@@ -240,4 +240,99 @@ export async function attachBonToReservation(
   if (check.bon.reservation_id === reservationId) return { ok: true, bon: check.bon }; // déjà fait (double envoi)
   const bon = await repo.attachReservation(check.bon.id, reservationId, check.from);
   return bon ? { ok: true, bon } : { ok: false, raison: "deja_reserve" };
+}
+
+// ── Remboursements ──────────────────────────────────────────────────────────
+
+/** Vérification des remboursements : bons payés depuis moins de 13 mois (validité 12 mois). */
+export const REFUND_LOOKBACK_DAYS = 400;
+
+export type RefundResult =
+  | { ok: true; bon: Bon; dejaRembourse: boolean }
+  | { ok: false; error: string; status: number };
+
+async function notifyRefund(bon: Bon, rembourse: number, total: boolean) {
+  const apiKey = getEnv("MAILJET_API_KEY");
+  const apiSecret = getEnv("MAILJET_API_SECRET");
+  const senderEmail = getEnv("MAILJET_SENDER_EMAIL") || "contact@vr-cafe.fr";
+  if (apiKey && apiSecret) {
+    try {
+      await sendBonRefundAdminEmail(bon, rembourse, total, { apiKey, apiSecret, senderEmail });
+    } catch (err) {
+      console.error("Bon cadeau : email de remboursement non envoyé", bon.id, err);
+    }
+  }
+  try {
+    await notifyNewReservation({
+      title: total ? "↩️ Bon cadeau remboursé et annulé" : "⚠️ Bon cadeau remboursé en partie",
+      body: `${bon.code} — ${bon.acheteur_nom} — ${rembourse} € sur ${bon.montant} €`,
+      url: `/admin/bons?q=${encodeURIComponent(bon.code ?? "")}`,
+    });
+  } catch (err) {
+    console.error("Bon cadeau : notification de remboursement impossible", err);
+  }
+}
+
+/**
+ * Bouton « Rembourser et annuler » de /admin/bons : rembourse le paiement SumUp en totalité
+ * (sauf s'il l'est déjà) puis annule le bon. Bons payés en ligne et encore valides uniquement.
+ */
+export async function refundBon(repo: BonRepo, sumup: SumUpConfig, id: string): Promise<RefundResult> {
+  const bon = await repo.getById(id);
+  if (!bon) return { ok: false, error: "Bon introuvable", status: 404 };
+  if (bon.mode_paiement !== "en_ligne" || !bon.sumup_transaction_code)
+    return { ok: false, error: "Ce bon n'a pas été payé en ligne : remboursez-le au TPE puis annulez-le.", status: 409 };
+  if (bon.statut !== "valide") return { ok: false, error: "Seul un bon valide peut être remboursé.", status: 409 };
+
+  const txn = await getTransaction(sumup, bon.sumup_transaction_code);
+  const deja = refundedAmount(txn);
+  if (deja < Number(bon.montant)) {
+    // Sans montant = remboursement total. SumUp refuse un montant explicite sous un minimum
+    // (constaté : `min_refundable_amount: 20` pour 18 €) : on ne précise le montant que pour
+    // solder un bon déjà remboursé en partie.
+    try {
+      await refundTransaction(sumup, txn.id, deja > 0 ? Number(bon.montant) - deja : undefined);
+    } catch (err) {
+      console.error("Bon cadeau : remboursement SumUp refusé", bon.id, err);
+      return { ok: false, error: "SumUp a refusé le remboursement. Remboursez depuis le tableau de bord SumUp : le bon sera annulé automatiquement dans l'heure.", status: 502 };
+    }
+  }
+
+  const annule = await repo.update(bon.id, { statut: "annule", montant_rembourse: Number(bon.montant) }, ["valide"]);
+  return { ok: true, bon: annule ?? { ...bon, statut: "annule", montant_rembourse: Number(bon.montant) }, dejaRembourse: deja >= Number(bon.montant) };
+}
+
+/**
+ * Fonction planifiée (toutes les heures) : SumUp n'envoie aucun webhook quand on rembourse depuis
+ * son tableau de bord. Pour chaque bon en ligne encore valide, on relit la transaction :
+ * remboursement total → bon annulé ; partiel → bon gardé. L'admin est prévenu une seule fois par
+ * nouveau montant remboursé (colonne montant_rembourse).
+ */
+export async function syncRefunds(repo: BonRepo, sumup: SumUpConfig, now = Date.now()) {
+  const since = new Date(now - REFUND_LOOKBACK_DAYS * 86400_000).toISOString();
+  const bons = await repo.listRefundCandidates(since);
+  const result = { verifies: 0, annules: [] as string[], partiels: [] as string[], erreurs: 0 };
+
+  for (const bon of bons) {
+    try {
+      const txn = await getTransaction(sumup, bon.sumup_transaction_code!);
+      result.verifies++;
+      const rembourse = Math.min(refundedAmount(txn), Number(bon.montant));
+      if (rembourse <= Number(bon.montant_rembourse ?? 0)) continue; // rien de nouveau
+
+      const total = rembourse >= Number(bon.montant);
+      const updated = await repo.update(
+        bon.id,
+        total ? { statut: "annule", montant_rembourse: rembourse } : { montant_rembourse: rembourse },
+        ["valide"],
+      );
+      if (!updated) continue; // utilisé ou annulé entre-temps
+      (total ? result.annules : result.partiels).push(bon.code ?? bon.id);
+      await notifyRefund(updated, rembourse, total);
+    } catch (err) {
+      result.erreurs++;
+      console.error("Bon cadeau : vérification du remboursement impossible", bon.id, err);
+    }
+  }
+  return result;
 }

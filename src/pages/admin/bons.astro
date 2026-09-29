@@ -134,6 +134,7 @@ const fieldClass =
     sandbox: boolean; paye_le: string | null; expire_le: string | null; utilise_le: string | null;
     email_envoye_le: string | null; created_at: string;
     reservation_id: string | null; reservation?: { creneau_debut: string; statut: string } | null;
+    montant_rembourse: number;
   };
 
   const ETATS: Record<string, { label: string; cls: string }> = {
@@ -198,7 +199,7 @@ const fieldClass =
     $("stat-valides").textContent = String(valides.length);
     $("stat-expirent").textContent = String(valides.filter((b) => b.expire_le && Date.parse(b.expire_le) < in30).length);
     $("stat-mois").textContent = String(vendusMois.length);
-    $("stat-ca").textContent = euros(vendusMois.reduce((s, b) => s + Number(b.montant), 0));
+    $("stat-ca").textContent = euros(vendusMois.reduce((s, b) => s + Number(b.montant) - Number(b.montant_rembourse || 0), 0));
   }
 
   function matches(b: Bon, q: string) {
@@ -251,6 +252,11 @@ const fieldClass =
     info.append(line(etat === "utilise" ? "Utilisé le" : "Valable jusqu'au", etat === "utilise" ? dateFr(b.utilise_le) : dateFr(b.expire_le)));
     root.append(info);
     if (b.message) root.append(h("p", "mt-2 text-sm italic text-white/55 whitespace-pre-line", `« ${b.message} »`));
+    if (Number(b.montant_rembourse) > 0) {
+      const total = Number(b.montant_rembourse) >= Number(b.montant);
+      root.append(h("p", `mt-2 text-sm ${total ? "text-red-300" : "text-amber-300"}`,
+        `↩️ Remboursé ${euros(b.montant_rembourse)}${total ? "" : ` sur ${euros(b.montant)} (partiel)`}`));
+    }
     if (b.reservation && b.reservation.statut !== "annulée") {
       const quand = new Date(b.reservation.creneau_debut).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
       root.append(h("p", "mt-2 text-sm text-green-300", `📅 Réservé pour le ${quand}`));
@@ -272,7 +278,13 @@ const fieldClass =
     if (etat === "utilise") actions.append(btn("Annuler l'utilisation", "unmark_used", "ghost"));
     if ((b.statut === "valide" || b.statut === "utilise") && b.acheteur_email)
       actions.append(btn(b.email_envoye_le ? "Renvoyer l'email" : "Envoyer l'email", "resend_email", "ghost"));
-    if (b.statut === "valide") actions.append(btn("Annuler le bon", "cancel", "danger", "Annuler ce bon ? (ex. après un remboursement). Il ne pourra plus être utilisé."));
+    if (b.statut === "valide" && b.mode_paiement === "en_ligne" && !b.sandbox)
+      actions.append(btn(`↩️ Rembourser ${euros(b.montant - Number(b.montant_rembourse || 0))} et annuler`, "refund", "danger",
+        `Rembourser ${euros(b.montant - Number(b.montant_rembourse || 0))} à ${b.acheteur_nom} sur sa carte (SumUp) et annuler le bon ${b.code} ?\n\nLe remboursement est définitif.`));
+    if (b.statut === "valide")
+      actions.append(btn("Annuler le bon", "cancel", "danger", b.mode_paiement === "comptoir"
+        ? "Annuler ce bon ? Il ne pourra plus être utilisé. (Remboursement éventuel : au TPE.)"
+        : "Annuler ce bon SANS rembourser le client ? Il ne pourra plus être utilisé."));
     if (actions.childElementCount) root.append(actions);
     return root;
   }
@@ -286,6 +298,7 @@ const fieldClass =
       bons = bons.map((x) => (x.id === updated.id ? updated : x));
       render();
       if (action === "resend_email") alert(`Email envoyé à ${updated.acheteur_email}.`);
+      if (action === "refund") alert(`Remboursement effectué : le bon ${updated.code} est annulé.`);
     } catch (err) {
       showError((err as Error).message);
       button.disabled = false;

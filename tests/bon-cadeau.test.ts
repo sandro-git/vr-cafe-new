@@ -29,7 +29,7 @@ vi.mock("../netlify/lib/bon-repo.ts", async (orig) => {
     },
     async insert(bon: any) {
       if (bon.code && db.duplicateCodes > 0) { db.duplicateCodes--; throw new DuplicateCodeError("dup"); }
-      const row = { code: null, reservation_id: null, sumup_checkout_id: null, sumup_transaction_code: null, paye_le: null, expire_le: null, utilise_le: null,
+      const row = { code: null, reservation_id: null, montant_rembourse: 0, sumup_checkout_id: null, sumup_transaction_code: null, paye_le: null, expire_le: null, utilise_le: null,
         email_envoye_le: null, sandbox: false, mode_paiement: "en_ligne", created_at: new Date().toISOString(), ...bon };
       db.rows.set(bon.id, row);
       return { ...row };
@@ -42,6 +42,9 @@ vi.mock("../netlify/lib/bon-repo.ts", async (orig) => {
       return { ...row };
     },
     async list() { return [...db.rows.values()]; },
+    async listRefundCandidates(since: string) {
+      return [...db.rows.values()].filter((b) => b.mode_paiement === "en_ligne" && b.statut === "valide" && b.sumup_transaction_code && b.paye_le >= since).map((b) => ({ ...b }));
+    },
   };
   return { DuplicateCodeError, getBonRepo: () => repo };
 });
@@ -51,6 +54,9 @@ import statut, { maskEmail } from "../netlify/functions/bon-cadeau-statut.mts";
 import webhook from "../netlify/functions/sumup-webhook.mts";
 import adminBons from "../netlify/functions/admin-bons.mts";
 import bonReservation from "../netlify/functions/bon-cadeau-reservation.mts";
+import { syncRefunds } from "../netlify/lib/bon-cadeau";
+import { getBonRepo } from "../netlify/lib/bon-repo";
+import { refundedAmount } from "../netlify/lib/sumup";
 import { generateReservationToken } from "../netlify/lib/reservation-token";
 import { createAdminSession } from "../netlify/lib/admin-session";
 import { isBonCode } from "../src/lib/bons-cadeaux";
@@ -58,7 +64,11 @@ import { isBonCode } from "../src/lib/bons-cadeaux";
 // Faux SumUp : checkouts créés, statut modifiable par le test
 type Checkout = { id: string; checkout_reference: string; amount: number; currency: string; merchant_code: string; status: string;
   hosted_checkout_url: string; merchant_sandbox: boolean; transaction_code?: string; redirect_url: string; return_url?: string };
-const sumup = { checkouts: new Map<string, Checkout>(), sandbox: true, fail: false, requests: [] as { method: string; url: string; auth: string | null }[] };
+const sumup = {
+  checkouts: new Map<string, Checkout>(), sandbox: true, fail: false, requests: [] as { method: string; url: string; auth: string | null }[],
+  // Transactions par code : montant remboursé (événements REFUND), remboursements demandés
+  refunded: new Map<string, number>(), refundCalls: [] as { txnId: string; body: any }[],
+};
 
 function fakeFetch(input: string, init: RequestInit = {}) {
   const url = String(input);
@@ -73,6 +83,23 @@ function fakeFetch(input: string, init: RequestInit = {}) {
       redirect_url: b.redirect_url, return_url: b.return_url };
     sumup.checkouts.set(id, c);
     return Promise.resolve(Response.json(c));
+  }
+  const t = url.match(/\/v2\.1\/merchants\/MTEST123\/transactions\?transaction_code=(.+)$/);
+  if (method === "GET" && t) {
+    const code = decodeURIComponent(t[1]);
+    const r = sumup.refunded.get(code) ?? 0;
+    return Promise.resolve(Response.json({
+      id: `txn-${code}`, transaction_code: code, amount: 58, status: "SUCCESSFUL", refunded_amount: null,
+      events: r ? [{ type: "REFUND", status: "REFUNDED", amount: r }] : [],
+      transaction_events: r ? [{ event_type: "REFUND", status: "REFUNDED", amount: r }] : [],
+    }));
+  }
+  const rf = url.match(/\/v1\.0\/merchants\/MTEST123\/payments\/txn-(.+)\/refunds$/);
+  if (method === "POST" && rf) {
+    const body = JSON.parse(String(init.body));
+    sumup.refundCalls.push({ txnId: `txn-${rf[1]}`, body });
+    sumup.refunded.set(rf[1], (sumup.refunded.get(rf[1]) ?? 0) + (body.amount ?? 58));
+    return Promise.resolve(new Response(null, { status: 204 }));
   }
   const m = url.match(/\/v0\.1\/checkouts\/(.+)$/);
   if (method === "GET" && m) {
@@ -93,7 +120,7 @@ beforeEach(() => {
   push.calls.length = 0;
   state.calls.length = 0;
   state.respond = () => ({ body: {} });
-  Object.assign(sumup, { checkouts: new Map(), sandbox: false, fail: false, requests: [] });
+  Object.assign(sumup, { checkouts: new Map(), sandbox: false, fail: false, requests: [], refunded: new Map(), refundCalls: [] });
   vi.stubEnv("SUMUP_API_KEY", "sup_sk_test");
   vi.stubEnv("SUMUP_MERCHANT_CODE", "MTEST123");
   vi.stubEnv("MAILJET_API_KEY", "k");
@@ -464,5 +491,116 @@ describe("bon cadeau dans une réservation (/api/bon-cadeau/verifier et /rattach
     expect((await call("verifier", { code: bon.code, remplace_id: RESA, token })).body.ok).toBe(true);
     expect((await call("rattacher", { code: bon.code, reservation_id: RESA2, remplace_id: RESA, token })).body.ok).toBe(true);
     expect(onlyBon().reservation_id).toBe(RESA2);
+  });
+});
+
+describe("remboursements", () => {
+  const CFG = { apiKey: "sup_sk_test", merchantCode: "MTEST123" };
+  const adminPost = async (body: unknown) => {
+    const token = await createAdminSession(ENV);
+    const res = await adminBons(new Request("https://vr-cafe.fr/api/admin/bons", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: `admin_session=${encodeURIComponent(token!)}` },
+      body: JSON.stringify(body),
+    }), {} as any);
+    return { status: res.status, body: await res.json() };
+  };
+  async function validBon() {
+    await buy();
+    await hook(pay().id); // transaction TX123, 58 €
+    state.calls.length = 0;
+    push.calls.length = 0;
+    return onlyBon();
+  }
+
+  it("refundedAmount : événements REFUND des deux listes sans les cumuler, ou refunded_amount", () => {
+    const ev = [{ type: "REFUND", status: "REFUNDED", amount: 18 }, { type: "PAYOUT", status: "SCHEDULED", amount: 17.55 }];
+    const tev = [{ event_type: "REFUND", status: "REFUNDED", amount: 18 }];
+    expect(refundedAmount({ id: "t", transaction_code: "T", amount: 18, status: "SUCCESSFUL", events: ev, transaction_events: tev })).toBe(18);
+    expect(refundedAmount({ id: "t", transaction_code: "T", amount: 18, status: "REFUNDED", refunded_amount: 18 })).toBe(18);
+    expect(refundedAmount({ id: "t", transaction_code: "T", amount: 18, status: "SUCCESSFUL", events: [{ type: "REFUND", status: "FAILED", amount: 18 }] })).toBe(0);
+  });
+
+  it("bouton admin : rembourse la transaction SumUp en totalité puis annule le bon", async () => {
+    const bon = await validBon();
+    const res = await adminPost({ action: "refund", id: bon.id });
+    expect(res.body.data).toMatchObject({ statut: "annule", montant_rembourse: 58 });
+    // sans montant : remboursement total (SumUp refuse un montant explicite sous un minimum)
+    expect(sumup.refundCalls).toEqual([{ txnId: "txn-TX123", body: {} }]);
+    // déjà annulé : plus de remboursement possible
+    expect((await adminPost({ action: "refund", id: bon.id })).status).toBe(409);
+    expect(sumup.refundCalls).toHaveLength(1);
+  });
+
+  it("bouton admin : déjà remboursé depuis SumUp → annule sans rembourser deux fois ; partiel → rembourse le reste", async () => {
+    const bon = await validBon();
+    sumup.refunded.set("TX123", 58);
+    expect((await adminPost({ action: "refund", id: bon.id })).body).toMatchObject({ data: { statut: "annule" }, deja_rembourse: true });
+    expect(sumup.refundCalls).toEqual([]);
+
+    db.rows.clear();
+    const bon2 = await validBon();
+    sumup.refunded.set("TX123", 20);
+    await adminPost({ action: "refund", id: bon2.id });
+    expect(sumup.refundCalls).toEqual([{ txnId: "txn-TX123", body: { amount: 38 } }]);
+  });
+
+  it("bouton admin : remboursement refusé par SumUp → message, bon inchangé", async () => {
+    const bon = await validBon();
+    sumup.refunded.set("TX123", 20);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockImplementation(((url: string, init?: RequestInit) =>
+      String(url).includes("/refunds") ? Promise.resolve(Response.json({ errors: [{ code: "min_amount" }] }, { status: 400 })) : fakeFetch(url, init)) as any);
+    const res = await adminPost({ action: "refund", id: bon.id });
+    expect(res.status).toBe(502);
+    expect(res.body.error).toContain("tableau de bord SumUp");
+    expect(onlyBon()).toMatchObject({ statut: "valide", montant_rembourse: 0 });
+  });
+
+  it("bouton admin : bon comptoir refusé (remboursement au TPE), erreur SumUp → bon inchangé", async () => {
+    const comptoir = await adminPost({ action: "create_comptoir", offre: "30_solo", acheteur_nom: "Paul", beneficiaire_nom: "Zoé" });
+    expect((await adminPost({ action: "refund", id: comptoir.body.data.id })).status).toBe(409);
+
+    db.rows.clear();
+    const bon = await validBon();
+    sumup.fail = true;
+    expect((await adminPost({ action: "refund", id: bon.id })).status).toBe(500);
+    expect(onlyBon().statut).toBe("valide");
+  });
+
+  it("vérification horaire : remboursement total fait dans SumUp → bon annulé, admin prévenu une seule fois", async () => {
+    const bon = await validBon();
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ verifies: 1, annules: [], partiels: [] });
+    expect(push.calls).toHaveLength(0);
+
+    sumup.refunded.set("TX123", 58);
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ annules: [bon.code] });
+    expect(onlyBon()).toMatchObject({ statut: "annule", montant_rembourse: 58 });
+    expect(state.calls.map((c) => c.body.Messages[0].Subject)).toEqual([`[Bon cadeau] Remboursé et annulé · ${bon.code} · 58 €`]);
+    expect(push.calls[0].title).toBe("↩️ Bon cadeau remboursé et annulé");
+
+    // plus candidat (annulé) : aucun nouvel avis
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ verifies: 0 });
+    expect(push.calls).toHaveLength(1);
+  });
+
+  it("vérification horaire : remboursement partiel → bon gardé, avis une fois par nouveau montant", async () => {
+    await validBon();
+    sumup.refunded.set("TX123", 20);
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ partiels: [onlyBon().code] });
+    expect(onlyBon()).toMatchObject({ statut: "valide", montant_rembourse: 20 });
+    await syncRefunds(getBonRepo(), CFG);
+    expect(push.calls).toHaveLength(1);
+    sumup.refunded.set("TX123", 58);
+    await syncRefunds(getBonRepo(), CFG);
+    expect(onlyBon()).toMatchObject({ statut: "annule", montant_rembourse: 58 });
+    expect(push.calls).toHaveLength(2);
+  });
+
+  it("vérification horaire : une erreur SumUp n'arrête pas les autres bons", async () => {
+    await validBon();
+    sumup.fail = true;
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ verifies: 0, erreurs: 1 });
+    expect(onlyBon().statut).toBe("valide");
   });
 });

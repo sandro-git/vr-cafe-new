@@ -24,6 +24,7 @@ export interface Bon {
   utilise_le: string | null;
   email_envoye_le: string | null;
   reservation_id: string | null;
+  montant_rembourse: number;
   created_at: string;
   /** Réservation rattachée (lecture admin uniquement) */
   reservation?: { creneau_debut: string; statut: string } | null;
@@ -39,7 +40,7 @@ export interface BonReservation {
   nb_personnes: number;
 }
 
-export type NewBon = Omit<Bon, "created_at" | "reservation" | "reservation_id" | "code" | "sumup_checkout_id" | "sumup_transaction_code" | "paye_le" | "expire_le" | "utilise_le" | "email_envoye_le" | "sandbox" | "mode_paiement"> &
+export type NewBon = Omit<Bon, "created_at" | "reservation" | "reservation_id" | "montant_rembourse" | "code" | "sumup_checkout_id" | "sumup_transaction_code" | "paye_le" | "expire_le" | "utilise_le" | "email_envoye_le" | "sandbox" | "mode_paiement"> &
   Partial<Pick<Bon, "code" | "paye_le" | "expire_le" | "mode_paiement" | "sandbox">>;
 
 /** Erreur d'unicité Postgres (code déjà attribué) : l'appelant retente avec un autre code. */
@@ -57,6 +58,8 @@ export interface BonRepo {
   /** Met à jour le bon, seulement s'il est encore dans l'un des statuts `ifStatut` ; null sinon. */
   update(id: string, patch: Partial<Bon>, ifStatut?: BonStatut[]): Promise<Bon | null>;
   list(limit: number): Promise<Bon[]>;
+  /** Bons payés en ligne, encore valides, payés depuis `sinceIso` : à vérifier chez SumUp (remboursement). */
+  listRefundCandidates(sinceIso: string): Promise<Bon[]>;
 }
 
 function getEnv(key: string): string | undefined {
@@ -72,7 +75,7 @@ function check<T>(res: { data: T; error: { code?: string; message: string } | nu
   return res.data;
 }
 
-const toBon = (row: any): Bon => ({ ...row, montant: Number(row.montant) });
+const toBon = (row: any): Bon => ({ ...row, montant: Number(row.montant), montant_rembourse: Number(row.montant_rembourse ?? 0) });
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function getBonRepo(): BonRepo {
@@ -121,6 +124,13 @@ export function getBonRepo(): BonRepo {
       if (ifStatut) q = q.in("statut", ifStatut);
       const row = check(await q.select("*").maybeSingle());
       return row ? toBon(row) : null;
+    },
+    async listRefundCandidates(sinceIso) {
+      const rows = check(await table().select("*")
+        .eq("mode_paiement", "en_ligne").eq("statut", "valide")
+        .not("sumup_transaction_code", "is", null)
+        .gte("paye_le", sinceIso)) as any[];
+      return (rows ?? []).map(toBon);
     },
     async list(limit) {
       const rows = check(await table().select("*, reservation:reservations ( creneau_debut, statut )").order("created_at", { ascending: false }).limit(limit)) as any[];

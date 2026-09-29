@@ -126,3 +126,37 @@ export async function sendBonAdminEmail(bon: Bon, creds: MailjetCreds): Promise<
     }],
   });
 }
+
+/** Avis à l'admin : remboursement détecté chez SumUp (total → bon annulé, partiel → bon gardé). */
+export function bonRefundAdminEmail(bon: Bon, rembourse: number, total: boolean): { subject: string; html: string } {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: ${total ? "#dc2626" : "#d97706"};">${total ? "↩️ Bon cadeau remboursé : annulé" : "⚠️ Bon cadeau remboursé en partie"}</h2>
+      <p style="font-size: 14px; color: #1e293b;">
+        Le paiement SumUp du bon <strong>${escHtml(bon.code)}</strong> (${escHtml(bon.offre_label)}, ${euros(bon.montant)})
+        a été remboursé à hauteur de <strong>${euros(rembourse)}</strong>.
+      </p>
+      <p style="font-size: 14px; color: #1e293b;">
+        ${total
+          ? "Le bon a été <strong>annulé</strong> : il ne peut plus être utilisé."
+          : "Le bon est <strong>toujours valide</strong>. Annulez-le dans l'admin si le client ne doit plus l'utiliser."}
+      </p>
+      <p style="font-size: 14px; color: #64748b;">Acheteur : ${escHtml(bon.acheteur_nom)}${bon.acheteur_email ? ` (${escHtml(bon.acheteur_email)})` : ""} · Bénéficiaire : ${escHtml(bon.beneficiaire_nom)}</p>
+      <p style="margin-top: 16px;"><a href="https://vr-cafe.fr/admin/bons?q=${encodeURIComponent(bon.code ?? "")}" style="color: #7c3aed;">Voir le bon</a></p>
+    </div>
+  `;
+  return { subject: `[Bon cadeau] ${total ? "Remboursé et annulé" : "Remboursement partiel"} · ${bon.code} · ${euros(rembourse)}`, html };
+}
+
+export async function sendBonRefundAdminEmail(bon: Bon, rembourse: number, total: boolean, creds: MailjetCreds): Promise<void> {
+  const { subject, html } = bonRefundAdminEmail(bon, rembourse, total);
+  const mailjet = new Mailjet({ apiKey: creds.apiKey, apiSecret: creds.apiSecret });
+  await mailjet.post("send", { version: "v3.1" }).request({
+    Messages: [{
+      From: { Email: creds.senderEmail, Name: "VR Café" },
+      To: [{ Email: ADMIN_EMAIL, Name: "VR Café Admin" }],
+      Subject: subject,
+      HTMLPart: html,
+    }],
+  });
+}

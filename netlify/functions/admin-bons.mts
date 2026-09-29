@@ -3,7 +3,8 @@
 import type { Context, Config } from "@netlify/functions";
 import { isAdminRequest } from "../lib/admin-session.ts";
 import { getBonRepo, type Bon } from "../lib/bon-repo.ts";
-import { createComptoirBon, deliverBon } from "../lib/bon-cadeau.ts";
+import { createComptoirBon, deliverBon, refundBon } from "../lib/bon-cadeau.ts";
+import { readSumUpConfig } from "../lib/sumup.ts";
 import { BON_MESSAGE_MAX, BON_NOM_MAX, getOffreBon } from "../../src/lib/bons-cadeaux.ts";
 import { isValidEmail } from "../../src/lib/reservation-validation.ts";
 
@@ -53,6 +54,14 @@ export default async (req: Request, _context: Context) => {
 
       case "cancel":
         return updated(await repo.update(id, { statut: "annule" }, ["valide"]), "Seul un bon valide peut être annulé.");
+
+      // Rembourse le paiement SumUp puis annule le bon (irréversible : confirmé côté page)
+      case "refund": {
+        const sumup = readSumUpConfig();
+        if (!sumup) return json({ error: "SumUp n'est pas configuré." }, 503);
+        const res = await refundBon(repo, sumup, id);
+        return res.ok ? json({ data: res.bon, deja_rembourse: res.dejaRembourse }) : json({ error: res.error }, res.status);
+      }
 
       case "resend_email": {
         const bon = await repo.getById(id);

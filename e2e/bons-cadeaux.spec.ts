@@ -109,6 +109,8 @@ test.describe("/admin/bons", () => {
         if (body.action === "mark_used") return { body: { data: { ...BONS.find((b) => b.id === body.id), statut: "utilise", utilise_le: new Date().toISOString() } } };
         if (body.action === "create_comptoir")
           return { body: { data: bon({ id: "55555555-2222-4333-8444-555555555555", code: "VRC-CPTR-5555", mode_paiement: "comptoir", beneficiaire_nom: body.beneficiaire_nom, acheteur_email: null, email_envoye_le: null }) } };
+        if (body.action === "refund")
+          return { body: { data: { ...BONS.find((b) => b.id === body.id), statut: "annule", montant_rembourse: 58 } } };
         return { status: 400, body: { error: "inattendu" } };
       },
     });
@@ -144,6 +146,25 @@ test.describe("/admin/bons", () => {
     page.once("dialog", (d) => d.dismiss());
     await page.locator("[data-bon='33333333-2222-4333-8444-555555555555']").getByRole("button", { name: /Marquer/ }).click();
     expect(api.callsTo("/api/admin/bons").filter((c) => c.body.action === "mark_used")).toHaveLength(0);
+  });
+
+  test("rembourser et annuler : confirmation avec le montant, bon annulé", async ({ page }) => {
+    const carte = page.locator(`[data-bon='${BON_ID}']`);
+    const dialogs: string[] = [];
+    page.on("dialog", (d) => { dialogs.push(d.message()); d.accept(); });
+    await carte.getByRole("button", { name: "↩️ Rembourser 58 € et annuler" }).click();
+    await expect(carte).toHaveCount(0); // quitte la liste « à utiliser »
+    expect(dialogs[0]).toContain("Rembourser 58 € à Marie");
+    expect(dialogs[0]).toContain("définitif");
+    expect(api.callsTo("/api/admin/bons").at(-1)!.body).toEqual({ action: "refund", id: BON_ID });
+    await page.getByRole("button", { name: "Tous" }).click();
+    await expect(page.locator(`[data-bon='${BON_ID}']`)).toContainText("Remboursé 58 €");
+  });
+
+  test("rembourser : confirmation refusée → rien n'est envoyé", async ({ page }) => {
+    page.once("dialog", (d) => d.dismiss());
+    await page.locator(`[data-bon='${BON_ID}']`).getByRole("button", { name: /Rembourser/ }).click();
+    expect(api.callsTo("/api/admin/bons").filter((c) => c.body.action === "refund")).toHaveLength(0);
   });
 
   test("créer un bon vendu au comptoir", async ({ page }) => {

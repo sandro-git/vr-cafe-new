@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bonAdminEmail, bonClientEmail } from "../netlify/lib/bon-cadeau-emails";
+import { bonAdminEmail, bonClientEmail, bonRefundAdminEmail } from "../netlify/lib/bon-cadeau-emails";
 import type { Bon } from "../netlify/lib/bon-repo";
 
 const bon = (over: Partial<Bon> = {}): Bon => ({
@@ -22,6 +22,7 @@ const bon = (over: Partial<Bon> = {}): Bon => ({
   utilise_le: null,
   email_envoye_le: null,
   reservation_id: null,
+  montant_rembourse: 0,
   created_at: "2026-09-28T18:29:00Z",
   ...over,
 });
@@ -64,5 +65,18 @@ describe("email admin", () => {
   it("indique le mode de paiement", () => {
     expect(bonAdminEmail(bon()).html).toContain("En ligne (SumUp TX1)");
     expect(bonAdminEmail(bon({ mode_paiement: "comptoir" })).html).toContain("Au comptoir");
+  });
+});
+
+describe("email admin de remboursement", () => {
+  it("total : bon annulé ; partiel : bon toujours valide ; saisies échappées, pas de flexbox", () => {
+    const total = bonRefundAdminEmail(bon(), 58, true);
+    expect(total.subject).toBe("[Bon cadeau] Remboursé et annulé · VRC-7K2M-9QXA · 58 €");
+    expect(total.html).toContain("annulé");
+    const partiel = bonRefundAdminEmail(bon(), 20, false);
+    expect(partiel.subject).toContain("Remboursement partiel");
+    expect(partiel.html).toContain("toujours valide");
+    expect(partiel.html).not.toContain("<script>");
+    expect(partiel.html).not.toMatch(/display:\s*flex/);
   });
 });

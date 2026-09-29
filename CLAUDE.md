@@ -42,7 +42,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
   - `netlify/lib/admin-reads.ts` (lectures admin : requêtes envoyées, validation des paramètres, erreurs) + `/api/admin/db` (401 sans session, service role avec session) ; `src/lib/uuid.ts` (UUID v4)
   - `netlify/lib/reservation-emails.ts` : destinataires, sujets, échappement HTML des saisies client, pas de flexbox
   - `netlify/lib/google-business.ts` (OAuth + cache du jeton, pagination, notes), `generate-review-reply.ts`, `mailjet-contacts.ts` (synchro, changement d'email, suppression RGPD, campagnes), `src/lib/notify.ts` (push, abonnements expirés)
-  - Bons cadeaux : `tests/bons-cadeaux.test.ts` (offres/prix, codes, validité, validation), `tests/bon-cadeau.test.ts` (fonctions `bon-cadeau/checkout`, `bon-cadeau/statut`, `bon-cadeau/verifier` et `rattacher`, `sumup-webhook`, `admin/bons` avec table en mémoire et faux SumUp via `fetch`), `tests/bon-cadeau-emails.test.ts` (échappement, pas de flexbox)
+  - Bons cadeaux : `tests/bons-cadeaux.test.ts` (offres/prix, codes, validité, validation), `tests/bon-cadeau.test.ts` (fonctions `bon-cadeau/checkout`, `bon-cadeau/statut`, `bon-cadeau/verifier` et `rattacher`, `sumup-webhook`, `admin/bons` (dont remboursement), `syncRefunds`, `refundedAmount`, avec table en mémoire et faux SumUp via `fetch`), `tests/bon-cadeau-emails.test.ts` (échappement, pas de flexbox)
 - **Aucun appel réseau réel** : Mailjet, Supabase, Anthropic, web-push sont remplacés par `vi.mock` et `fetch` par `vi.stubGlobal` ; faux client Mailjet réutilisable dans `tests/helpers/mailjet-mock.ts`
 - Lancer aussi `bun astro check` après avoir modifié un test : les erreurs de type des tests n'empêchent pas Vitest de passer. **Référence : 0 erreur, 0 avertissement** depuis le 27/09/2026 — toute erreur est nouvelle et doit être corrigée
 - Non testés : `src/lib/supabase.js` (config) et `netlify/lib/staff-guide-content.generated.ts` (généré)
@@ -56,9 +56,9 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
 - Serveur dédié `astro dev --port 4399` lancé avec `ADMIN_PASSWORD` et `ADMIN_SESSION_SECRET` de test ; les tests posent un cookie `admin_session` **signé** avec ces secrets (`e2e/helpers/admin-session.ts`), **URL Supabase bidon** (`http://supabase.e2e.test`) : tout appel non simulé échoue au lieu de toucher la base de prod
 - Supabase (REST/RPC) et les fonctions `/api/*` sont simulés dans le navigateur (`e2e/helpers/mocks.ts` : `FakeSupabase`, `FakeApi`) → aucune réservation, aucun email, aucune réponse Google réellement créés. `FakeSupabase.unhandled` doit rester vide (vérifié après chaque test). Option `delayMs` pour simuler un réseau lent
 - Horloge du navigateur fixée (`setNow`) : les tests de réservation se placent le jeudi 1er octobre 2026 à 10:00 (Paris)
-- Fichiers (64 tests) :
+- Fichiers (66 tests) :
   - `e2e/reservation-bon-cadeau.spec.ts` (5) : bon appliqué (remise, rattachement après insert et avant l'email), plusieurs bons / retrait / bon > session, code invalide bloquant, rattachement refusé, modification (bons repris, rattachés avant l'annulation) ; `admin-donnees.spec.ts` : badge 🎁 dans `/admin/reservations`
-  - `e2e/bons-cadeaux.spec.ts` (10) : `/cadeaux` (achat → redirection SumUp simulée, validation, vente indisponible), `/cadeaux/merci` (attente puis code, échec), `/admin/bons` (filtres, recherche par code, marquer utilisé, bon expiré, bon comptoir)
+  - `e2e/bons-cadeaux.spec.ts` (12, dont « Rembourser et annuler ») : `/cadeaux` (achat → redirection SumUp simulée, validation, vente indisponible), `/cadeaux/merci` (attente puis code, échec), `/admin/bons` (filtres, recherche par code, marquer utilisé, bon expiré, bon comptoir)
   - `e2e/admin-login.spec.ts` (5), `e2e/admin-logout-push.spec.ts` (5), `e2e/admin-avis.spec.ts` (7), `e2e/admin-donnees.spec.ts` (6), `e2e/annulation.spec.ts` (10), `e2e/contact.spec.ts` (2), `e2e/reservation.spec.ts` (13)
   - `e2e/helpers/mocks.ts` : `FakeSupabase` (tables `config`, `durees_session`, `jours_fermeture`, `periodes_vacances`, `avis_google`, `boxes`, RPC `get_boxes_disponibles`, inserts `reservations` / `reservation_boxes` enregistrés dans `.inserts`), `FakeApi` (appels `/api/*` enregistrés, réponse par défaut `{ ok: true }`, handlers par chemin), `setNow`. Comme en prod, `FakeSupabase` **ne sert pas** `reservations` / `clients` en lecture et **refuse un insert avec `RETURNING`** (`.select()` après `.insert()`)
   - `e2e/helpers/reservation-steps.ts` : `chooseSlot` (étapes 1 et 2 du formulaire standard)
@@ -191,6 +191,13 @@ Un bon = **une expérience précise** (pas un montant), utilisable **en une fois
 
 **Admin `/admin/bons`** (`src/pages/admin/bons.astro` → `POST /api/admin/bons`, session admin) : `list`, `mark_used` (seulement depuis `valide`), `unmark_used`, `cancel`, `resend_email`, `create_comptoir` (bon payé au TPE, valide tout de suite, email si adresse, pas de push). Recherche par code tolérante (`normalizeBonCode` : minuscules, espaces, sans tirets). Les bons `sandbox` portent un badge TEST et sont exclus du CA du mois. Rendu en `textContent` uniquement (saisies publiques).
 
+**Remboursements** (`supabase/bons_cadeaux_remboursement.sql` : colonne `montant_rembourse`) :
+- **SumUp n'envoie aucun webhook pour un remboursement** (vérifié en prod le 29/09/2026 : aucun appel à `sumup-webhook` après un remboursement fait depuis le tableau de bord SumUp)
+- Bouton **« ↩️ Rembourser X € et annuler »** de `/admin/bons` (bons en ligne valides, hors sandbox ; confirmation avec le montant) → `POST /api/admin/bons {action: "refund"}` → `refundBon` : relit la transaction (`GET /v2.1/merchants/{code}/transactions?transaction_code=`), rembourse via `POST /v1.0/merchants/{code}/payments/{txn_id}/refunds` **sans montant** (= total ; SumUp refuse un montant explicite sous un minimum, constaté `min_refundable_amount: 20` pour 18 €), puis bon `annule` + `montant_rembourse`. Refus SumUp → 502, bon inchangé, message invitant à rembourser depuis SumUp
+- **Fonction planifiée `sumup-remboursements`** (`@hourly`) → `syncRefunds` : bons en ligne `valide` payés depuis < 400 jours ; montant remboursé = événements `REFUND`/`REFUNDED` (`refundedAmount` : `events[].type` et `transaction_events[].event_type` décrivent les mêmes événements → max, jamais la somme ; `status` reste `SUCCESSFUL` après remboursement en sandbox). Total → `annule` ; partiel → bon gardé. Avis admin (email `[Bon cadeau] Remboursé et annulé …` + push) une fois par nouveau `montant_rembourse`
+- Bons comptoir : remboursement au TPE puis « Annuler le bon » (sans bouton de remboursement)
+- « CA ce mois » de `/admin/bons` déduit `montant_rembourse`
+
 **Utilisation dans une réservation** (formulaire standard `ReservationForm`, modes client et admin ; pas l'anniversaire ni le MDJ) :
 - Étape 3, champ « 🎁 Bon cadeau » + « Appliquer » (ou Entrée) → `POST /api/bon-cadeau/verifier {code}` : refus `inconnu` / `utilise` / `expire` / `annule` / `deja_reserve` (messages `BON_REFUS_MESSAGES`), sinon infos publiques du bon (jamais nom ni email). Plusieurs bons possibles ; récapitulatif « Session / Bon cadeau / Reste à payer sur place » (`resteAPayer` : un bon qui vaut plus que la session ne rend pas la monnaie). Un code saisi mais pas appliqué est vérifié à la soumission ; invalide → réservation bloquée
 - Après l'insert `reservations` + `reservation_boxes` : `POST /api/bon-cadeau/rattacher {code, reservation_id}` pour chaque bon, **avant** l'annulation de l'ancienne réservation (modification) et **avant** `/api/reservation-confirmation`, qui relit les bons en base pour afficher la remise dans l'email client et admin. Échec → réservation confirmée quand même, avertissement « présentez-le à votre arrivée »
@@ -244,7 +251,8 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `GET /api/bon-cadeau/statut?bon=<id>` | id du bon (UUID) | Vérifie le paiement chez SumUp et renvoie l'état (code si payé) |
 | `POST /api/bon-cadeau/verifier` / `rattacher` | Origin (+ `remplace_id`/`token` HMAC en modification) | Champ bon cadeau du formulaire de réservation |
 | `POST /api/sumup-webhook` | aucune (non signé) : paiement relu via l'API SumUp | Active le bon payé |
-| `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, renvoi d'email, bon vendu au comptoir |
+| `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, remboursement SumUp, renvoi d'email, bon vendu au comptoir |
+| `sumup-remboursements` (planifiée, toutes les heures) | — | Détecte les remboursements faits dans SumUp et annule les bons |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
 | `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
