@@ -26,7 +26,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         id="chat"
         class="flex flex-col gap-3 mb-4 min-h-[16rem] max-h-[28rem] overflow-y-auto bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4"
       >
-        <p id="chat-empty" class="text-white/40 text-sm">Pose une question ci-dessous ou choisis une suggestion.</p>
+        <p id="chat-empty" class="text-white/55 text-sm">Pose une question ci-dessous ou choisis une suggestion.</p>
       </div>
 
       <!-- Saisie -->
@@ -37,7 +37,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           maxlength="500"
           placeholder="Pose ta question..."
           autocomplete="off"
-          class="flex-1 bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] outline-none rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/35"
+          class="flex-1 bg-white/5 ring-1 ring-white/10 focus:ring-2 focus:ring-[var(--color-brand-400)] outline-none rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/50"
         />
         <button
           type="submit"
@@ -104,7 +104,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
   function addLoadingBubble() {
     const div = document.createElement('div');
-    div.className = 'self-start flex items-center gap-2 text-white/40 text-sm px-1';
+    div.className = 'self-start flex items-center gap-2 text-white/55 text-sm px-1';
     div.innerHTML = '<span class="inline-block w-3.5 h-3.5 border-2 border-white/20 border-t-[var(--color-brand-400)] rounded-full animate-spin"></span> Réponse en cours...';
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;

@@ -57,7 +57,7 @@ const faqs = [
 ];
 
 const fieldClass =
-  "bg-white/5 ring-1 ring-white/10 text-white text-base rounded-xl focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none block w-full p-3.5 placeholder:text-white/35 transition-all";
+  "bg-white/5 ring-1 ring-white/10 text-white text-base rounded-xl focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none block w-full p-3.5 placeholder:text-white/50 transition-all";
 const labelClass = "block mb-2 text-sm font-semibold text-white";
 ---
 
@@ -122,11 +122,11 @@ const labelClass = "block mb-2 text-sm font-semibold text-white";
         <div class="sm:col-span-2">
           <label for="acheteur_email" class={labelClass}>Votre email</label>
           <input id="acheteur_email" name="acheteur_email" type="email" autocomplete="email" class={fieldClass} placeholder="vous@email.fr" required />
-          <p class="mt-1.5 text-xs text-white/45">Le bon vous est envoyé à cette adresse : vous pourrez le transférer ou l'imprimer.</p>
+          <p class="mt-1.5 text-xs text-white/55">Le bon vous est envoyé à cette adresse : vous pourrez le transférer ou l'imprimer.</p>
           <p id="err-acheteur_email" class="hidden mt-1.5 text-sm text-red-300"></p>
         </div>
         <div class="sm:col-span-2">
-          <label for="message" class={labelClass}>Petit mot <span class="font-normal text-white/45">(facultatif)</span></label>
+          <label for="message" class={labelClass}>Petit mot <span class="font-normal text-white/55">(facultatif)</span></label>
           <textarea id="message" name="message" rows="3" maxlength={BON_MESSAGE_MAX} class={fieldClass} placeholder="Joyeux anniversaire ! Prêt(e) pour l'aventure ?"></textarea>
           <p id="err-message" class="hidden mt-1.5 text-sm text-red-300"></p>
         </div>

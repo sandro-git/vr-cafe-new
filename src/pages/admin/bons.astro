@@ -3,7 +3,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX } from "../../lib/bons-cadeaux";
 
 const fieldClass =
-  "w-full bg-white/5 ring-1 ring-white/10 text-white text-sm rounded-xl p-3 focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none placeholder:text-white/35";
+  "w-full bg-white/5 ring-1 ring-white/10 text-white text-sm rounded-xl p-3 focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none placeholder:text-white/50";
 ---
 
 <AdminLayout>
@@ -94,11 +94,11 @@ const fieldClass =
         <input name="acheteur_nom" maxlength={BON_NOM_MAX} required class={fieldClass} placeholder="Nom de l'acheteur" />
       </label>
       <label class="block">
-        <span class="block text-sm font-semibold text-white mb-1.5">Email de l'acheteur <span class="font-normal text-white/45">(facultatif)</span></span>
+        <span class="block text-sm font-semibold text-white mb-1.5">Email de l'acheteur <span class="font-normal text-white/55">(facultatif)</span></span>
         <input name="acheteur_email" type="email" class={fieldClass} placeholder="Pour lui envoyer le bon" />
       </label>
       <label class="block">
-        <span class="block text-sm font-semibold text-white mb-1.5">Petit mot <span class="font-normal text-white/45">(facultatif)</span></span>
+        <span class="block text-sm font-semibold text-white mb-1.5">Petit mot <span class="font-normal text-white/55">(facultatif)</span></span>
         <textarea name="message" rows="2" maxlength={BON_MESSAGE_MAX} class={fieldClass}></textarea>
       </label>
       <p id="new-error" class="hidden text-sm text-red-300"></p>
@@ -142,8 +142,8 @@ const fieldClass =
     utilise: { label: "Utilisé", cls: "bg-white/10 text-white/70 border-white/20" },
     expire: { label: "Expiré", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
     annule: { label: "Annulé", cls: "bg-red-500/15 text-red-300 border-red-500/30" },
-    en_attente: { label: "Paiement en attente", cls: "bg-white/5 text-white/45 border-white/10" },
-    echec: { label: "Paiement échoué", cls: "bg-white/5 text-white/45 border-white/10" },
+    en_attente: { label: "Paiement en attente", cls: "bg-white/5 text-white/55 border-white/10" },
+    echec: { label: "Paiement échoué", cls: "bg-white/5 text-white/55 border-white/10" },
   };
 
   let bons: Bon[] = [];

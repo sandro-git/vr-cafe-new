@@ -12,7 +12,7 @@ const { id = 'dp' } = Astro.props;
     id={`${id}-trigger`}
     class="w-full text-left bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] transition-colors"
   >
-    <span id={`${id}-display`} class="text-white/40">Sélectionnez une date</span>
+    <span id={`${id}-display`} class="text-white/55">Sélectionnez une date</span>
   </button>
   <input type="hidden" id={`${id}-value`} />
 
@@ -39,7 +39,7 @@ const { id = 'dp' } = Astro.props;
     <!-- Jours de la semaine -->
     <div class="grid grid-cols-7 mb-1 text-center">
       {['Lu','Ma','Me','Je','Ve','Sa','Di'].map(j => (
-        <span class="text-xs font-bold text-white/40 py-1">{j}</span>
+        <span class="text-xs font-bold text-white/55 py-1">{j}</span>
       ))}
     </div>
 
@@ -150,7 +150,7 @@ const { id = 'dp' } = Astro.props;
       const display = document.getElementById(`${rootId}-display`)!;
       const d = new Date(dateStr + 'T12:00:00');
       display.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      display.classList.remove('text-white/40');
+      display.classList.remove('text-white/55');
       display.classList.add('text-white');
 
       // Fermer le popup
@@ -234,7 +234,7 @@ const { id = 'dp' } = Astro.props;
       const display = document.getElementById(`${rootId}-display`)!;
       display.textContent = 'Sélectionnez une date';
       display.classList.remove('text-white');
-      display.classList.add('text-white/40');
+      display.classList.add('text-white/55');
     }
 
     // Pilotage externe : set la date depuis du code parent (boutons prev/next/today, etc.)

@@ -87,7 +87,8 @@ const isActive = (href: string) =>
         scrollbar-width: none;
       }
 
-      /* Pastille façon iOS : rouge système, chiffre blanc, pilule dès 2 chiffres */
+      /* Pastille façon iOS : chiffre blanc, pilule dès 2 chiffres.
+         Couleurs assombries pour un contraste WCAG AA ≥ 4.5:1 avec le blanc (texte 11px) */
       .nav-badge {
         position: absolute;
         top: -6px;
@@ -99,7 +100,7 @@ const isActive = (href: string) =>
         align-items: center;
         justify-content: center;
         border-radius: 9999px;
-        background: #ff3b30;
+        background: #d70015; /* rouge iOS « contraste élevé » : 5.4:1 */
         color: #fff;
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
         font-size: 11px;
@@ -110,9 +111,9 @@ const isActive = (href: string) =>
         pointer-events: none;
         animation: nav-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
-      /* Réservations du jour : vert système iOS (info, pas une alerte) */
+      /* Réservations du jour : vert (info, pas une alerte) : 5.0:1 */
       .nav-badge[data-nav-badge="reservations"] {
-        background: #34c759;
+        background: #15803d;
       }
       .nav-badge[hidden] {
         display: none;

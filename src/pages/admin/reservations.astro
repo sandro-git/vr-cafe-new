@@ -221,22 +221,22 @@ try {
       tr.innerHTML = `
         <td class="px-5 py-4">
           <span class="font-semibold text-white">${h1}</span>
-          <span class="text-white/40"> → ${h2}</span>
+          <span class="text-white/55"> → ${h2}</span>
         </td>
         <td class="px-5 py-4">
           <p class="font-medium text-white">
             ${res.type_reservation === 'anniversaire' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-pink-500/15 text-pink-300 border border-pink-500/30">🎂 Anniv.</span>' : res.type_reservation === 'mdj' ? '<span class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">🏠 MDJ</span>' : ''}${esc(res.client_nom)}
           </p>
-          ${res.notes ? `<p class="text-white/40 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
+          ${res.notes ? `<p class="text-white/55 text-xs mt-0.5 max-w-xs truncate">${esc(res.notes)}</p>` : ''}
           ${bonsBadges(res)}
         </td>
         <td class="px-5 py-4">
           <p>${esc(res.client_email)}</p>
-          <p class="text-white/40 text-xs mt-0.5">${esc(res.client_telephone)}</p>
+          <p class="text-white/55 text-xs mt-0.5">${esc(res.client_telephone)}</p>
         </td>
         <td class="px-5 py-4">
           <p>${res.duree_minutes} min</p>
-          <p class="text-white/40 text-xs mt-0.5">${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</p>
+          <p class="text-white/55 text-xs mt-0.5">${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''}</p>
         </td>
         <td class="px-5 py-4 text-white/55 text-xs">${esc(boxNames)}</td>
         <td class="px-5 py-4">
@@ -246,7 +246,7 @@ try {
           ${res.statut === 'confirmée'
             ? `<button class="btn-cancel text-xs text-red-300 hover:text-red-200 transition-colors" data-id="${res.id}">Annuler</button>`
             : res.statut === 'annulée'
-              ? `<button class="btn-noshow text-xs text-white/40 hover:text-yellow-300 transition-colors" data-id="${res.id}">No-show</button>`
+              ? `<button class="btn-noshow text-xs text-white/55 hover:text-yellow-300 transition-colors" data-id="${res.id}">No-show</button>`
               : ''
           }
         </td>
@@ -289,7 +289,7 @@ try {
         <p class="text-white/55 text-sm">${esc(res.client_email)}</p>
         <p class="text-white/55 text-sm">${esc(res.client_telephone)}</p>
         <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
-          <div class="text-xs text-white/40">
+          <div class="text-xs text-white/55">
             ${res.duree_minutes} min · ${res.nb_personnes} joueur${res.nb_personnes > 1 ? 's' : ''} · ${esc(boxNames)}
           </div>
           <div class="flex gap-3">

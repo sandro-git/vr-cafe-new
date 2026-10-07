@@ -59,7 +59,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
       <div id="plan-error" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm"></div>
 
       <!-- Légende couleurs -->
-      <div class="flex items-center gap-4 mb-3 text-xs text-white/40 flex-wrap">
+      <div class="flex items-center gap-4 mb-3 text-xs text-white/55 flex-wrap">
         <span class="flex items-center gap-1.5">
           <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(4,120,87,0.6);border:1px solid #10b981;"></span>
           VR sans-fil
@@ -114,7 +114,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
               id="vacances-label"
               type="text"
               placeholder="Vacances de Pâques..."
-              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
+              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/50"
             />
           </div>
           <button
@@ -128,9 +128,9 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
         <p id="vacances-error" class="hidden mb-4 text-sm text-red-300"></p>
 
         <!-- Liste périodes -->
-        <div id="vacances-loading" class="text-white/40 text-sm py-4">Chargement...</div>
+        <div id="vacances-loading" class="text-white/55 text-sm py-4">Chargement...</div>
         <div id="vacances-liste" class="hidden space-y-2"></div>
-        <p id="vacances-vide" class="hidden text-white/40 text-sm py-4">Aucune période de vacances configurée.</p>
+        <p id="vacances-vide" class="hidden text-white/55 text-sm py-4">Aucune période de vacances configurée.</p>
       </div>
 
       <!-- ===== Jours de fermeture ===== -->
@@ -155,7 +155,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
               id="fermeture-motif"
               type="text"
               placeholder="Jour férié, congés..."
-              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/35"
+              class="w-full bg-white/5 text-white ring-1 ring-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-400)] placeholder:text-white/50"
             />
           </div>
           <button
@@ -169,9 +169,9 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
         <p id="fermeture-error" class="hidden mb-4 text-sm text-red-300"></p>
 
         <!-- Liste jours fermés -->
-        <div id="fermeture-loading" class="text-white/40 text-sm py-4">Chargement...</div>
+        <div id="fermeture-loading" class="text-white/55 text-sm py-4">Chargement...</div>
         <div id="fermeture-liste" class="hidden space-y-2"></div>
-        <p id="fermeture-vide" class="hidden text-white/40 text-sm py-4">Aucun jour de fermeture planifié.</p>
+        <p id="fermeture-vide" class="hidden text-white/55 text-sm py-4">Aucun jour de fermeture planifié.</p>
       </div>
 
     </div>
@@ -262,7 +262,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
             <svg class="w-4 h-4 text-pink-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-white/40">(fixe pour les anniversaires)</span>
+            Durée : <strong class="text-white ml-1">1 heure</strong> <span class="text-white/55">(fixe pour les anniversaires)</span>
           </div>
 
           <div id="edit-vr-section">
@@ -613,7 +613,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
         timeCell.style.zIndex = '20';
         timeCell.style.background = 'var(--color-surface)';
       }
-      if (!isHalfHour) timeCell.innerHTML = `<span class="text-white/40 text-xs">${hour}h</span>`;
+      if (!isHalfHour) timeCell.innerHTML = `<span class="text-white/55 text-xs">${hour}h</span>`;
       gridEl.appendChild(timeCell);
       for (let d = 0; d < 7; d++) {
         const cell = document.createElement('div');
@@ -844,7 +844,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
     suggestions.forEach(s => {
       const li = document.createElement('li');
       li.className = 'px-3 py-2.5 text-sm text-white/70 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-0';
-      li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-white/40 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
+      li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-white/55 text-xs ml-2">${esc(s.client_email ?? '')}</span>`;
       li.addEventListener('mousedown', e => { e.preventDefault(); fillEditClient(s); });
       ul.appendChild(li);
     });

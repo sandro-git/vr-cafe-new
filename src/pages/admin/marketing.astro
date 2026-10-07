@@ -62,7 +62,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             </button>
           </div>
           <div id="list-fideles" class="space-y-2"></div>
-          <p id="empty-fideles" class="hidden text-white/40 text-sm py-4">Aucun client fidèle pour l'instant.</p>
+          <p id="empty-fideles" class="hidden text-white/55 text-sm py-4">Aucun client fidèle pour l'instant.</p>
         </section>
 
         <!-- Bloc Inactifs -->
@@ -81,7 +81,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             </button>
           </div>
           <div id="list-inactifs" class="space-y-2"></div>
-          <p id="empty-inactifs" class="hidden text-white/40 text-sm py-4">Aucun client inactif pour l'instant.</p>
+          <p id="empty-inactifs" class="hidden text-white/55 text-sm py-4">Aucun client inactif pour l'instant.</p>
         </section>
 
         <!-- Bloc Nouveaux -->
@@ -93,7 +93,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             </div>
           </div>
           <div id="list-nouveaux" class="space-y-2"></div>
-          <p id="empty-nouveaux" class="hidden text-white/40 text-sm py-4">Aucun nouveau client ce mois-ci.</p>
+          <p id="empty-nouveaux" class="hidden text-white/55 text-sm py-4">Aucun nouveau client ce mois-ci.</p>
         </section>
 
       </div>
@@ -125,12 +125,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         </div>
         <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
           ${c.email ? `<a href="mailto:${esc(c.email)}" class="text-[var(--color-brand-300)] hover:text-[var(--color-brand-200)] text-xs">${esc(c.email)}</a>` : ''}
-          ${c.telephone ? `<span class="text-white/40 text-xs">${esc(c.telephone)}</span>` : ''}
+          ${c.telephone ? `<span class="text-white/55 text-xs">${esc(c.telephone)}</span>` : ''}
         </div>
       </div>
       <div class="text-right shrink-0">
         <p class="text-white text-sm font-medium">${c.nbConfirmees} rés.</p>
-        <p class="text-white/40 text-xs">${fmtDate(c.derniereResa)}</p>
+        <p class="text-white/55 text-xs">${fmtDate(c.derniereResa)}</p>
       </div>
     `;
     return div;

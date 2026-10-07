@@ -58,13 +58,13 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         <section>
           <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">À traiter</h2>
           <div id="avis-a-traiter" class="space-y-4"></div>
-          <p id="avis-a-traiter-empty" class="hidden text-white/40 text-sm">Aucun avis en attente — tout est à jour.</p>
+          <p id="avis-a-traiter-empty" class="hidden text-white/55 text-sm">Aucun avis en attente — tout est à jour.</p>
         </section>
 
         <section>
           <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">Historique publié</h2>
           <div id="avis-historique" class="space-y-3"></div>
-          <p id="avis-historique-empty" class="hidden text-white/40 text-sm">Aucune réponse publiée pour le moment.</p>
+          <p id="avis-historique-empty" class="hidden text-white/55 text-sm">Aucune réponse publiée pour le moment.</p>
         </section>
       </div>
 
@@ -159,7 +159,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         <div>
           <p class="font-medium text-white">${esc(a.auteur_nom)}</p>
           <p class="text-amber-300 text-sm">${stars}</p>
-          <p class="text-white/40 text-xs mt-0.5">${esc(dateFmt)}</p>
+          <p class="text-white/55 text-xs mt-0.5">${esc(dateFmt)}</p>
         </div>
         <span class="px-2 py-1 rounded-lg border text-xs font-medium shrink-0 ${badge}">${label}</span>
       </div>
