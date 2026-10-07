@@ -1300,9 +1300,16 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
   // ── Event listeners navigation ─────────────────────────────────────────────
   const DP_ID = 'dp-planning';
 
+  // Date affichée dans le datepicker : aujourd'hui si la semaine courante le contient, sinon le lundi
+  function datePickerDate() {
+    const today = stripTime(new Date());
+    const inWeek = today >= currentWeekStart && today <= addDays(currentWeekStart, 6);
+    return localDateStr(inWeek ? today : currentWeekStart);
+  }
+
   function syncDatePicker() {
     document.dispatchEvent(new CustomEvent('datepicker:setDate', {
-      detail: { id: DP_ID, date: localDateStr(currentWeekStart) }
+      detail: { id: DP_ID, date: datePickerDate() }
     }));
   }
 
@@ -1555,7 +1562,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
     detail: {
       id: DP_ID,
       adminMode: true,
-      selectedDate: localDateStr(currentWeekStart),
+      selectedDate: datePickerDate(),
       datesFermees: joursFermetureCache,
       periodesVacances: periodesVacancesCache,
       joursNormaux: [0, 3, 5, 6],
