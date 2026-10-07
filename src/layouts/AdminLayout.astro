@@ -4,11 +4,11 @@ const PUBLIC_VAPID_KEY = import.meta.env.PUBLIC_VAPID_KEY ?? "";
 
 const pathname = Astro.url.pathname;
 const navLinks = [
-  { href: "/admin/reservations", label: "Réservations" },
+  { href: "/admin/reservations", label: "Réservations", badge: "reservations" },
   { href: "/admin/planning", label: "Planning" },
   { href: "/admin/clients", label: "Clients" },
   { href: "/admin/bons", label: "Bons cadeaux" },
-  { href: "/admin/avis", label: "Avis" },
+  { href: "/admin/avis", label: "Avis", badge: "avis" },
   { href: "/admin/marketing", label: "Marketing" },
   { href: "/admin/consommation", label: "Consommation" },
   { href: "/admin/aide", label: "Aide" },
@@ -33,19 +33,20 @@ const isActive = (href: string) =>
           <span class="text-white/60 font-normal text-sm">Admin</span>
         </a>
 
-        <nav class="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <nav class="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar py-2 pr-2">
           {
             navLinks.map((link) => (
               <a
                 href={link.href}
                 class:list={[
-                  "shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  "relative shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                   isActive(link.href)
                     ? "bg-white/10 text-white"
                     : "text-white/55 hover:text-white hover:bg-white/5",
                 ]}
               >
                 {link.label}
+                {link.badge && <span class="nav-badge" data-nav-badge={link.badge} hidden />}
               </a>
             ))
           }
@@ -85,9 +86,86 @@ const isActive = (href: string) =>
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+
+      /* Pastille façon iOS : rouge système, chiffre blanc, pilule dès 2 chiffres */
+      .nav-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background: #ff3b30;
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        box-shadow: 0 0 0 2px var(--color-surface-elevated), 0 1px 3px rgb(0 0 0 / 0.4);
+        pointer-events: none;
+        animation: nav-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .nav-badge[hidden] {
+        display: none;
+      }
+      @keyframes nav-badge-pop {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .nav-badge { animation: none; }
+      }
     </style>
   </body>
 </html>
+
+<script>
+  import { adminRead } from "../lib/admin-read.js";
+
+  // Pastilles du menu : avis en attente, réservations reçues aujourd'hui.
+  // Rafraîchies toutes les minutes, au retour sur l'onglet, et sur l'événement
+  // « admin:badges-refresh » (ex. après traitement d'un avis).
+  const setBadge = (name: string, count: number) => {
+    const el = document.querySelector<HTMLElement>(`[data-nav-badge="${name}"]`);
+    if (!el) return;
+    if (count <= 0) {
+      el.hidden = true;
+      return;
+    }
+    const text = count > 99 ? "99+" : String(count);
+    if (!el.hidden && el.textContent === text) return;
+    // Masquer puis réafficher relance l'animation d'apparition quand le nombre change
+    el.hidden = true;
+    void el.offsetWidth;
+    el.textContent = text;
+    el.hidden = false;
+  };
+
+  const refreshBadges = async () => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+    const { data } = await adminRead("nav_badges", { start: start.toISOString(), end: end.toISOString() });
+    if (!data) return;
+    setBadge("avis", data.avis_en_attente);
+    setBadge("reservations", data.reservations_du_jour);
+  };
+
+  refreshBadges();
+  setInterval(() => {
+    if (document.visibilityState === "visible") refreshBadges();
+  }, 60_000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshBadges();
+  });
+  window.addEventListener("admin:badges-refresh", refreshBadges);
+</script>
 
 <script define:vars={{ PUBLIC_VAPID_KEY }}>
   if ("serviceWorker" in navigator && "PushManager" in window && PUBLIC_VAPID_KEY) {

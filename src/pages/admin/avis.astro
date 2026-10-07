@@ -239,6 +239,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     }
 
     await loadAvis();
+    window.dispatchEvent(new Event('admin:badges-refresh'));
     return result;
   }
 

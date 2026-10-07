@@ -33,6 +33,7 @@ export const ADMIN_READ_ACTIONS = [
   "list_clients",
   "client_reservations",
   "marketing_reservations",
+  "nav_badges",
 ] as const;
 export type AdminReadAction = (typeof ADMIN_READ_ACTIONS)[number];
 
@@ -109,6 +110,27 @@ export async function runAdminRead(supabase: SupabaseClient<any, any, any>, acti
         .order("creneau_debut", { ascending: false });
       if (error) return fail(error.message, 500);
       return ok(data ?? []);
+    }
+
+    // Pastilles du menu admin : avis Google en attente + réservations reçues aujourd'hui
+    // (bornes de la journée calculées par le navigateur, heure de Paris)
+    case "nav_badges": {
+      const start = parseDate(body.start);
+      const end = parseDate(body.end);
+      if (!start || !end || end < start) return fail("Dates invalides");
+      if (end.getTime() - start.getTime() > 2 * 24 * 60 * 60 * 1000) return fail("Période trop longue");
+      const [avis, resas] = await Promise.all([
+        supabase.from("avis_google").select("id", { count: "exact", head: true }).eq("statut", "en_attente"),
+        supabase
+          .from("reservations")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", start.toISOString())
+          .lte("created_at", end.toISOString())
+          .not("statut", "in", '("annulée","no_show")'),
+      ]);
+      if (avis.error) return fail(avis.error.message, 500);
+      if (resas.error) return fail(resas.error.message, 500);
+      return ok({ avis_en_attente: avis.count ?? 0, reservations_du_jour: resas.count ?? 0 });
     }
   }
 }
