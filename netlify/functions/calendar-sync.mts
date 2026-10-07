@@ -1,5 +1,5 @@
 // Synchronise les réservations vers l'agenda Google « Réservation » toutes les
-// 5 minutes (voir netlify/lib/reservation-calendar.ts). Fonction planifiée : pas
+// minutes (voir netlify/lib/reservation-calendar.ts). Fonction planifiée : pas
 // appelable en HTTP ; en production, « Run now » depuis l'interface Netlify
 // (Functions → calendar-sync) force une synchro immédiate.
 
@@ -23,5 +23,5 @@ export default async () => {
 };
 
 export const config: Config = {
-  schedule: "*/5 * * * *",
+  schedule: "* * * * *",
 };

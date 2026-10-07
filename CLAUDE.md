@@ -254,7 +254,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `POST /api/sumup-webhook` | aucune (non signé) : paiement relu via l'API SumUp | Active le bon payé |
 | `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, remboursement SumUp, renvoi d'email, bon vendu au comptoir |
 | `sumup-remboursements` (planifiée, toutes les heures) | — | Détecte les remboursements faits dans SumUp et annule les bons |
-| `calendar-sync` (planifiée, toutes les 5 min) | — | Synchronise les réservations vers l'agenda Google « Réservation » |
+| `calendar-sync` (planifiée, toutes les minutes) | — | Synchronise les réservations vers l'agenda Google « Réservation » |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
 | `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
@@ -271,7 +271,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 
 ### Synchro agenda Google « Réservation »
 
-Fonction planifiée `calendar-sync` (`*/5 * * * *`) → `syncReservationsCalendar()` (`netlify/lib/reservation-calendar.ts`, client REST `netlify/lib/google-calendar.ts`). **Réconciliation complète** plutôt qu'un appel à chaque écriture : les réservations sont écrites par trop de chemins (formulaires en clé anon, admin, MCP, WhatsApp, annulation/modification client). Supabase est la source de vérité :
+Fonction planifiée `calendar-sync` (`* * * * *`, chaque minute) → `syncReservationsCalendar()` (`netlify/lib/reservation-calendar.ts`, client REST `netlify/lib/google-calendar.ts`). **Réconciliation complète** plutôt qu'un appel à chaque écriture : les réservations sont écrites par trop de chemins (formulaires en clé anon, admin, MCP, WhatsApp, annulation/modification client). Supabase est la source de vérité :
 - fenêtre : réservations dont la fin est après J-7 et le début avant J+365 (même fenêtre pour la requête Supabase et `events.list`, sinon un événement à cheval sur la borne serait supprimé) ;
 - `confirmée` / `no_show` → événement (no-show : préfixe 🚫, gris) ; `annulée` ou réservation supprimée → événement supprimé ;
 - id d'événement déterministe `vrc<uuid sans tirets>` ; propriétés privées `source=vr-cafe`, `reservation_id`, `h` (empreinte du contenu) → seuls les événements modifiés sont réécrits. Les retouches faites à la main dans Google restent tant que la réservation ne change pas ; un événement supprimé à la main est recréé (POST 409 → PUT) ;
