@@ -106,14 +106,14 @@ describe("runAdminRead", () => {
     expect(supa.queries[0]).toContainEqual(["eq", "client_id", UUID]);
   });
 
-  it("nav_badges : avis en attente + réservations reçues sur la journée", async () => {
+  it("nav_badges : avis en attente + réservations prévues sur la journée", async () => {
     supa.result = { data: null, error: null, count: 3 } as any;
     const r = await runAdminRead(fakeClient(), "nav_badges", {
       start: "2026-10-06T22:00:00.000Z", end: "2026-10-07T21:59:59.999Z",
     });
     expect(r).toEqual({ status: 200, body: { data: { avis_en_attente: 3, reservations_du_jour: 3 } } });
     expect(supa.queries[0]).toContainEqual(["eq", "statut", "en_attente"]);
-    expect(supa.queries[1]).toContainEqual(["gte", "created_at", "2026-10-06T22:00:00.000Z"]);
+    expect(supa.queries[1]).toContainEqual(["gte", "creneau_debut", "2026-10-06T22:00:00.000Z"]);
     expect(supa.queries[1]).toContainEqual(["not", "statut", "in", '("annulée","no_show")']);
     expect((await runAdminRead(fakeClient(), "nav_badges", { start: "2026-10-01T00:00:00Z", end: "2026-10-07T00:00:00Z" })).status).toBe(400);
   });

@@ -112,7 +112,7 @@ export async function runAdminRead(supabase: SupabaseClient<any, any, any>, acti
       return ok(data ?? []);
     }
 
-    // Pastilles du menu admin : avis Google en attente + réservations reçues aujourd'hui
+    // Pastilles du menu admin : avis Google en attente + réservations prévues aujourd'hui
     // (bornes de la journée calculées par le navigateur, heure de Paris)
     case "nav_badges": {
       const start = parseDate(body.start);
@@ -124,8 +124,8 @@ export async function runAdminRead(supabase: SupabaseClient<any, any, any>, acti
         supabase
           .from("reservations")
           .select("id", { count: "exact", head: true })
-          .gte("created_at", start.toISOString())
-          .lte("created_at", end.toISOString())
+          .gte("creneau_debut", start.toISOString())
+          .lte("creneau_debut", end.toISOString())
           .not("statut", "in", '("annulée","no_show")'),
       ]);
       if (avis.error) return fail(avis.error.message, 500);

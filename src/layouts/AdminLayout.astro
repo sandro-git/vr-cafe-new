@@ -110,6 +110,10 @@ const isActive = (href: string) =>
         pointer-events: none;
         animation: nav-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
+      /* Réservations du jour : vert système iOS (info, pas une alerte) */
+      .nav-badge[data-nav-badge="reservations"] {
+        background: #34c759;
+      }
       .nav-badge[hidden] {
         display: none;
       }
@@ -127,7 +131,7 @@ const isActive = (href: string) =>
 <script>
   import { adminRead } from "../lib/admin-read.js";
 
-  // Pastilles du menu : avis en attente, réservations reçues aujourd'hui.
+  // Pastilles du menu : avis en attente, réservations prévues aujourd'hui.
   // Rafraîchies toutes les minutes, au retour sur l'onglet, et sur l'événement
   // « admin:badges-refresh » (ex. après traitement d'un avis).
   const setBadge = (name: string, count: number) => {
