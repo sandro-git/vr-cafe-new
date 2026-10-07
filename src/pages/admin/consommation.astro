@@ -1,0 +1,103 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import {
+  CALENDAR_SYNC_RUNS_PER_DAY,
+  THRESHOLDS,
+  fetchUsage,
+  formatValue,
+  isUsageConfigured,
+  summarizeUsage,
+  type Level,
+  type UsageSummary,
+} from "../../../netlify/lib/netlify-usage";
+
+// Lecture à chaque affichage (page admin, protégée par le middleware)
+let summary: UsageSummary | null = null;
+let error: string | null = null;
+if (!isUsageConfigured()) {
+  error = "NETLIFY_API_TOKEN n'est pas configuré : la consommation ne peut pas être lue.";
+} else {
+  try {
+    summary = summarizeUsage(await fetchUsage());
+  } catch (e) {
+    console.error("admin/consommation", e);
+    error = "Impossible de lire la consommation Netlify pour le moment.";
+  }
+}
+
+const dateFr = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" });
+const pct = (x: number | null) => (x === null ? "—" : `${Math.round(x)} %`);
+const LEVEL: Record<Level, { text: string; badge: string; bar: string }> = {
+  ok: { text: "OK", badge: "bg-green-500/15 text-green-300 border-green-500/30", bar: "bg-green-400" },
+  warn: { text: "Seuil proche", badge: "bg-amber-500/15 text-amber-300 border-amber-500/30", bar: "bg-amber-400" },
+  critical: { text: "Seuil presque atteint", badge: "bg-red-500/15 text-red-300 border-red-500/30", bar: "bg-red-400" },
+};
+const invocations = summary?.metrics.find((m) => m.key === "invocations");
+---
+
+<AdminLayout>
+  <main class="min-h-screen py-8 px-4 sm:px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="mb-8">
+        <h1 class="font-display text-2xl font-extrabold tracking-tight text-white">Consommation Netlify</h1>
+        <p class="text-white/55 text-sm mt-0.5">
+          {summary
+            ? `Période du ${dateFr(summary.periodStart)} au ${dateFr(summary.periodEnd)} · jour ${Math.floor(summary.elapsedDays) + 1} sur ${Math.round(summary.totalDays)}`
+            : "Plan gratuit"}
+        </p>
+      </div>
+
+      {error && (
+        <div class="bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-4 text-sm">{error}</div>
+      )}
+
+      {summary && (
+        <>
+          <div class="grid gap-4 sm:grid-cols-3 mb-6">
+            {summary.metrics.map((m) => (
+              <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4" data-metric={m.key}>
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <p class="text-white/55 text-xs uppercase tracking-wide">{m.label}</p>
+                  <span class:list={["shrink-0 text-xs px-2 py-0.5 rounded-full border", LEVEL[m.level].badge]}>
+                    {LEVEL[m.level].text}
+                  </span>
+                </div>
+                <p class="text-2xl font-bold text-white">{pct(m.usedPct)}</p>
+                <p class="text-white/55 text-sm">
+                  {formatValue(m.used, m.unit)} sur {formatValue(m.included, m.unit)}
+                </p>
+                <div class="h-2 rounded-full bg-white/10 mt-3 overflow-hidden" aria-hidden="true">
+                  <div class:list={["h-full rounded-full", LEVEL[m.level].bar]} style={`width:${Math.min(m.usedPct, 100)}%`}></div>
+                </div>
+                <p class="text-white/55 text-xs mt-2">
+                  Fin de mois estimée :{" "}
+                  <span class="text-white">
+                    {m.projected === null ? "dans quelques jours" : `${formatValue(m.projected, m.unit)} (${pct(m.projectedPct)})`}
+                  </span>
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {invocations && (
+            <div class="bg-[var(--color-surface-card)] border border-white/10 rounded-xl p-4 mb-6 text-sm text-white/70 space-y-1">
+              <p class="text-white font-semibold">Synchro de l'agenda Google</p>
+              <p>
+                {CALENDAR_SYNC_RUNS_PER_DAY.toLocaleString("fr-FR")} appels par jour (chaque minute de 8h à minuit), soit environ{" "}
+                <span class="text-white">{summary.calendarSyncMonthly.toLocaleString("fr-FR")} appels</span> sur la période ({pct((summary.calendarSyncMonthly / invocations.included) * 100)} de l'allocation).
+              </p>
+            </div>
+          )}
+
+          <div class="text-white/55 text-xs space-y-1">
+            <p>
+              Alerte par email et notification push (vérification toutes les 6 heures) : « Seuil proche » à {THRESHOLDS.warnUsedPct} % utilisé ou {THRESHOLDS.warnProjectedPct} % estimé en fin de mois, « Seuil presque atteint » à {THRESHOLDS.criticalUsedPct} % utilisé ou {THRESHOLDS.criticalProjectedPct} % estimé.
+            </p>
+            <p>Au-delà de l'allocation gratuite des fonctions, Netlify passe le site au niveau payant. Chiffres fournis par Netlify, mis à jour avec un léger décalage.</p>
+          </div>
+        </>
+      )}
+    </div>
+  </main>
+</AdminLayout>

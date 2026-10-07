@@ -1,12 +1,16 @@
 // Synchronise les réservations vers l'agenda Google « Réservation » toutes les
-// minutes (voir netlify/lib/reservation-calendar.ts). Fonction planifiée : pas
-// appelable en HTTP ; en production, « Run now » depuis l'interface Netlify
-// (Functions → calendar-sync) force une synchro immédiate.
+// minutes de 8h à minuit, heure de Paris (voir netlify/lib/reservation-calendar.ts).
+// Le cron Netlify est en UTC : la plage 6h-22h UTC couvre 8h-minuit en été comme en
+// hiver, et isSyncHour() écarte l'heure en trop (7h en hiver, minuit en été). Le
+// premier passage de 8h rattrape tout ce qui a changé pendant la nuit.
+// Fonction planifiée : pas appelable en HTTP ; en production, « Run now » depuis
+// l'interface Netlify (Functions → calendar-sync) force une synchro immédiate.
 
 import type { Config } from "@netlify/functions";
-import { syncReservationsCalendar } from "../lib/reservation-calendar.ts";
+import { isSyncHour, syncReservationsCalendar } from "../lib/reservation-calendar.ts";
 
 export default async () => {
+  if (!isSyncHour()) return new Response("pause nocturne");
   try {
     const result = await syncReservationsCalendar();
     if (result.skipped) console.log(`calendar-sync : ignoré — ${result.skipped}`);
@@ -23,5 +27,5 @@ export default async () => {
 };
 
 export const config: Config = {
-  schedule: "* * * * *",
+  schedule: "* 6-22 * * *",
 };

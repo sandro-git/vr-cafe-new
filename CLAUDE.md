@@ -231,6 +231,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 - `/admin/bons` — bons cadeaux (voir « Bons cadeaux »)
 - `/admin/clients` — CRM : liste clients filtrée (fidèles, inactifs, tous) + historique des réservations
 - `/admin/marketing` — stats (fidèles, inactifs, nouveaux) + liens vers Mailjet
+- `/admin/consommation` — consommation Netlify du mois (appels de fonctions, temps d'exécution, bande passante, projection fin de mois), voir « Consommation Netlify et alertes »
 - `/admin/aide` — chat d'aide opérationnelle pour les collaborateurs (questions suggérées + saisie libre), répond uniquement à partir de `content/staff-guide.md` via Claude Haiku 4.5
 - `/admin/login` — connexion (seule page admin accessible sans session) ; `/admin/logout` — déconnexion de l'appareil, en `POST` uniquement (bouton « Déconnexion » du header)
 
@@ -254,7 +255,8 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `POST /api/sumup-webhook` | aucune (non signé) : paiement relu via l'API SumUp | Active le bon payé |
 | `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, remboursement SumUp, renvoi d'email, bon vendu au comptoir |
 | `sumup-remboursements` (planifiée, toutes les heures) | — | Détecte les remboursements faits dans SumUp et annule les bons |
-| `calendar-sync` (planifiée, toutes les minutes) | — | Synchronise les réservations vers l'agenda Google « Réservation » |
+| `calendar-sync` (planifiée, chaque minute de 8h à minuit) | — | Synchronise les réservations vers l'agenda Google « Réservation » |
+| `usage-alert` (planifiée, toutes les 6 h) | — | Alerte (email + push) quand la consommation Netlify approche des limites |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
 | `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
@@ -271,7 +273,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 
 ### Synchro agenda Google « Réservation »
 
-Fonction planifiée `calendar-sync` (`* * * * *`, chaque minute) → `syncReservationsCalendar()` (`netlify/lib/reservation-calendar.ts`, client REST `netlify/lib/google-calendar.ts`). **Réconciliation complète** plutôt qu'un appel à chaque écriture : les réservations sont écrites par trop de chemins (formulaires en clé anon, admin, MCP, WhatsApp, annulation/modification client). Supabase est la source de vérité :
+Fonction planifiée `calendar-sync`, **chaque minute de 8h à minuit (Paris)** : cron UTC `* 6-22 * * *` (couvre 8h-minuit été comme hiver) + `isSyncHour()` qui écarte l'heure en trop (7h en hiver, minuit en été ; ces appels comptent quand même, ≈ 1 020 appels/jour). Le passage de 8h rattrape la nuit. `isSyncHour` lit l'heure via `formatToParts` (en fr-FR, `format()` renvoie « 08 h ») → `syncReservationsCalendar()` (`netlify/lib/reservation-calendar.ts`, client REST `netlify/lib/google-calendar.ts`). **Réconciliation complète** plutôt qu'un appel à chaque écriture : les réservations sont écrites par trop de chemins (formulaires en clé anon, admin, MCP, WhatsApp, annulation/modification client). Supabase est la source de vérité :
 - fenêtre : réservations dont la fin est après J-7 et le début avant J+365 (même fenêtre pour la requête Supabase et `events.list`, sinon un événement à cheval sur la borne serait supprimé) ;
 - `confirmée` / `no_show` → événement (no-show : préfixe 🚫, gris) ; `annulée` ou réservation supprimée → événement supprimé ;
 - id d'événement déterministe `vrc<uuid sans tirets>` ; propriétés privées `source=vr-cafe`, `reservation_id`, `h` (empreinte du contenu) → seuls les événements modifiés sont réécrits. Les retouches faites à la main dans Google restent tant que la réservation ne change pas ; un événement supprimé à la main est recréé (POST 409 → PUT) ;
@@ -281,6 +283,15 @@ Fonction planifiée `calendar-sync` (`* * * * *`, chaque minute) → `syncReserv
 **Auth** : même client OAuth que les avis (`GOOGLE_CLIENT_ID`/`SECRET`) mais jeton distinct `GOOGLE_CALENDAR_REFRESH_TOKEN` (scopes `calendar.events` + `calendar.calendarlist.readonly`), obtenu avec `bun scripts/google-calendar-auth.mts` (flux OAuth local sur `http://localhost:8765/callback`, vérifie que l'agenda existe, enregistre le jeton sur Netlify sans l'afficher). Agenda trouvé par son nom (`GOOGLE_CALENDAR_NAME`, défaut « Réservation », accents/casse ignorés) ou forcé par `GOOGLE_CALENDAR_ID`.
 
 Une planifiée ne tourne pas dans `netlify dev` : en production, « Run now » dans Netlify (Functions → calendar-sync) force une synchro.
+
+### Consommation Netlify et alertes
+
+Plan gratuit **legacy** (125 000 appels de fonctions et 100 h d'exécution par mois et par site, 100 Go de bande passante par compte ; au-delà des fonctions, Netlify passe le site au niveau payant). Lu via l'API Netlify avec `NETLIFY_API_TOKEN` (jeton personnel, `scripts/set-netlify-usage-token.sh`) dans `netlify/lib/netlify-usage.ts` :
+- `GET /api/v1/sites/{site}/usage` → `functions.capabilities.invocations|runtime` (seul endpoint trouvé pour les fonctions ; `getAccount().capabilities` renvoie `used: 0`, ne pas s'y fier) ; `GET /api/v1/accounts/{account_id}/bandwidth`. Période du 1er au 1er à minuit **heure du Pacifique**. Chiffres mis à jour par Netlify avec du retard
+- `summarizeUsage` : % utilisé + projection linéaire fin de période (pas avant 3 jours) ; niveaux `warn` (75 % utilisé ou 90 % projeté) / `critical` (90 % / 110 %)
+- Page **`/admin/consommation`** (SSR, lecture à chaque affichage) : 3 cartes + part estimée de calendar-sync
+- Fonction planifiée **`usage-alert`** (`0 */6 * * *`, `netlify/lib/usage-alert.ts`) : email `[Netlify] …` à `ADMIN_EMAIL` + push, **une fois par métrique et par niveau et par période** (dernier niveau dans Netlify Blobs, store `usage-alerts`). Jeton refusé (401/403) → email « Suivi de consommation en panne », une fois par mois. Sans jeton : ne fait rien
+- Tests : `tests/netlify-usage.test.ts`
 
 ### Variables d'environnement
 
@@ -312,6 +323,10 @@ MAILJET_SENDER_EMAIL=contact@vr-cafe.fr
 GOOGLE_CALENDAR_REFRESH_TOKEN=... # secrète, via scripts/google-calendar-auth.mts
 GOOGLE_CALENDAR_ID=...            # optionnel (sinon recherche par nom)
 GOOGLE_CALENDAR_NAME=Réservation  # optionnel
+
+# Netlify (lecture de la consommation : /admin/consommation, usage-alert)
+NETLIFY_API_TOKEN=...             # secrète, via scripts/set-netlify-usage-token.sh
+NETLIFY_SITE_ID=...               # optionnel (défaut : site vr-cafe)
 
 # Anthropic (chat aide admin, réponses aux avis Google, agent WhatsApp)
 ANTHROPIC_API_KEY=...

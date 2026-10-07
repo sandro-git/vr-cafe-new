@@ -31,6 +31,19 @@ const TIME_ZONE = "Europe/Paris";
 export const PAST_DAYS = 7;
 export const FUTURE_DAYS = 365;
 
+/** Synchro de SYNC_START_HOUR à minuit, heure de Paris (pas de synchro la nuit). */
+export const SYNC_START_HOUR = 8;
+
+export function isSyncHour(now = Date.now()): boolean {
+  // formatToParts : en fr-FR, format() renvoie « 08 h », illisible par Number()
+  const hour = Number(
+    new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hourCycle: "h23", timeZone: TIME_ZONE })
+      .formatToParts(now)
+      .find((p) => p.type === "hour")?.value,
+  );
+  return hour >= SYNC_START_HOUR;
+}
+
 export interface CalendarReservation {
   id: string;
   statut: string;
