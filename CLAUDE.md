@@ -35,6 +35,7 @@ Toutes les commandes utilisent `bun` et doivent être exécutées depuis la raci
   - `src/lib/pricing.ts` (grille + anniversaire)
   - `netlify/lib/reservation-token.ts` (HMAC)
   - `netlify/lib/reservation-push.ts` (message, une seule notification par réservation, fenêtre de 10 min, id invalide)
+  - `netlify/lib/reservation-calendar.ts` (événement Google : titre, description, couleurs ; plan créer/mettre à jour/supprimer ; fenêtre identique base/Google ; `sendUpdates=none` ; id déjà existant → remplacement)
   - `netlify/lib/admin-session.ts` (jeton de session admin : valide, expiré, falsifié, secret ou mot de passe changé, lecture du cookie, mot de passe)
   - `netlify/lib/reservation-notice.ts` (règle des 24h)
   - `src/lib/reservation-validation.ts` : email, téléphone, faux numéros, formatage, détection du pays, `validateClientInfo`, et les exemples (`placeholder`) de `COUNTRIES` (chaque exemple doit être valide et appartenir **exactement** à son pays)
@@ -253,6 +254,7 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 | `POST /api/sumup-webhook` | aucune (non signé) : paiement relu via l'API SumUp | Active le bon payé |
 | `POST /api/admin/bons` | Cookie `admin_session` | Liste, utilisation, annulation, remboursement SumUp, renvoi d'email, bon vendu au comptoir |
 | `sumup-remboursements` (planifiée, toutes les heures) | — | Détecte les remboursements faits dans SumUp et annule les bons |
+| `calendar-sync` (planifiée, toutes les 5 min) | — | Synchronise les réservations vers l'agenda Google « Réservation » |
 | `GET /api/reservation-lookup-public` | Token HMAC (`id` + `token`) | Lecture d'une réservation pour la page `/reservation/annulation` et le mode modification |
 | `POST /api/reservation-cancel-public` | Token HMAC (`id` + `token`) | Annulation par le client (≥ 24h) ; `motif: "modification"` = sans email |
 
@@ -266,6 +268,19 @@ Protégée par `src/middleware.ts` (cookie `admin_session` httpOnly, `sameSite: 
 - `public/sw.js` — Service Worker (enregistré par `AdminLayout.astro`)
 - Abonnement / désabonnement d'un appareil admin : `POST` / `DELETE /api/push/subscribe` ; réabonnement à chaque page admin, désabonnement au bouton « Déconnexion » (voir « Section admin »)
 - Clés VAPID : `PUBLIC_VAPID_KEY`, `PRIVATE_VAPID_KEY`, `VAPID_EMAIL`
+
+### Synchro agenda Google « Réservation »
+
+Fonction planifiée `calendar-sync` (`*/5 * * * *`) → `syncReservationsCalendar()` (`netlify/lib/reservation-calendar.ts`, client REST `netlify/lib/google-calendar.ts`). **Réconciliation complète** plutôt qu'un appel à chaque écriture : les réservations sont écrites par trop de chemins (formulaires en clé anon, admin, MCP, WhatsApp, annulation/modification client). Supabase est la source de vérité :
+- fenêtre : réservations dont la fin est après J-7 et le début avant J+365 (même fenêtre pour la requête Supabase et `events.list`, sinon un événement à cheval sur la borne serait supprimé) ;
+- `confirmée` / `no_show` → événement (no-show : préfixe 🚫, gris) ; `annulée` ou réservation supprimée → événement supprimé ;
+- id d'événement déterministe `vrc<uuid sans tirets>` ; propriétés privées `source=vr-cafe`, `reservation_id`, `h` (empreinte du contenu) → seuls les événements modifiés sont réécrits. Les retouches faites à la main dans Google restent tant que la réservation ne change pas ; un événement supprimé à la main est recréé (POST 409 → PUT) ;
+- jamais d'invité ni d'email (`sendUpdates=none`) ; couleurs : anniversaire rose (4), MDJ violet (3) ;
+- sans `GOOGLE_CALENDAR_REFRESH_TOKEN`, la fonction ne fait rien (log « ignoré »).
+
+**Auth** : même client OAuth que les avis (`GOOGLE_CLIENT_ID`/`SECRET`) mais jeton distinct `GOOGLE_CALENDAR_REFRESH_TOKEN` (scopes `calendar.events` + `calendar.calendarlist.readonly`), obtenu avec `bun scripts/google-calendar-auth.mts` (flux OAuth local sur `http://localhost:8765/callback`, vérifie que l'agenda existe, enregistre le jeton sur Netlify sans l'afficher). Agenda trouvé par son nom (`GOOGLE_CALENDAR_NAME`, défaut « Réservation », accents/casse ignorés) ou forcé par `GOOGLE_CALENDAR_ID`.
+
+Une planifiée ne tourne pas dans `netlify dev` : en production, « Run now » dans Netlify (Functions → calendar-sync) force une synchro.
 
 ### Variables d'environnement
 
@@ -292,6 +307,11 @@ VAPID_EMAIL=...
 MAILJET_API_KEY=...
 MAILJET_API_SECRET=...
 MAILJET_SENDER_EMAIL=contact@vr-cafe.fr
+
+# Google Calendar (synchro agenda « Réservation ») — réutilise GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+GOOGLE_CALENDAR_REFRESH_TOKEN=... # secrète, via scripts/google-calendar-auth.mts
+GOOGLE_CALENDAR_ID=...            # optionnel (sinon recherche par nom)
+GOOGLE_CALENDAR_NAME=Réservation  # optionnel
 
 # Anthropic (chat aide admin, réponses aux avis Google, agent WhatsApp)
 ANTHROPIC_API_KEY=...
