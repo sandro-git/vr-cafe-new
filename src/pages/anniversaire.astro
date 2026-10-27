@@ -66,7 +66,7 @@ const schema = graph([
         {[
           { emoji: "🎮", accent: "from-[var(--color-glow-blue)] to-[var(--color-brand-500)]", title: "Des expériences pour tous", text: "Enfants, ados ou adultes — nos jeux VR conviennent à tous les âges. Escape games, jeux d'action, aventures multijoueurs." },
           { emoji: "👥", accent: "from-[var(--color-glow-pink)] to-[var(--color-brand-500)]", title: "Groupes jusqu'à 10 personnes", text: "Nous accueillons vos groupes et organisons les sessions pour que tout le monde joue ensemble ou en rotation." },
-          { emoji: "⭐", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "4,9/5 sur TripAdvisor", text: "56 avis clients enthousiastes. Nos visiteurs repartent avec des souvenirs plein les yeux — et reviennent !" },
+          { emoji: "⭐", accent: "from-[var(--color-accent-400)] to-[var(--color-glow-pink)]", title: "4,9/5 sur Google", text: "Des avis clients enthousiastes. Nos visiteurs repartent avec des souvenirs plein les yeux — et reviennent !" },
         ].map((c) => (
           <article class="card-glow group p-7 text-center transition-transform duration-[var(--dur-base)] hover:-translate-y-1">
             <div class={`mx-auto mb-5 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${c.accent} text-2xl shadow-lg transition-transform duration-[var(--dur-base)] group-hover:scale-110`}>{c.emoji}</div>
