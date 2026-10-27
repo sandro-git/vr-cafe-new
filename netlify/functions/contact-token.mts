@@ -4,7 +4,14 @@ import type { Config } from "@netlify/functions";
 // vérifié par /api/contact (âge min 3s anti-bot, max 1h). Servi à part pour que
 // /contact reste une page statique (pas de démarrage à froid de fonction).
 export default async () => {
-  const secret = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
+  const secret = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+  if (!secret) {
+    console.error("ADMIN_PASSWORD absent : jeton CSRF non émis");
+    return new Response(JSON.stringify({ error: "Unavailable" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
   const ts = String(Date.now());
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);

@@ -278,9 +278,14 @@ async function toolCreateReservation(args: Record<string, unknown>) {
     return text("Erreur lors de la création de la réservation. Veuillez réessayer.");
 
   // Insert boxes
-  await supabase
+  const { error: boxErr } = await supabase
     .from("reservation_boxes")
-    .insert(assigned.map((b: Record<string, unknown>) => ({ reservation_id: resa.id, box_id: b.id })));
+    .insert(assigned.map((b: Record<string, unknown>) => ({ reservation_id: resa.id, box_id: b.box_id })));
+  if (boxErr) {
+    // Sans box, la réservation ne bloquerait pas le créneau : on la retire.
+    await supabase.from("reservations").delete().eq("id", resa.id);
+    return text("Erreur lors de l'attribution des box. Veuillez réessayer.");
+  }
 
   const ref = (resa.id as string).split("-")[0].toUpperCase();
   const boxNames = assigned.map((b: Record<string, unknown>) => b.box_nom).join(", ");

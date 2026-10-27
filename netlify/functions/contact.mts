@@ -84,7 +84,14 @@ export default async (req: Request, _context: Context) => {
     }
 
     // Validation CSRF
-    const csrfSecret = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD || "vrcafe-csrf-fallback";
+    const csrfSecret = Netlify.env.get("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+    if (!csrfSecret) {
+      console.error("ADMIN_PASSWORD absent : jeton CSRF invérifiable");
+      return new Response(
+        JSON.stringify({ error: "Failed to send email" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
     if (!csrfToken || !ts || !(await verifyCsrf(csrfToken, ts, csrfSecret))) {
       return new Response(
         JSON.stringify({ error: "Invalid CSRF token" }),

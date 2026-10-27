@@ -164,7 +164,7 @@ La clé anon est publique (intégrée au JS du site) : **aucune table contenant 
 **Flux** : `/contact` (page **statique**) → composant `src/components/ContactForm.astro` → `POST /api/contact` (`netlify/functions/contact.mts`) → email Mailjet à `sandro@vr-cafe.fr` (sujet `[Contact VR Café] <sujet>`, `Reply-To` = email du visiteur) → redirection 303 vers `/contact/merci`.
 
 - **Champs** : `email`, `subject`, `message` (obligatoires) + champs cachés `_csrf`, `_ts` et le piège à robots `website`
-- **Jeton CSRF** : récupéré côté client via `GET /api/contact-token` (`contact-token.mts`) → `{ csrf, ts }` = HMAC-SHA256 de l'horodatage d'émission, signé avec `ADMIN_PASSWORD` (repli `vrcafe-csrf-fallback`). Page statique → le jeton n'est pas dans le HTML ; il est redemandé s'il a plus de 50 min (le serveur le refuse au-delà d'1 h)
+- **Jeton CSRF** : récupéré côté client via `GET /api/contact-token` (`contact-token.mts`) → `{ csrf, ts }` = HMAC-SHA256 de l'horodatage d'émission, signé avec `ADMIN_PASSWORD` (sans repli : variable absente → 500). Page statique → le jeton n'est pas dans le HTML ; il est redemandé s'il a plus de 50 min (le serveur le refuse au-delà d'1 h)
 - **Anti-robots** (côté serveur, dans cet ordre) :
   - `Origin` absente ou hors de `ALLOWED_ORIGINS` (dont `localhost:4321` et `:8888`) → 403
   - `website` rempli → redirection silencieuse vers `/contact/merci`, aucun email

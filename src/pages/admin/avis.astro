@@ -75,6 +75,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 <script>
   // @ts-nocheck
   import { supabase } from '../../lib/supabase.js';
+  import { esc as escHtml } from '../../lib/html';
+  const esc = (str) => escHtml(str, '—');
 
   let avisCache = [];
 
@@ -261,9 +263,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     document.getElementById('admin-error').classList.add('hidden');
   }
 
-  function esc(str) {
-    return String(str ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────
   loadAvis();

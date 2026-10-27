@@ -146,6 +146,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
   // @ts-nocheck
   import { adminRead } from '../../lib/admin-read.js';
   import { isValidEmail, isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
+  import { esc } from '../../lib/html';
 
   // ── État ──────────────────────────────────────────────────────────────────
   let allClients = [];
@@ -355,9 +356,6 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
     el.classList.remove('hidden');
   }
 
-  function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   // ── Événements ────────────────────────────────────────────────────────────
   document.querySelectorAll('.chip-btn').forEach(btn => {

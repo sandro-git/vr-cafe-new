@@ -75,6 +75,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
 <script>
   // @ts-nocheck
+  import { esc } from '../../lib/html';
   const QUESTION_MIN_LENGTH = 2;
   const QUESTION_MAX_LENGTH = 500;
 
@@ -86,9 +87,6 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   const errorEl = document.getElementById('chat-error');
   const suggestionBtns = document.querySelectorAll('.suggestion-btn');
 
-  function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   function addMessage(text, who) {
     chatEmpty.classList.add('hidden');

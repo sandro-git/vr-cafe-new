@@ -104,10 +104,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 <script>
   // @ts-nocheck
   import { adminRead } from '../../lib/admin-read.js';
+  import { esc } from '../../lib/html';
 
-  function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   function fmtDate(date) {
     if (!date) return '—';

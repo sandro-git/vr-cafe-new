@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { generateReservationToken, verifyReservationToken } from "../netlify/lib/reservation-token";
+import { generateReservationToken, hasReservationTokenSecret, verifyReservationToken } from "../netlify/lib/reservation-token";
 
 const ID = "305b8767-1234-4abc-9def-0123456789ab";
 const OTHER_ID = "11111111-2222-4333-8444-555555555555";
@@ -42,6 +42,18 @@ describe("reservation-token", () => {
     const token = await generateReservationToken(ID);
     process.env.ADMIN_PASSWORD = "autre-secret";
     try {
+      expect(await verifyReservationToken(ID, token)).toBe(false);
+    } finally {
+      process.env.ADMIN_PASSWORD = "secret-de-test";
+    }
+  });
+
+  it("sans secret configuré : aucun lien signé, aucun token accepté", async () => {
+    const token = await generateReservationToken(ID);
+    delete process.env.ADMIN_PASSWORD;
+    try {
+      expect(hasReservationTokenSecret()).toBe(false);
+      await expect(generateReservationToken(ID)).rejects.toThrow();
       expect(await verifyReservationToken(ID, token)).toBe(false);
     } finally {
       process.env.ADMIN_PASSWORD = "secret-de-test";

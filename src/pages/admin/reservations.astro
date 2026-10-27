@@ -154,6 +154,8 @@ try {
   import { supabase } from '../../lib/supabase.js';
   import { adminRead } from '../../lib/admin-read.js';
   import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from '../../lib/pricing';
+  import { esc as escHtml } from '../../lib/html';
+  const esc = (str) => escHtml(str, '—');
 
   let currentDate = localDateStr(new Date());
   let reservationsCache = [];
@@ -422,9 +424,6 @@ try {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  function esc(str) {
-    return String(str ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   // ── Contrôles date ─────────────────────────────────────────────────────────
   const DP_ID = 'dp-reservations';

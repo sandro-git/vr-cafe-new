@@ -151,7 +151,7 @@ const {
           {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
-        <PhoneCountryField mode={mode} />
+        <PhoneCountryField mode={mode} suggestionsId="client-tel-suggestions" />
 
         <!-- Bon cadeau : vérifié à l'ajout (/api/bon-cadeau/verifier), rattaché après création -->
         <div id="bon-section">
@@ -224,6 +224,7 @@ const {
   import { newReservationId } from '../lib/uuid';
   import { fetchClientSuggestions } from '../lib/admin-read.js';
   import { normalizeBonCode, resteAPayer } from '../lib/bons-cadeaux';
+  import { esc } from '../lib/html';
 
   const mode = window.__rvMode;
   const successRedirect = window.__rvRedirect;
@@ -1012,9 +1013,6 @@ const {
     return d;
   }
 
-  function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   function nbBtnClass(active) {
     return active
@@ -1058,7 +1056,7 @@ const {
       suggestions.forEach(s => {
         const li = document.createElement('li');
         li.className = 'px-3 py-2.5 text-sm text-white/70 hover:bg-white/5 cursor-pointer border-b border-white/10 last:border-0';
-        li.innerHTML = `<span class="text-white font-medium">${String(s.client_nom ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span><span class="text-white/55 text-xs ml-2">${String(s.client_email ?? '').replace(/&/g,'&amp;')}</span>`;
+        li.innerHTML = `<span class="text-white font-medium">${esc(s.client_nom)}</span><span class="text-white/55 text-xs ml-2">${esc(s.client_email)}</span>`;
         li.addEventListener('mousedown', e => { e.preventDefault(); onSelect(s); ul.classList.add('hidden'); });
         ul.appendChild(li);
       });
@@ -1092,7 +1090,7 @@ const {
 
     setupAcField('client-nom', 'client-nom-suggestions', 'nom');
     setupAcField('client-email', 'client-email-suggestions', 'email');
-    setupAcField('client-telephone', 'client-tel-suggestions', 'tel');
+    setupAcField('client-telephone', 'client-tel-suggestions', 'telephone');
   }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────

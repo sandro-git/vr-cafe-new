@@ -5,7 +5,7 @@ import { syncClientToMailjet } from "../lib/mailjet-contacts.ts";
 import { calcMontantReservation, PRIX_ANNIVERSAIRE_DEFAUT } from "../../src/lib/pricing.ts";
 import { resteAPayer } from "../../src/lib/bons-cadeaux.ts";
 import { isValidEmail, isFakeEmail, isValidPhone, isFakePhone } from "../../src/lib/reservation-validation.ts";
-import { generateReservationToken } from "../lib/reservation-token.ts";
+import { generateReservationToken, hasReservationTokenSecret } from "../lib/reservation-token.ts";
 import { hasMinNotice } from "../lib/reservation-notice.ts";
 
 const ALLOWED_ORIGINS = [
@@ -139,7 +139,7 @@ export default async (req: Request, _context: Context) => {
   const vrIcon = vr_type === "sans_fil" ? "📡" : "🔌";
   const vrLabel = vr_type === "sans_fil" ? "VR Sans Fil" : "VR Filaire";
 
-  const canSelfManage = !!id && hasMinNotice(debut);
+  const canSelfManage = !!id && hasMinNotice(debut) && hasReservationTokenSecret();
 
   const supabaseUrl = Netlify.env.get("PUBLIC_SUPABASE_URL") || process.env.PUBLIC_SUPABASE_URL;
   const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || process.env.SUPABASE_SERVICE_ROLE_KEY;

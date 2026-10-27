@@ -147,7 +147,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
           {mode === 'admin' && <ul id="client-email-suggestions" class="hidden absolute z-50 left-0 right-0 mt-1 bg-[var(--color-surface-card)] ring-1 ring-white/10 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto"></ul>}
         </div>
 
-        <PhoneCountryField mode={mode} />
+        <PhoneCountryField mode={mode} suggestionsId="client-tel-suggestions" />
 
         <div>
           <label for="client-notes" class="block text-sm font-medium text-white/70 mb-1.5">Notes (optionnel)</label>
@@ -199,6 +199,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
   import { headsetBadgeHtml } from '../lib/headsetBadge';
   import { newReservationId } from '../lib/uuid';
   import { fetchClientSuggestions } from '../lib/admin-read.js';
+  import { esc } from '../lib/html';
   // Supabase en import dynamique : le rendu de l'étape 1 ne dépend pas du chunk.
   let supabase;
   async function ensureSupabase() {
@@ -825,9 +826,6 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
     d.setHours(Math.floor(totalMin / 60), totalMin % 60, 0, 0);
     return d;
   }
-  function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
   function nbBtnClass(active) {
     return active
       ? 'py-3 rounded-xl border-2 border-[var(--color-brand-400)] bg-[var(--color-brand-500)]/25 text-white font-bold text-lg transition-all'
@@ -896,7 +894,7 @@ const successRedirect = mode === 'admin' ? '/admin/planning' : null;
 
     setupAcField('client-nom', 'client-nom-suggestions', 'nom');
     setupAcField('client-email', 'client-email-suggestions', 'email');
-    setupAcField('client-telephone', 'client-tel-suggestions', 'tel');
+    setupAcField('client-telephone', 'client-tel-suggestions', 'telephone');
   }
 
   // ── Démarrage ─────────────────────────────────────────────────────────────

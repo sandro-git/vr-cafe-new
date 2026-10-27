@@ -297,6 +297,8 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
   import { supabase } from '../../lib/supabase.js';
   import { adminRead, fetchClientSuggestions as fetchClientSuggestionsEdit } from '../../lib/admin-read.js';
   import { isValidPhone, formatPhoneForStorage, detectPhoneCountry } from '../../lib/reservation-validation';
+  import { esc as escHtml } from '../../lib/html';
+  const esc = (str) => escHtml(str, '—');
 
   // Helper : toutes les écritures admin passent par la fonction serveur
   async function adminDb(action, params = {}) {
@@ -375,12 +377,6 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  function esc(str) {
-    return String(str ?? '—')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
 
   // ── Labels de date ────────────────────────────────────────────────────────
   function updateDateLabel() {
@@ -871,7 +867,7 @@ import PhoneCountryField from "../../components/PhoneCountryField.astro";
 
   setupEditAcField('edit-nom', 'edit-nom-suggestions', 'nom');
   setupEditAcField('edit-email', 'edit-email-suggestions', 'email');
-  setupEditAcField('edit-telephone', 'edit-tel-suggestions', 'tel');
+  setupEditAcField('edit-telephone', 'edit-tel-suggestions', 'telephone');
 
   function setupEditVrType(currentType) {
     editSelectedVrType = currentType;
