@@ -4,13 +4,16 @@
 //    paiement chez SumUp (le webhook n'est pas signé : on ne croit que l'API), vérifie montant,
 //    référence et marchand, puis passe le bon en « valide » par un UPDATE conditionnel
 //    (WHERE statut = 'en_attente') → le bon n'est activé, envoyé et notifié qu'une fois.
-import { bonEtat, bonExpiry, generateBonCode, getOffreBon, isBonCode, normalizeBonCode, type BonAchat, type BonRefus } from "../../src/lib/bons-cadeaux.ts";
+import { bonEtat, bonExpiry, formatEuros, generateBonCode, getOffreBon, isBonCode, libellePrixBon, normalizeBonCode, prixBon, prixPayeBon, type BonAchat, type BonRefus } from "../../src/lib/bons-cadeaux.ts";
 import { notifyNewReservation } from "../../src/lib/notify.ts";
 import { DuplicateCodeError, type Bon, type BonRepo, type NewBon } from "./bon-repo.ts";
 import { sendBonAdminEmail, sendBonClientEmail, sendBonRefundAdminEmail } from "./bon-cadeau-emails.ts";
 import { createHostedCheckout, getCheckout, getTransaction, refundTransaction, refundedAmount, type SumUpConfig } from "./sumup.ts";
 
 const CODE_ATTEMPTS = 5;
+
+/** Montants en euros comparés au centime (évite 23.200000000000003 ≠ 23.2). */
+const cents = (n: number) => Math.round(Number(n) * 100);
 
 function getEnv(key: string): string | undefined {
   try { return Netlify.env.get(key); } catch { /* hors contexte Netlify */ }
@@ -24,14 +27,18 @@ export async function startCheckout(
   repo: BonRepo,
   sumup: SumUpConfig,
   achat: BonAchat,
-  opts: { origin: string; webhookUrl?: string; isProduction: boolean },
+  opts: { origin: string; webhookUrl?: string; isProduction: boolean; now?: Date },
 ): Promise<{ id: string; url: string }> {
   const id = crypto.randomUUID();
+  // Le prix payé dépend de la date (promos) : même instant pour le prix facturé et created_at,
+  // à partir duquel il est ensuite recalculé (finalizeBon, remboursements, admin).
+  const now = opts.now ?? new Date();
   await repo.insert({
     id,
     offre: achat.offre.id,
     offre_label: achat.offre.label,
-    montant: achat.offre.prix,
+    montant: achat.offre.prix, // valeur de la session offerte (déduite à la réservation)
+    created_at: now.toISOString(),
     acheteur_nom: achat.acheteur_nom,
     acheteur_email: achat.acheteur_email,
     beneficiaire_nom: achat.beneficiaire_nom,
@@ -41,7 +48,7 @@ export async function startCheckout(
 
   const checkout = await createHostedCheckout(sumup, {
     reference: id,
-    amount: achat.offre.prix,
+    amount: prixBon(achat.offre, now),
     description: `Bon cadeau VR Café – ${achat.offre.label}`,
     redirectUrl: `${opts.origin}/cadeaux/merci?bon=${id}`,
     returnUrl: opts.webhookUrl,
@@ -106,7 +113,7 @@ export async function deliverBon(repo: BonRepo, bon: Bon, { notifyAdmin = true }
     try {
       await notifyNewReservation({
         title: bon.sandbox ? "🎁 Bon cadeau vendu (TEST)" : "🎁 Bon cadeau vendu",
-        body: `${bon.acheteur_nom} — ${bon.offre_label} — ${bon.montant} €`,
+        body: `${bon.acheteur_nom} — ${bon.offre_label} — ${libellePrixBon(bon)}`,
         url: "/admin/bons",
       });
     } catch (err) {
@@ -129,7 +136,8 @@ export async function finalizeBon(repo: BonRepo, sumup: SumUpConfig, bon: Bon): 
     checkout.checkout_reference === bon.id &&
     checkout.merchant_code === sumup.merchantCode &&
     checkout.currency === "EUR" &&
-    Number(checkout.amount) === Number(bon.montant) &&
+    // prix payé = prix de l'offre à la création du bon (promo figée même si payé après la fin)
+    cents(checkout.amount) === cents(prixPayeBon(bon)) &&
     offre !== null && offre.prix === Number(bon.montant);
 
   if (!matches) {
@@ -151,8 +159,11 @@ export async function finalizeBon(repo: BonRepo, sumup: SumUpConfig, bon: Bon): 
 }
 
 /** Bon vendu au comptoir (payé au TPE) : saisi depuis /admin/bons, valide immédiatement. */
-export async function createComptoirBon(repo: BonRepo, achat: Omit<BonAchat, "acheteur_email"> & { acheteur_email: string | null }): Promise<Bon> {
-  const now = new Date();
+export async function createComptoirBon(
+  repo: BonRepo,
+  achat: Omit<BonAchat, "acheteur_email"> & { acheteur_email: string | null },
+  { now = new Date() } = {},
+): Promise<Bon> {
   const base: NewBon = {
     id: crypto.randomUUID(),
     offre: achat.offre.id,
@@ -164,6 +175,7 @@ export async function createComptoirBon(repo: BonRepo, achat: Omit<BonAchat, "ac
     message: achat.message,
     statut: "valide",
     mode_paiement: "comptoir",
+    created_at: now.toISOString(), // prix payé (promo éventuelle) recalculé à partir de cette date
     paye_le: now.toISOString(),
     expire_le: bonExpiry(now).toISOString(),
   };
@@ -265,7 +277,7 @@ async function notifyRefund(bon: Bon, rembourse: number, total: boolean) {
   try {
     await notifyNewReservation({
       title: total ? "↩️ Bon cadeau remboursé et annulé" : "⚠️ Bon cadeau remboursé en partie",
-      body: `${bon.code} — ${bon.acheteur_nom} — ${rembourse} € sur ${bon.montant} €`,
+      body: `${bon.code} — ${bon.acheteur_nom} — ${formatEuros(rembourse)} sur ${formatEuros(prixPayeBon(bon))}`,
       url: `/admin/bons?q=${encodeURIComponent(bon.code ?? "")}`,
     });
   } catch (err) {
@@ -284,22 +296,23 @@ export async function refundBon(repo: BonRepo, sumup: SumUpConfig, id: string): 
     return { ok: false, error: "Ce bon n'a pas été payé en ligne : remboursez-le au TPE puis annulez-le.", status: 409 };
   if (bon.statut !== "valide") return { ok: false, error: "Seul un bon valide peut être remboursé.", status: 409 };
 
+  const paye = prixPayeBon(bon); // montant réellement encaissé (promo éventuelle), pas la valeur
   const txn = await getTransaction(sumup, bon.sumup_transaction_code);
   const deja = refundedAmount(txn);
-  if (deja < Number(bon.montant)) {
+  if (cents(deja) < cents(paye)) {
     // Sans montant = remboursement total. SumUp refuse un montant explicite sous un minimum
     // (constaté : `min_refundable_amount: 20` pour 18 €) : on ne précise le montant que pour
     // solder un bon déjà remboursé en partie.
     try {
-      await refundTransaction(sumup, txn.id, deja > 0 ? Number(bon.montant) - deja : undefined);
+      await refundTransaction(sumup, txn.id, deja > 0 ? (cents(paye) - cents(deja)) / 100 : undefined);
     } catch (err) {
       console.error("Bon cadeau : remboursement SumUp refusé", bon.id, err);
       return { ok: false, error: "SumUp a refusé le remboursement. Remboursez depuis le tableau de bord SumUp : le bon sera annulé automatiquement dans l'heure.", status: 502 };
     }
   }
 
-  const annule = await repo.update(bon.id, { statut: "annule", montant_rembourse: Number(bon.montant) }, ["valide"]);
-  return { ok: true, bon: annule ?? { ...bon, statut: "annule", montant_rembourse: Number(bon.montant) }, dejaRembourse: deja >= Number(bon.montant) };
+  const annule = await repo.update(bon.id, { statut: "annule", montant_rembourse: paye }, ["valide"]);
+  return { ok: true, bon: annule ?? { ...bon, statut: "annule", montant_rembourse: paye }, dejaRembourse: cents(deja) >= cents(paye) };
 }
 
 /**
@@ -317,10 +330,11 @@ export async function syncRefunds(repo: BonRepo, sumup: SumUpConfig, now = Date.
     try {
       const txn = await getTransaction(sumup, bon.sumup_transaction_code!);
       result.verifies++;
-      const rembourse = Math.min(refundedAmount(txn), Number(bon.montant));
-      if (rembourse <= Number(bon.montant_rembourse ?? 0)) continue; // rien de nouveau
+      const paye = prixPayeBon(bon); // montant réellement encaissé (promo éventuelle), pas la valeur
+      const rembourse = Math.min(cents(refundedAmount(txn)), cents(paye)) / 100;
+      if (cents(rembourse) <= cents(bon.montant_rembourse ?? 0)) continue; // rien de nouveau
 
-      const total = rembourse >= Number(bon.montant);
+      const total = cents(rembourse) >= cents(paye);
       const updated = await repo.update(
         bon.id,
         total ? { statut: "annule", montant_rembourse: rembourse } : { montant_rembourse: rembourse },

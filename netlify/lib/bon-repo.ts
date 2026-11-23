@@ -41,7 +41,7 @@ export interface BonReservation {
 }
 
 export type NewBon = Omit<Bon, "created_at" | "reservation" | "reservation_id" | "montant_rembourse" | "code" | "sumup_checkout_id" | "sumup_transaction_code" | "paye_le" | "expire_le" | "utilise_le" | "email_envoye_le" | "sandbox" | "mode_paiement"> &
-  Partial<Pick<Bon, "code" | "paye_le" | "expire_le" | "mode_paiement" | "sandbox">>;
+  Partial<Pick<Bon, "code" | "paye_le" | "expire_le" | "mode_paiement" | "sandbox" | "created_at">>;
 
 /** Erreur d'unicité Postgres (code déjà attribué) : l'appelant retente avec un autre code. */
 export class DuplicateCodeError extends Error {}

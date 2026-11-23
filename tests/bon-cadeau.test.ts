@@ -54,12 +54,12 @@ import statut, { maskEmail } from "../netlify/functions/bon-cadeau-statut.mts";
 import webhook from "../netlify/functions/sumup-webhook.mts";
 import adminBons from "../netlify/functions/admin-bons.mts";
 import bonReservation from "../netlify/functions/bon-cadeau-reservation.mts";
-import { syncRefunds } from "../netlify/lib/bon-cadeau";
+import { startCheckout, syncRefunds } from "../netlify/lib/bon-cadeau";
 import { getBonRepo } from "../netlify/lib/bon-repo";
 import { refundedAmount } from "../netlify/lib/sumup";
 import { generateReservationToken } from "../netlify/lib/reservation-token";
 import { createAdminSession } from "../netlify/lib/admin-session";
-import { isBonCode } from "../src/lib/bons-cadeaux";
+import { isBonCode, prixPayeBon, validateBonAchat } from "../src/lib/bons-cadeaux";
 
 // Faux SumUp : checkouts créés, statut modifiable par le test
 type Checkout = { id: string; checkout_reference: string; amount: number; currency: string; merchant_code: string; status: string;
@@ -113,7 +113,13 @@ const ENV = { ADMIN_PASSWORD: "mot-de-passe-test", ADMIN_SESSION_SECRET: "secret
 const ORIGIN = "https://vr-cafe.fr";
 const ACHAT = { offre: "60_duo", acheteur_nom: "Marie Curie", acheteur_email: "marie@gmail.com", beneficiaire_nom: "Léa", message: "Bon anniv !" };
 
+// Horloge fixée hors promo : sinon les prix attendus changeraient pendant une promo datée
+// (et un build lancé pendant le Black Friday échouerait)
+const HORS_PROMO = "2026-10-15T10:00:00Z";
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(HORS_PROMO));
   db.rows.clear();
   db.reservations.clear();
   db.duplicateCodes = 0;
@@ -134,6 +140,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -602,5 +609,122 @@ describe("remboursements", () => {
     sumup.fail = true;
     expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ verifies: 0, erreurs: 1 });
     expect(onlyBon().statut).toBe("valide");
+  });
+});
+
+describe("promo Black Friday (-20 %, 27 au 30/11/2026, heure de Paris)", () => {
+  const CFG = { apiKey: "sup_sk_test", merchantCode: "MTEST123" };
+  const PENDANT = "2026-11-28T12:00:00Z";
+  const APRES = "2026-12-01T10:00:00Z";
+  const SOLO = { ...ACHAT, offre: "30_solo" };
+  const adminPost = async (body: unknown) => {
+    const token = await createAdminSession(ENV);
+    const res = await adminBons(new Request("https://vr-cafe.fr/api/admin/bons", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: `admin_session=${encodeURIComponent(token!)}` },
+      body: JSON.stringify(body),
+    }), {} as any);
+    return { status: res.status, body: await res.json() };
+  };
+  async function bonPromo() {
+    vi.setSystemTime(new Date(PENDANT));
+    await buy(SOLO);
+    await hook(pay().id);
+    state.calls.length = 0;
+    push.calls.length = 0;
+    return onlyBon();
+  }
+
+  it("checkout pendant la promo : SumUp facture 14,40 €, la base garde la valeur 18 € et la date du prix", async () => {
+    vi.setSystemTime(new Date(PENDANT));
+    expect((await buy(SOLO)).status).toBe(200);
+    expect(sumup.checkouts.get("chk-1")!.amount).toBe(14.4);
+    expect(onlyBon()).toMatchObject({ montant: 18, created_at: new Date(PENDANT).toISOString() });
+  });
+
+  it("checkout hors promo : prix normal", async () => {
+    await buy(SOLO);
+    expect(sumup.checkouts.get("chk-1")!.amount).toBe(18);
+    expect(onlyBon().montant).toBe(18);
+  });
+
+  it("startCheckout : date injectable (dernière seconde de la promo, puis minuit le 1er décembre)", async () => {
+    const parsed = validateBonAchat(SOLO);
+    if (!parsed.ok) throw new Error("achat invalide");
+    const opts = { origin: ORIGIN, isProduction: true };
+    await startCheckout(getBonRepo(), CFG, parsed.value, { ...opts, now: new Date("2026-11-30T22:59:59Z") });
+    await startCheckout(getBonRepo(), CFG, parsed.value, { ...opts, now: new Date("2026-11-30T23:00:00Z") });
+    expect([...sumup.checkouts.values()].map((c) => c.amount)).toEqual([14.4, 18]);
+    expect([...db.rows.values()].map((b) => [b.montant, b.created_at])).toEqual([
+      [18, "2026-11-30T22:59:59.000Z"],
+      [18, "2026-11-30T23:00:00.000Z"],
+    ]);
+  });
+
+  it("paiement lancé pendant la promo, payé après la fin : activé à 14,40 €, admin informé du prix payé", async () => {
+    vi.setSystemTime(new Date(PENDANT));
+    await buy(SOLO);
+    vi.setSystemTime(new Date(APRES));
+    expect((await hook(pay().id)).body.statut).toBe("valide");
+    expect(push.calls[0].body).toBe("Marie Curie — 30 min solo — 14,40 € (Black Friday, valeur 18 €)");
+    const admin = state.calls.find((c) => c.body.Messages[0].To[0].Email === "sandro@vr-cafe.fr")!;
+    expect(admin.body.Messages[0].Subject).toBe("[Bon cadeau] 30 min solo · 14,40 € (Black Friday, valeur 18 €) · Marie Curie");
+    // l'email du bon ne montre aucun prix
+    const client = state.calls.find((c) => c.body.Messages[0].To[0].Email === "marie@gmail.com")!;
+    expect(client.body.Messages[0].HTMLPart).not.toMatch(/€/);
+  });
+
+  it("bon promo payé 18 € (montant incohérent) → non activé", async () => {
+    vi.setSystemTime(new Date(PENDANT));
+    await buy(SOLO);
+    const c = pay();
+    c.amount = 18;
+    await hook(c.id);
+    expect(onlyBon().statut).toBe("en_attente");
+    expect(state.calls).toHaveLength(0);
+  });
+
+  it("vérifier : le bon promo garde la valeur de la session (18 €)", async () => {
+    const bon = await bonPromo();
+    const res = await bonReservation(new Request("https://vr-cafe.fr/api/bon-cadeau/verifier", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN },
+      body: JSON.stringify({ code: bon.code }),
+    }), {} as any);
+    expect((await res.json()).bon.montant).toBe(18);
+  });
+
+  it("remboursement admin d'un bon promo : 14,40 € remboursés, partiel → solde de 4,40 €", async () => {
+    const bon = await bonPromo();
+    expect((await adminPost({ action: "refund", id: bon.id })).body.data).toMatchObject({ statut: "annule", montant_rembourse: 14.4 });
+    expect(sumup.refundCalls).toEqual([{ txnId: "txn-TX123", body: {} }]);
+
+    db.rows.clear();
+    sumup.refundCalls.length = 0;
+    const bon2 = await bonPromo();
+    sumup.refunded.set("TX123", 10);
+    await adminPost({ action: "refund", id: bon2.id });
+    expect(sumup.refundCalls).toEqual([{ txnId: "txn-TX123", body: { amount: 4.4 } }]);
+  });
+
+  it("remboursement déjà fait de 14,40 € : bon promo totalement remboursé (bouton et vérification horaire)", async () => {
+    const bon = await bonPromo();
+    sumup.refunded.set("TX123", 14.4);
+    expect(await syncRefunds(getBonRepo(), CFG)).toMatchObject({ annules: [bon.code], partiels: [] });
+    expect(onlyBon()).toMatchObject({ statut: "annule", montant_rembourse: 14.4 });
+    expect(push.calls[0].body).toBe(`${bon.code} — Marie Curie — 14,40 € sur 14,40 €`);
+
+    db.rows.clear();
+    const bon2 = await bonPromo();
+    sumup.refunded.set("TX123", 14.4);
+    expect((await adminPost({ action: "refund", id: bon2.id })).body).toMatchObject({ data: { statut: "annule" }, deja_rembourse: true });
+    expect(sumup.refundCalls).toEqual([]);
+  });
+
+  it("bon vendu au comptoir pendant la promo : valeur 18 €, prix payé 14,40 € d'après created_at", async () => {
+    vi.setSystemTime(new Date(PENDANT));
+    const res = await adminPost({ action: "create_comptoir", offre: "30_solo", acheteur_nom: "Paul", beneficiaire_nom: "Zoé" });
+    expect(res.body.data).toMatchObject({ montant: 18, created_at: new Date(PENDANT).toISOString() });
+    expect(prixPayeBon(res.body.data)).toBe(14.4);
   });
 });

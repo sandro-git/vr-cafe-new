@@ -2,6 +2,7 @@
 // et l'avis de vente à l'admin. Mise en page en <table> : Gmail ignore display:flex.
 import Mailjet from "node-mailjet";
 import type { Bon } from "./bon-repo.ts";
+import { formatEuros, libellePrixBon, prixPayeBon } from "../../src/lib/bons-cadeaux.ts";
 
 export interface MailjetCreds {
   apiKey: string;
@@ -24,7 +25,7 @@ function escHtml(str: string | null | undefined): string {
 const dateFr = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" }) : "";
 
-const euros = (n: number) => `${Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
+const euros = formatEuros;
 
 /** Email contenant le bon (code, expérience, bénéficiaire, validité). */
 export function bonClientEmail(bon: Bon): { subject: string; html: string } {
@@ -86,7 +87,7 @@ export function bonAdminEmail(bon: Bon): { subject: string; html: string } {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #7c3aed;">🎁 Bon cadeau vendu${bon.sandbox ? " (TEST SumUp sandbox)" : ""}</h2>
       <table role="presentation" cellpadding="0" cellspacing="0" style="font-size: 14px;">
-        ${row("Offre", `${escHtml(bon.offre_label)} · ${euros(bon.montant)}`)}
+        ${row("Offre", `${escHtml(bon.offre_label)} · ${escHtml(libellePrixBon(bon))}`)}
         ${row("Code", `<strong>${escHtml(bon.code)}</strong>`)}
         ${row("Acheteur", `${escHtml(bon.acheteur_nom)}${bon.acheteur_email ? ` (<a href="mailto:${escHtml(bon.acheteur_email)}">${escHtml(bon.acheteur_email)}</a>)` : ""}`)}
         ${row("Bénéficiaire", escHtml(bon.beneficiaire_nom))}
@@ -96,7 +97,7 @@ export function bonAdminEmail(bon: Bon): { subject: string; html: string } {
       <p style="margin-top: 16px;"><a href="https://vr-cafe.fr/admin/bons" style="color: #7c3aed;">Voir les bons cadeaux</a></p>
     </div>
   `;
-  return { subject: `[Bon cadeau] ${bon.offre_label} · ${euros(bon.montant)} · ${bon.acheteur_nom}`, html };
+  return { subject: `[Bon cadeau] ${bon.offre_label} · ${libellePrixBon(bon)} · ${bon.acheteur_nom}`, html };
 }
 
 export async function sendBonClientEmail(bon: Bon, creds: MailjetCreds): Promise<void> {
@@ -133,7 +134,7 @@ export function bonRefundAdminEmail(bon: Bon, rembourse: number, total: boolean)
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: ${total ? "#dc2626" : "#d97706"};">${total ? "↩️ Bon cadeau remboursé : annulé" : "⚠️ Bon cadeau remboursé en partie"}</h2>
       <p style="font-size: 14px; color: #1e293b;">
-        Le paiement SumUp du bon <strong>${escHtml(bon.code)}</strong> (${escHtml(bon.offre_label)}, ${euros(bon.montant)})
+        Le paiement SumUp du bon <strong>${escHtml(bon.code)}</strong> (${escHtml(bon.offre_label)}, payé ${euros(prixPayeBon(bon))})
         a été remboursé à hauteur de <strong>${euros(rembourse)}</strong>.
       </p>
       <p style="font-size: 14px; color: #1e293b;">

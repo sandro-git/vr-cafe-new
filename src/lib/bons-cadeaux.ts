@@ -32,6 +32,70 @@ export function getOffreBon(id: unknown): OffreBon | null {
   return OFFRES_BON.find((o) => o.id === id) ?? null;
 }
 
+// ── Promotions datées ───────────────────────────────────────────────────────
+// Une promo baisse le PRIX PAYÉ, jamais la valeur du bon : la colonne `montant` reste la
+// valeur de la session offerte (déduite à la réservation). Le prix payé d'un bon est
+// recalculé à partir de sa date de création → ne jamais supprimer une promo passée.
+
+export interface PromoBon {
+  id: string;
+  label: string;
+  remisePct: number;
+  /** Début inclus (ISO avec fuseau) */
+  debut: string;
+  /** Fin exclue (ISO avec fuseau) */
+  fin: string;
+}
+
+export const PROMOS_BON: readonly PromoBon[] = [
+  // Vendredi 27/11/2026 00:00 → lundi 30/11/2026 23:59:59, heure de Paris (UTC+1)
+  { id: "black-friday-2026", label: "Black Friday", remisePct: 20, debut: "2026-11-27T00:00:00+01:00", fin: "2026-12-01T00:00:00+01:00" },
+];
+
+const toMs = (date: Date | number | string) => (typeof date === "number" ? date : typeof date === "string" ? Date.parse(date) : date.getTime());
+
+/** Promo en cours à cette date (début inclus, fin exclue), ou null. */
+export function promoActive(date: Date | number | string = Date.now(), promos: readonly PromoBon[] = PROMOS_BON): PromoBon | null {
+  const t = toMs(date);
+  if (Number.isNaN(t)) return null;
+  return promos.find((p) => t >= Date.parse(p.debut) && t < Date.parse(p.fin)) ?? null;
+}
+
+/** Prix à payer pour une offre à cette date, arrondi au centime (calcul en centimes entiers). */
+export function prixBon(offre: Pick<OffreBon, "prix">, date: Date | number | string = Date.now()): number {
+  const promo = promoActive(date);
+  const centimes = Math.round(offre.prix * 100);
+  if (!promo) return centimes / 100;
+  return Math.round((centimes * (100 - promo.remisePct)) / 100) / 100;
+}
+
+/** Prix effectivement payé pour un bon : prix de son offre à sa date de création (sinon sa valeur). */
+export function prixPayeBon(bon: { offre: string; montant: number; created_at: string }): number {
+  const offre = getOffreBon(bon.offre);
+  if (!offre || Number.isNaN(Date.parse(bon.created_at))) return Number(bon.montant);
+  return prixBon(offre, bon.created_at);
+}
+
+/** Promo appliquée à l'achat d'un bon (null si payé au prix normal). */
+export function promoDuBon(bon: { offre: string; montant: number; created_at: string }): PromoBon | null {
+  return prixPayeBon(bon) !== Number(bon.montant) ? promoActive(bon.created_at) : null;
+}
+
+/** 18 → « 18 € », 14.4 → « 14,40 € ». */
+export function formatEuros(n: number): string {
+  const v = Number(n);
+  const decimals = Number.isInteger(v) ? 0 : 2;
+  return `${v.toLocaleString("fr-FR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })} €`;
+}
+
+/** « 58 € », ou « 14,40 € (Black Friday, valeur 18 €) » pour un bon acheté en promo. */
+export function libellePrixBon(bon: { offre: string; montant: number; created_at: string }): string {
+  const paye = prixPayeBon(bon);
+  const promo = promoDuBon(bon);
+  if (paye === Number(bon.montant)) return formatEuros(paye);
+  return `${formatEuros(paye)} (${promo ? `${promo.label}, ` : ""}valeur ${formatEuros(bon.montant)})`;
+}
+
 // Sans 0/O ni 1/I : un code lu à voix haute ou recopié à la main reste sans ambiguïté.
 // 32 caractères → un octet aléatoire & 31 donne une distribution uniforme.
 export const BON_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";

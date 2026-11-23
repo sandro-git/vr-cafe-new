@@ -2,12 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   BON_CODE_ALPHABET,
   OFFRES_BON,
+  PROMOS_BON,
   bonEtat,
   bonExpiry,
+  formatEuros,
   generateBonCode,
   getOffreBon,
   isBonCode,
+  libellePrixBon,
   normalizeBonCode,
+  prixBon,
+  prixPayeBon,
+  promoActive,
   resteAPayer,
   validateBonAchat,
 } from "../src/lib/bons-cadeaux";
@@ -104,5 +110,56 @@ describe("resteAPayer", () => {
 
   it("prix inconnu : pas de reste calculé", () => {
     expect(resteAPayer(null, [{ montant: 29 }])).toEqual({ deduction: 29, reste: null });
+  });
+
+  it("bon acheté en promo (14,40 €) : déduit sa valeur, la session 30 min solo est entièrement couverte", () => {
+    const bon = { offre: "30_solo", montant: 18, created_at: "2026-11-28T12:00:00Z" };
+    expect(prixPayeBon(bon)).toBe(14.4);
+    expect(resteAPayer(18, [bon])).toEqual({ deduction: 18, reste: 0 });
+  });
+});
+
+describe("promo Black Friday 2026 (-20 %)", () => {
+  const prix = (date: string) => OFFRES_BON.map((o) => prixBon(o, date));
+  const NORMAL = [18, 36, 29, 58];
+  const PROMO = [14.4, 28.8, 23.2, 46.4];
+
+  it("liste datée : 27/11 00:00 → 01/12 00:00 heure de Paris (fin exclue)", () => {
+    expect(PROMOS_BON.find((p) => p.id === "black-friday-2026")).toMatchObject({ label: "Black Friday", remisePct: 20 });
+  });
+
+  it("veille (26/11 23:59:59 Paris) : prix normal", () => {
+    expect(promoActive("2026-11-26T22:59:59Z")).toBeNull();
+    expect(prix("2026-11-26T22:59:59Z")).toEqual(NORMAL);
+  });
+
+  it("début (27/11 00:00 Paris) : -20 %, valeurs exactes au centime", () => {
+    expect(promoActive("2026-11-26T23:00:00Z")?.id).toBe("black-friday-2026");
+    expect(prix("2026-11-26T23:00:00Z")).toEqual(PROMO);
+  });
+
+  it("pendant et dernière seconde (30/11 23:59:59 Paris) : -20 %", () => {
+    expect(prix("2026-11-28T15:30:00Z")).toEqual(PROMO);
+    expect(prix("2026-11-30T22:59:59Z")).toEqual(PROMO);
+    expect(prixBon(getOffreBon("60_solo")!, new Date("2026-11-30T22:59:59Z"))).toBe(23.2); // pas 23.200000000000003
+    expect(prixBon(getOffreBon("60_solo")!, Date.parse("2026-11-30T22:59:59Z"))).toBe(23.2);
+  });
+
+  it("après (01/12 00:00 Paris) : prix normal", () => {
+    expect(promoActive("2026-11-30T23:00:00Z")).toBeNull();
+    expect(prix("2026-11-30T23:00:00Z")).toEqual(NORMAL);
+  });
+
+  it("prixPayeBon : prix de l'offre à la création du bon, sinon sa valeur", () => {
+    expect(prixPayeBon({ offre: "60_duo", montant: 58, created_at: "2026-11-29T10:00:00Z" })).toBe(46.4);
+    expect(prixPayeBon({ offre: "60_duo", montant: 58, created_at: "2026-10-01T10:00:00Z" })).toBe(58);
+    expect(prixPayeBon({ offre: "ancienne_offre", montant: 40, created_at: "2026-11-29T10:00:00Z" })).toBe(40);
+  });
+
+  it("formatEuros et libellé admin", () => {
+    expect(formatEuros(18)).toBe("18 €");
+    expect(formatEuros(14.4)).toBe("14,40 €");
+    expect(libellePrixBon({ offre: "30_solo", montant: 18, created_at: "2026-11-28T12:00:00Z" })).toBe("14,40 € (Black Friday, valeur 18 €)");
+    expect(libellePrixBon({ offre: "30_solo", montant: 18, created_at: "2026-10-01T12:00:00Z" })).toBe("18 €");
   });
 });

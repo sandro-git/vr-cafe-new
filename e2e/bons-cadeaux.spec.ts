@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { adminSessionCookie } from "./helpers/admin-session";
-import { FakeApi } from "./helpers/mocks";
+import { FakeApi, setNow } from "./helpers/mocks";
 
 // /api/bon-cadeau/*, /api/admin/bons et la page de paiement SumUp sont simulés :
 // aucun bon, aucun paiement, aucun email réellement créé.
@@ -9,6 +9,43 @@ const SUMUP_URL = "https://checkout.sumup.com/pay/c-e2e";
 const BON_ID = "11111111-2222-4333-8444-555555555555";
 
 test.describe("/cadeaux", () => {
+  // Horloge hors promo (sinon les prix attendus changeraient pendant une promo datée)
+  test.beforeEach(async ({ page }) => {
+    await setNow(page, "2026-10-15T10:00:00+02:00");
+  });
+
+  test("hors promo : pas de bandeau, prix normaux", async ({ page }) => {
+    await page.goto("/cadeaux");
+    await expect(page.locator("#bon-total")).toHaveText("58 €");
+    await expect(page.locator("#bon-promo")).toBeHidden();
+    await expect(page.locator(".bon-prix s")).toHaveCount(0);
+  });
+
+  test("Black Friday : bandeau, ancien prix barré, prix promo dans les cartes et le bouton Payer", async ({ page }) => {
+    await setNow(page, "2026-11-30T23:59:00+01:00");
+    const api = new FakeApi({ "/api/bon-cadeau/checkout": () => ({ body: { url: SUMUP_URL } }) });
+    await api.install(page);
+    await page.route("https://checkout.sumup.com/**", (r) => r.fulfill({ contentType: "text/html", body: "<h1>SumUp</h1>" }));
+    await page.goto("/cadeaux");
+
+    await expect(page.locator("#bon-promo")).toHaveText("🖤 Black Friday : -20 % sur tous les bons cadeaux jusqu'au lundi 30 novembre");
+    await expect(page.locator("#bon-total")).toHaveText("46,40 €");
+    await expect(page.locator(".bon-prix[data-offre='30_solo']")).toHaveText("18 €14,40 €");
+    await expect(page.locator(".bon-prix[data-offre='30_solo'] s")).toHaveText("18 €");
+    await page.getByRole("radio", { name: "1h solo, 23,20 € au lieu de 29 € (Black Friday)" }).check({ force: true });
+    await expect(page.locator("#bon-total")).toHaveText("23,20 €");
+
+    // le navigateur n'envoie jamais de prix : le serveur le recalcule
+    await page.getByLabel("Pour qui ?").fill("Léa");
+    await page.getByLabel("De la part de").fill("Marie");
+    await page.getByLabel("Votre email").fill("marie@gmail.com");
+    await page.locator("#bon-submit").click();
+    await page.waitForURL(SUMUP_URL);
+    const [call] = api.callsTo("/api/bon-cadeau/checkout");
+    expect(call.body).toMatchObject({ offre: "60_solo" });
+    expect(call.body.prix).toBeUndefined();
+  });
+
   test("achat : envoie l'offre et les infos, puis redirige vers la page de paiement SumUp", async ({ page }) => {
     const api = new FakeApi({ "/api/bon-cadeau/checkout": () => ({ body: { url: SUMUP_URL } }) });
     await api.install(page);

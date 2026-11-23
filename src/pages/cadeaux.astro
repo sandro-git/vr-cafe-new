@@ -5,7 +5,7 @@ import PageHeader from "../components/PageHeader.astro";
 import FAQ from "../components/FAQ.astro";
 import JsonLd from "../components/JsonLd.astro";
 import { graph, businessNode, breadcrumb, product } from "../lib/seo";
-import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX } from "../lib/bons-cadeaux";
+import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX, formatEuros } from "../lib/bons-cadeaux";
 
 const prixMin = Math.min(...OFFRES_BON.map((o) => o.prix));
 
@@ -84,15 +84,21 @@ const labelClass = "block mb-2 text-sm font-semibold text-white";
       <h2 class="font-display text-2xl font-extrabold tracking-tight text-white mb-4">
         1. Choisissez le bon cadeau
       </h2>
+      <!-- Promo datée (PROMOS_BON) : révélé par le script pendant la période, page statique -->
+      <p
+        id="bon-promo"
+        hidden
+        class="mb-4 p-4 rounded-xl bg-black/60 ring-1 ring-[var(--color-accent-400)]/50 text-center font-semibold text-white"
+      ></p>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="radiogroup" aria-label="Bon cadeau">
         {
           OFFRES_BON.map((o, i) => (
             <label class="bon-offre card-glow group relative cursor-pointer p-4 sm:p-5 text-center transition-transform hover:-translate-y-1 has-[:checked]:ring-2 has-[:checked]:ring-[var(--color-brand-400)]">
-              <input type="radio" name="offre" value={o.id} class="sr-only" checked={i === 3} aria-label={`${o.label}, ${o.prix} €`} />
+              <input type="radio" name="offre" value={o.id} class="sr-only" checked={i === 3} aria-label={`${o.label}, ${formatEuros(o.prix)}`} />
               <span class="block text-2xl mb-1" aria-hidden="true">{o.nb_personnes === 1 ? "🥽" : "🥽🥽"}</span>
               <span class="block font-display text-lg font-bold text-white">{o.duree_minutes === 60 ? "1h" : "30 min"}</span>
               <span class="block text-sm text-white/55">{o.nb_personnes === 1 ? "Solo · 1 joueur" : "Duo · 2 joueurs"}</span>
-              <span class="block mt-3 font-display text-2xl font-extrabold text-[var(--color-accent-400)]">{o.prix} €</span>
+              <span class="bon-prix block mt-3 font-display text-2xl font-extrabold text-[var(--color-accent-400)]" data-offre={o.id}>{formatEuros(o.prix)}</span>
             </label>
           ))
         }
@@ -178,10 +184,42 @@ const labelClass = "block mb-2 text-sm font-semibold text-white";
 </BaseLayout>
 
 <script>
-  import { OFFRES_BON, validateBonAchat } from "../lib/bons-cadeaux";
+  import { OFFRES_BON, formatEuros, prixBon, promoActive, validateBonAchat } from "../lib/bons-cadeaux";
 
   // Ordre d'affichage : le premier champ en erreur reçoit le focus
   const FIELDS = ["offre", "beneficiaire_nom", "acheteur_nom", "acheteur_email", "message"];
+
+  /**
+   * Page statique : le prix normal est dans le HTML ; pendant une promo datée (PROMOS_BON),
+   * ancien prix barré + prix promo. Affichage seulement : le serveur recalcule le prix facturé.
+   */
+  function showPromo(now: number) {
+    const promo = promoActive(now);
+    if (!promo) return;
+    const banner = document.getElementById("bon-promo");
+    if (banner) {
+      // fin exclue → dernier jour = fin - 1 ms
+      const dernierJour = new Date(Date.parse(promo.fin) - 1).toLocaleDateString("fr-FR", {
+        weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris",
+      });
+      banner.textContent = `🖤 ${promo.label} : -${promo.remisePct} % sur tous les bons cadeaux jusqu'au ${dernierJour}`;
+      banner.hidden = false;
+    }
+    for (const el of document.querySelectorAll<HTMLElement>(".bon-prix[data-offre]")) {
+      const offre = OFFRES_BON.find((o) => o.id === el.dataset.offre);
+      if (!offre) continue;
+      const prix = prixBon(offre, now);
+      const ancien = document.createElement("s");
+      ancien.className = "block text-base font-semibold text-white/55";
+      ancien.textContent = formatEuros(offre.prix);
+      ancien.setAttribute("aria-hidden", "true");
+      const nouveau = document.createElement("span");
+      nouveau.textContent = formatEuros(prix);
+      el.replaceChildren(ancien, nouveau);
+      const radio = el.closest("label")?.querySelector<HTMLInputElement>('input[name="offre"]');
+      radio?.setAttribute("aria-label", `${offre.label}, ${formatEuros(prix)} au lieu de ${formatEuros(offre.prix)} (${promo.label})`);
+    }
+  }
 
   function setup() {
     const form = document.getElementById("bon-form") as HTMLFormElement | null;
@@ -192,10 +230,12 @@ const labelClass = "block mb-2 text-sm font-semibold text-white";
     const total = document.getElementById("bon-total")!;
     const errorBox = document.getElementById("bon-error")!;
 
+    // Même instant pour les cartes et le total ; le total est recalculé à chaque changement
+    showPromo(Date.now());
     const updateTotal = () => {
       const id = (form.querySelector('input[name="offre"]:checked') as HTMLInputElement | null)?.value;
       const offre = OFFRES_BON.find((o) => o.id === id);
-      total.textContent = offre ? `${offre.prix} €` : "";
+      total.textContent = offre ? formatEuros(prixBon(offre)) : "";
     };
     form.addEventListener("change", updateTotal);
     updateTotal();

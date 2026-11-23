@@ -1,6 +1,14 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX } from "../../lib/bons-cadeaux";
+import { OFFRES_BON, BON_MESSAGE_MAX, BON_NOM_MAX, formatEuros, prixBon, promoActive } from "../../lib/bons-cadeaux";
+
+// Page rendue à chaque requête : le menu de vente au comptoir affiche le prix du moment
+// (le serveur recalcule le même prix à la création du bon, d'après sa date)
+const promo = promoActive();
+const prixComptoir = (o: (typeof OFFRES_BON)[number]) => {
+  const prix = prixBon(o);
+  return prix === o.prix ? formatEuros(prix) : `${formatEuros(prix)} (${promo?.label}, valeur ${formatEuros(o.prix)})`;
+};
 
 const fieldClass =
   "w-full bg-white/5 ring-1 ring-white/10 text-white text-sm rounded-xl p-3 focus:ring-2 focus:ring-[var(--color-brand-400)] focus:outline-none placeholder:text-white/50";
@@ -82,7 +90,7 @@ const fieldClass =
       <label class="block">
         <span class="block text-sm font-semibold text-white mb-1.5">Offre</span>
         <select name="offre" class={fieldClass} required>
-          {OFFRES_BON.map((o) => <option value={o.id} class="bg-[var(--color-surface-card)]">{o.label} · {o.prix} €</option>)}
+          {OFFRES_BON.map((o) => <option value={o.id} class="bg-[var(--color-surface-card)]">{o.label} · {prixComptoir(o)}</option>)}
         </select>
       </label>
       <label class="block">
@@ -125,10 +133,10 @@ const fieldClass =
 </style>
 
 <script>
-  import { bonEtat, normalizeBonCode } from "../../lib/bons-cadeaux";
+  import { bonEtat, formatEuros, normalizeBonCode, prixPayeBon, promoDuBon } from "../../lib/bons-cadeaux";
 
   type Bon = {
-    id: string; code: string | null; offre_label: string; montant: number;
+    id: string; code: string | null; offre: string; offre_label: string; montant: number;
     acheteur_nom: string; acheteur_email: string | null; beneficiaire_nom: string; message: string | null;
     statut: "en_attente" | "valide" | "utilise" | "annule" | "echec"; mode_paiement: "en_ligne" | "comptoir";
     sandbox: boolean; paye_le: string | null; expire_le: string | null; utilise_le: string | null;
@@ -151,7 +159,10 @@ const fieldClass =
 
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
   const dateFr = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—");
-  const euros = (n: number) => `${Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
+  const euros = formatEuros;
+  // `montant` = valeur de la session offerte ; le prix payé peut être plus bas (promo à l'achat)
+  const cents = (n: number) => Math.round(Number(n) * 100);
+  const resteARembourser = (b: Bon) => (cents(prixPayeBon(b)) - cents(b.montant_rembourse || 0)) / 100;
 
   /** Élément DOM ; le texte passe par textContent (saisies publiques : jamais d'innerHTML). */
   function h(tag: string, cls = "", text?: string | null, attrs: Record<string, string> = {}) {
@@ -199,7 +210,7 @@ const fieldClass =
     $("stat-valides").textContent = String(valides.length);
     $("stat-expirent").textContent = String(valides.filter((b) => b.expire_le && Date.parse(b.expire_le) < in30).length);
     $("stat-mois").textContent = String(vendusMois.length);
-    $("stat-ca").textContent = euros(vendusMois.reduce((s, b) => s + Number(b.montant) - Number(b.montant_rembourse || 0), 0));
+    $("stat-ca").textContent = euros(vendusMois.reduce((s, b) => s + cents(resteARembourser(b)), 0) / 100);
   }
 
   function matches(b: Bon, q: string) {
@@ -251,11 +262,16 @@ const fieldClass =
     info.append(line("Acheté le", dateFr(b.paye_le ?? b.created_at)));
     info.append(line(etat === "utilise" ? "Utilisé le" : "Valable jusqu'au", etat === "utilise" ? dateFr(b.utilise_le) : dateFr(b.expire_le)));
     root.append(info);
+    const paye = prixPayeBon(b);
+    if (paye !== Number(b.montant)) {
+      const promo = promoDuBon(b);
+      root.append(h("p", "mt-2 text-sm text-white/70", `💸 payé ${euros(paye)}${promo ? ` (${promo.label})` : ""}`));
+    }
     if (b.message) root.append(h("p", "mt-2 text-sm italic text-white/55 whitespace-pre-line", `« ${b.message} »`));
     if (Number(b.montant_rembourse) > 0) {
-      const total = Number(b.montant_rembourse) >= Number(b.montant);
+      const total = resteARembourser(b) <= 0;
       root.append(h("p", `mt-2 text-sm ${total ? "text-red-300" : "text-amber-300"}`,
-        `↩️ Remboursé ${euros(b.montant_rembourse)}${total ? "" : ` sur ${euros(b.montant)} (partiel)`}`));
+        `↩️ Remboursé ${euros(b.montant_rembourse)}${total ? "" : ` sur ${euros(paye)} (partiel)`}`));
     }
     if (b.reservation && b.reservation.statut !== "annulée") {
       const quand = new Date(b.reservation.creneau_debut).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
@@ -279,8 +295,8 @@ const fieldClass =
     if ((b.statut === "valide" || b.statut === "utilise") && b.acheteur_email)
       actions.append(btn(b.email_envoye_le ? "Renvoyer l'email" : "Envoyer l'email", "resend_email", "ghost"));
     if (b.statut === "valide" && b.mode_paiement === "en_ligne" && !b.sandbox)
-      actions.append(btn(`↩️ Rembourser ${euros(b.montant - Number(b.montant_rembourse || 0))} et annuler`, "refund", "danger",
-        `Rembourser ${euros(b.montant - Number(b.montant_rembourse || 0))} à ${b.acheteur_nom} sur sa carte (SumUp) et annuler le bon ${b.code} ?\n\nLe remboursement est définitif.`));
+      actions.append(btn(`↩️ Rembourser ${euros(resteARembourser(b))} et annuler`, "refund", "danger",
+        `Rembourser ${euros(resteARembourser(b))} à ${b.acheteur_nom} sur sa carte (SumUp) et annuler le bon ${b.code} ?\n\nLe remboursement est définitif.`));
     if (b.statut === "valide")
       actions.append(btn("Annuler le bon", "cancel", "danger", b.mode_paiement === "comptoir"
         ? "Annuler ce bon ? Il ne pourra plus être utilisé. (Remboursement éventuel : au TPE.)"
