@@ -150,10 +150,26 @@ describe("promo Black Friday 2026 (-20 %)", () => {
     expect(prix("2026-11-30T23:00:00Z")).toEqual(NORMAL);
   });
 
-  it("prixPayeBon : prix de l'offre à la création du bon, sinon sa valeur", () => {
+  it("prixPayeBon : valeur du bon avec la promo en cours à sa création", () => {
     expect(prixPayeBon({ offre: "60_duo", montant: 58, created_at: "2026-11-29T10:00:00Z" })).toBe(46.4);
     expect(prixPayeBon({ offre: "60_duo", montant: 58, created_at: "2026-10-01T10:00:00Z" })).toBe(58);
-    expect(prixPayeBon({ offre: "ancienne_offre", montant: 40, created_at: "2026-11-29T10:00:00Z" })).toBe(40);
+    // offre retirée depuis : la promo s'appliquait quand même à l'achat
+    expect(prixPayeBon({ offre: "ancienne_offre", montant: 40, created_at: "2026-11-29T10:00:00Z" })).toBe(32);
+    expect(prixPayeBon({ offre: "60_duo", montant: 58, created_at: "pas une date" })).toBe(58);
+  });
+
+  it("prixPayeBon ne dépend pas du tarif actuel de l'offre (changement de prix ultérieur)", () => {
+    // bon 30 min solo vendu 18 € ; le tarif actuel de l'offre (18 €) ne doit pas compter
+    const offre = getOffreBon("30_solo")!;
+    const avant = offre.prix;
+    try {
+      (offre as { prix: number }).prix = 20; // simule une hausse de tarif après la vente
+      expect(prixPayeBon({ offre: "30_solo", montant: 18, created_at: "2026-10-01T10:00:00Z" })).toBe(18);
+      expect(prixPayeBon({ offre: "30_solo", montant: 18, created_at: "2026-11-28T10:00:00Z" })).toBe(14.4);
+      expect(libellePrixBon({ offre: "30_solo", montant: 18, created_at: "2026-10-01T10:00:00Z" })).toBe("18 €");
+    } finally {
+      (offre as { prix: number }).prix = avant;
+    }
   });
 
   it("formatEuros et libellé admin", () => {

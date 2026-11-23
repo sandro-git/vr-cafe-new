@@ -69,11 +69,14 @@ export function prixBon(offre: Pick<OffreBon, "prix">, date: Date | number | str
   return Math.round((centimes * (100 - promo.remisePct)) / 100) / 100;
 }
 
-/** Prix effectivement payé pour un bon : prix de son offre à sa date de création (sinon sa valeur). */
+/**
+ * Prix effectivement payé pour un bon : sa valeur (`montant`, figée à l'achat) avec la promo
+ * en cours à sa date de création. Jamais le tarif actuel de l'offre : un changement de prix
+ * ou une offre retirée ne doit pas modifier ce qu'un ancien bon a coûté (CA, remboursements).
+ */
 export function prixPayeBon(bon: { offre: string; montant: number; created_at: string }): number {
-  const offre = getOffreBon(bon.offre);
-  if (!offre || Number.isNaN(Date.parse(bon.created_at))) return Number(bon.montant);
-  return prixBon(offre, bon.created_at);
+  if (Number.isNaN(Date.parse(bon.created_at))) return Number(bon.montant);
+  return prixBon({ prix: Number(bon.montant) }, bon.created_at);
 }
 
 /** Promo appliquée à l'achat d'un bon (null si payé au prix normal). */
